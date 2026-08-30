@@ -5,6 +5,7 @@ import { MousePointerClick } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export default function CTA() {
+  
   const t = useTranslations("Landing.CTA");
 
   return (
