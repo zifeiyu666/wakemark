@@ -1,0 +1,66 @@
+{
+  "sidebar": {
+    "group": "Bookmarks",
+    "all": "All bookmarks",
+    "unread": "Unread",
+    "read": "Read"
+  },
+  "titles": {
+    "all": "All bookmarks",
+    "unread": "Unread",
+    "read": "Read"
+  },
+  "toolbar": {
+    "newestFirst": "Newest first",
+    "oldestFirst": "Oldest first",
+    "select": "Select",
+    "sync": "Sync",
+    "syncing": "Syncing…",
+    "searchPlaceholder": "Search…",
+    "loadMore": "Load more"
+  },
+  "connect": {
+    "title": "Sync with X",
+    "description": "Connect your X account to pull your bookmarks, auto-tag them with AI, and keep them searchable forever.",
+    "button": "Sync with X",
+    "note": "Read-only access to your bookmarks. We never post on your behalf."
+  },
+  "empty": {
+    "title": "No bookmarks yet",
+    "description": "Hit Sync to pull your latest X bookmarks.",
+    "noResults": "No bookmarks match your filters."
+  },
+  "card": {
+    "unread": "Unread",
+    "addTag": "Add tag",
+    "customTagPlaceholder": "Custom tag…",
+    "openTweet": "Open tweet",
+    "processing": "AI processing…",
+    "failed": "Processing failed",
+    "playVideo": "Play video on X",
+    "videoCover": "Video thumbnail"
+  },
+  "bulk": {
+    "selected": "{count} selected",
+    "markRead": "Mark read",
+    "markUnread": "Mark unread",
+    "clear": "Clear"
+  },
+  "syncBanner": {
+    "syncing": "Syncing bookmarks from X… added {added}",
+    "processing": "AI tagging & summarizing… {remaining} left",
+    "done": "Sync complete. {added} new bookmarks.",
+    "rateLimit": "Paused at X API rate limit. Progress saved — Sync again later to resume.",
+    "usageCapped": "X API usage cap reached. Sync will resume after the quota resets.",
+    "authError": "X authorization expired. Please reconnect your X account.",
+    "refreshFailed": "X token refresh failed. Please try again in a moment.",
+    "caughtUp": "You're all caught up. {added} new bookmarks."
+  },
+  "errors": {
+    "loadFailed": "Failed to load bookmarks.",
+    "syncFailed": "Sync failed. Please try again.",
+    "notConnected": "Connect your X account first.",
+    "disconnect": "Disconnect"
+  },
+  "connectedAs": "Connected as @{username}"
+}

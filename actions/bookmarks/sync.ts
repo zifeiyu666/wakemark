@@ -1,0 +1,48 @@
+"use server";
+
+import { ActionResult, actionResponse } from "@/lib/action-response";
+import { getSession } from "@/lib/auth/server";
+import {
+  SyncRefreshError,
+  syncBookmarksForUser,
+  XNotConnectedError,
+  type SyncResult,
+  type SyncStoppedReason,
+} from "@/lib/bookmarks/sync-core";
+import { getErrorMessage } from "@/lib/error-utils";
+import { XReconnectRequiredError } from "@/lib/x/connection";
+
+export type { SyncResult, SyncStoppedReason };
+
+export async function syncBookmarks(): Promise<ActionResult<SyncResult>> {
+  const session = await getSession();
+  const user = session?.user;
+  if (!user) return actionResponse.unauthorized();
+
+  try {
+    // Manual Sync means "show me my newest bookmarks": walk from the latest
+    // and stop at known history; the cron drain owns the old-backlog crawl.
+    // 20 pages covers up to ~2000 fresh bookmarks in one pass.
+    return actionResponse.success(
+      await syncBookmarksForUser(user.id, { maxPages: 20, mode: "latest" })
+    );
+  } catch (error) {
+    if (error instanceof XNotConnectedError) {
+      return actionResponse.error("X account not connected.", "not-connected");
+    }
+    if (error instanceof XReconnectRequiredError) {
+      return actionResponse.error(
+        "X authorization expired. Please reconnect your X account.",
+        "auth-error"
+      );
+    }
+    if (error instanceof SyncRefreshError) {
+      return actionResponse.error(
+        "X token refresh failed. Please try again in a moment.",
+        "refresh-failed"
+      );
+    }
+    console.error("Error syncing bookmarks", error);
+    return actionResponse.error(getErrorMessage(error));
+  }
+}

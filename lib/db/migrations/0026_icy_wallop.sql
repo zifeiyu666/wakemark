@@ -1,0 +1,1 @@
+ALTER TABLE "bookmarks" ADD COLUMN "media_types" jsonb DEFAULT '[]' NOT NULL;

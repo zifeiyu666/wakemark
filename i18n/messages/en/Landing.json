@@ -1,0 +1,175 @@
+{
+  "Hero": {
+    "badge": {
+      "label": "NEW",
+      "text": "Smart Bookmarks Sync & AI Weekly Drop",
+      "href": "/#pricing"
+    },
+    "title": "Wake your sleeping bookmarks",
+    "description": "Your saved tweets, auto-tagged, organized into lists, and summarized in a digest that arrives on your schedule.",
+    "cta": "Organize my bookmarks",
+    "ctaNote": "Free for seven days. No charge today, cancel anytime.",
+    "video": {
+      "title": "See WakeMark in action",
+      "eyebrow": "See it in action",
+      "heading": "A 60-second tour of <accent>WakeMark.</accent>",
+      "description": "From your first sync to your weekly digest. Watch how thousands of saved tweets become a tidy library you actually revisit.",
+      "playLabel": "Play the product intro video",
+      "closeLabel": "Close the video",
+      "poster": "/images/features/user-1.png",
+      "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    }
+  },
+  "Problem": {
+    "label": "The Problem",
+    "items": [
+      {
+        "stat": "3,000+",
+        "statLabel": "Bookmarks saved, on average",
+        "title": "Bookmarks pile up",
+        "description": "You save tweets all day long. But X/Twitter buries them in a single unsorted list you will never scroll back through."
+      },
+      {
+        "stat": "97%",
+        "statLabel": "Never opened again",
+        "title": "Gone the moment you save",
+        "description": "No reminders, no search, no tags. X/Twitter treats your bookmarks as a write-only database."
+      },
+      {
+        "stat": "12 sec",
+        "statLabel": "Avg. catch-up with a digest",
+        "title": "Life is too short to scroll",
+        "description": "You don't have 30 minutes to re-read old tweets. A daily digest takes less time than making coffee."
+      }
+    ]
+  },
+  "PricingLock": {
+    "eyebrow": "Pricing",
+    "title": "Lock in your price before it's gone",
+    "description": "Your price stays the same as long as you're subscribed. Join early, pay less. Simple as that.",
+    "note": "One plan. Every feature. Price rises as spots fill.",
+    "tiers": [
+      {
+        "id": "founders",
+        "name": "Founders",
+        "price": "$59",
+        "period": "/yr",
+        "discount": "-40%",
+        "discountTone": "tint",
+        "monthly": "$4.92/mo",
+        "status": "soldout",
+        "statusLabel": "Sold out",
+        "medal": true
+      },
+      {
+        "id": "early-bird",
+        "name": "Early Bird",
+        "price": "$69",
+        "period": "/yr",
+        "discount": "-30%",
+        "discountTone": "tint",
+        "monthly": "$5.75/mo",
+        "status": "active",
+        "statusLabel": "",
+        "medal": true,
+        "remaining": "143 of 150 remaining",
+        "progress": 5,
+        "cta": "Get started"
+      },
+      {
+        "id": "early-access",
+        "name": "Early Access",
+        "price": "$79",
+        "period": "/yr",
+        "discount": "-20%",
+        "discountTone": "tint",
+        "monthly": "$6.58/mo",
+        "status": "upnext",
+        "statusLabel": "Up next",
+        "medal": true
+      },
+      {
+        "id": "standard",
+        "name": "Standard",
+        "price": "$99",
+        "period": "/yr",
+        "discount": "Full price",
+        "discountTone": "outline",
+        "monthly": "$8.25/mo",
+        "status": "upnext",
+        "statusLabel": "Up next",
+        "medal": false
+      }
+    ],
+    "chart": {
+      "title": "Price for new subscribers increases as more people join",
+      "axisLabel": "Price/yr",
+      "lockedLabel": "your price (locked)",
+      "footnote": "Subscribe now to lock in your price. Your rate never goes up once you're in.",
+      "yTicks": [40, 55, 70, 85, 100]
+    },
+    "includedLabel": "Included at every price",
+    "included": [
+      "Every bookmark, synced automatically",
+      "Auto-sorted by topic with AI",
+      "Weekly digest in your inbox",
+      "Create & share themed lists",
+      "Ask AI anything about your bookmarks",
+      "Syncs on its own, or on demand"
+    ],
+    "trial": "Try free for 7 days"
+  },
+  "Features": {
+    "badge": {
+      "label": "FEATURES",
+      "text": "Everything your bookmarks need"
+    },
+    "title": "Bookmarks that organize themselves",
+    "description": "WakeMark syncs your X bookmarks, tags them by topic, sorts them into lists, and turns them into digests that arrive on your schedule. No setup, no manual sorting.",
+    "items": []
+  },
+  "FAQ": {
+    "eyebrow": "FAQ",
+    "title": "Questions you might have",
+    "items": [
+      {
+        "question": "How do you access my bookmarks? Do I have to give you my X/Twitter password?",
+        "answer": "Never. You connect via X/Twitter's official OAuth flow, which grants read-only access to your bookmarks. We never see your password, and you can revoke access from your X/Twitter settings at any time."
+      },
+      {
+        "question": "What happens to my data if I cancel?",
+        "answer": "Your bookmarks and lists stay yours. If you cancel, you keep everything you've already synced. Resubscribe anytime to pick up where you left off."
+      },
+      {
+        "question": "How is this different from saving tweets to Notion or Readwise?",
+        "answer": "Those tools store links. WakeMark actually reads, categorizes, and summarizes your bookmarks for you. You get auto-tagging by topic, shareable themed lists, and a digest that surfaces what matters instead of another pile of unread saves."
+      },
+      {
+        "question": "What does the AI auto-tagging actually do?",
+        "answer": "When your bookmarks sync, our AI reads each one and assigns topic tags like \"startup fundraising\" or \"CSS layout\" or \"machine learning.\" You don't configure anything. Tags appear automatically, and you can use them to filter, search, or build lists."
+      },
+      {
+        "question": "Is there a free trial?",
+        "answer": "Yes. Every account starts with a 7-day free trial. After that, pricing starts at $59/year depending on when you join. Your price locks in for as long as you stay subscribed. Cancel anytime."
+      },
+      {
+        "question": "How often do bookmarks sync?",
+        "answer": "Bookmarks sync automatically every day, plus you can trigger a manual sync whenever you want. There's no bookmark limit."
+      },
+      {
+        "question": "What does the email digest look like?",
+        "answer": "It's a clean summary of your recent bookmarks, grouped by topic. Each entry includes the key takeaway in a sentence or two, plus a direct link to the original tweet. Think of it as a personal briefing, not a wall of links."
+      },
+      {
+        "question": "Is there a risk X/Twitter will block this or change their API?",
+        "answer": "We use X/Twitter's official API within their published rate limits. If X/Twitter changes something on their end, we adapt. Your bookmarks already synced to WakeMark stay safe regardless of what happens with the API."
+      }
+    ]
+  },
+  "CTA": {
+    "title": "You already saved the best parts of X/Twitter. Time to actually read them.",
+    "description": "Your bookmark graveyard becomes a morning briefing. Try WakeMark free for 7 days.",
+    "button": "Turn my bookmarks into a briefing",
+    "trustText": "Free for seven days. No charge today, cancel anytime."
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "title": "Submit feedback",
+  "description": "Tell us about a bug, suggest a feature, or ask a question. We read every submission.",
+  "category": "Category",
+  "categories": {
+    "bug": "Bug",
+    "feature": "Feature request",
+    "question": "Question"
+  },
+  "fieldTitle": "Title",
+  "titlePlaceholder": "Brief summary",
+  "message": "Message",
+  "messagePlaceholder": "What's on your mind?",
+  "charCount": "{count}/{max}",
+  "submit": "Submit",
+  "submitting": "Submitting...",
+  "toast": {
+    "successTitle": "Feedback submitted",
+    "successDescription": "Thanks for writing in — we read every submission.",
+    "errorTitle": "Submission failed",
+    "errorDescription": "Please try again later."
+  }
+}
