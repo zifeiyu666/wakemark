@@ -21,3 +21,23 @@ WakeMark automatically tags your saved tweets, organizes bookmarks into lists, a
 - 🖼️ **R2/S3 Storage** - Cloud storage support for media files
 
 Please refer to the [Documentation](https://wakemark.app) for more information.
+
+## Scheduled bookmark sync (Upstash QStash)
+
+Vercel Cron is disabled so the app remains compatible with the free Hobby plan.
+Use [Upstash QStash](https://console.upstash.com/qstash) to create a schedule
+that sends a `GET` request to:
+
+```text
+https://<your-domain>/api/cron/bookmarks?job=drain
+```
+
+Set the request header `Authorization: Bearer <CRON_SECRET>` and choose a
+schedule such as `*/10 * * * *`. QStash will then continue large first-time
+history imports and process the pending AI backlog. You may create a second
+daily schedule for `?job=daily` (for example `0 8 * * *`, UTC). Keep
+`CRON_SECRET` configured in Vercel and QStash; never commit its value.
+
+The endpoint is implemented in
+[`app/api/cron/bookmarks/route.ts`](./app/api/cron/bookmarks/route.ts). Its
+database checkpoints make each drain invocation resumable and idempotent.

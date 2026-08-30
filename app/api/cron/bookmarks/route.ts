@@ -13,13 +13,14 @@ import { NextRequest, NextResponse } from "next/server";
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
-// Vercel Cron drives this route (see vercel.json):
-//  - job=drain (every 10 min): advance unfinished initial imports and the AI
-//    backlog for every connected user, no click required
-//  - job=daily (fixed time): force a fresh sync pass for every connected user
+// This endpoint is scheduled externally by Upstash QStash (see README). Vercel
+// Cron is intentionally disabled so the app remains compatible with the Hobby
+// plan. QStash should call `?job=drain` frequently to advance unfinished
+// initial imports and the AI backlog; `?job=daily` can be scheduled separately
+// when a daily fresh sync is desired.
 // The DB is the queue (pagination_token checkpoint + pending row statuses), so
-// ticks are bounded, resumable and idempotent; a tick can never overlap the
-// next one because the budget (<5 min) is below the 10-min interval.
+// each invocation is bounded, resumable and idempotent. If drain is restored
+// on a frequent external schedule, keep its interval above the tick budget.
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const auth = request.headers.get("authorization");
