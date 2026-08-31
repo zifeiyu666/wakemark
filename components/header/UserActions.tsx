@@ -18,7 +18,7 @@ export function UserActions({ user }: { user: User }) {
 
   return (
     <Button asChild size="sm">
-      <I18nLink href="/dashboard" prefetch={false}>
+      <I18nLink href="/dashboard/bookmarks" prefetch={false}>
         {t("Button.dashboard")}
         <ArrowRight />
       </I18nLink>

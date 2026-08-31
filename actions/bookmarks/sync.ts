@@ -7,12 +7,13 @@ import {
   syncBookmarksForUser,
   XNotConnectedError,
   type SyncResult,
-  type SyncStoppedReason,
 } from "@/lib/bookmarks/sync-core";
 import { getErrorMessage } from "@/lib/error-utils";
 import { XReconnectRequiredError } from "@/lib/x/connection";
 
-export type { SyncResult, SyncStoppedReason };
+// NOTE: do not re-export types from a "use server" file — the server-actions
+// loader evaluates them as values and crashes with "SyncResult is not defined".
+// Clients should import these types from "@/lib/bookmarks/sync-core" directly.
 
 export async function syncBookmarks(): Promise<ActionResult<SyncResult>> {
   const session = await getSession();

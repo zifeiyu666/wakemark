@@ -24,7 +24,12 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const auth = request.headers.get("authorization");
-  if (!secret || auth !== `Bearer ${secret}`) {
+  // QStash's Upstash-Forward header sends the configured value verbatim,
+  // while direct/manual callers commonly use the Bearer convention. Accept
+  // both forms without exposing the secret in logs or responses.
+  const authorized =
+    !!secret && (auth === secret || auth === `Bearer ${secret}`);
+  if (!authorized) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -94,4 +99,10 @@ export async function GET(request: NextRequest) {
     users: results.length,
     results,
   });
+}
+
+// QStash schedules use POST by default. Keep GET for manual checks and expose
+// the same authenticated behavior for QStash's POST delivery.
+export async function POST(request: NextRequest) {
+  return GET(request);
 }

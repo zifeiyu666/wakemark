@@ -8,7 +8,8 @@ import {
 } from "@/actions/bookmarks/list";
 import { disconnectX } from "@/actions/bookmarks/connection";
 import { processPendingBookmarks } from "@/actions/bookmarks/process";
-import { syncBookmarks, type SyncStoppedReason } from "@/actions/bookmarks/sync";
+import { syncBookmarks } from "@/actions/bookmarks/sync";
+import type { SyncStoppedReason } from "@/lib/bookmarks/sync-core";
 import { BookmarkCard } from "@/components/bookmarks/BookmarkCard";
 import { ConnectXCard } from "@/components/bookmarks/ConnectXCard";
 import { Button } from "@/components/ui/button";

@@ -127,6 +127,38 @@ function extractJson(text: string): string {
   return candidate.slice(start, end + 1);
 }
 
+// Salvage a batch payload truncated mid-JSON (finishReason=length): strip the
+// dangling incomplete entry and close the wrappers so the already-complete
+// entries survive, instead of losing the whole batch to a JSON.parse error.
+function repairTruncatedJson(text: string): string | null {
+  const endsWithClose = text.trimEnd().endsWith("}");
+  const suffixes = endsWithClose
+    ? ["]}", "", "]}]", '"]}']
+    : ["]}]", "]}", '"]}', '"]}'];
+  for (const suffix of suffixes) {
+    try {
+      JSON.parse(text + suffix);
+      return text + suffix;
+    } catch {
+      // try the next closing variant
+    }
+  }
+  // Drop the dangling partial entry and retry once.
+  const cut = Math.max(text.lastIndexOf("},"), text.lastIndexOf("}\n"));
+  if (cut > 0) {
+    const trimmed = text.slice(0, cut + 1);
+    for (const suffix of ["]}", '"]}']) {
+      try {
+        JSON.parse(trimmed + suffix);
+        return trimmed + suffix;
+      } catch {
+        // try the next closing variant
+      }
+    }
+  }
+  return null;
+}
+
 // Tag a whole chunk in ONE request; returns results keyed by tweetId so the
 // caller can verify which bookmarks actually got tagged.
 async function tagChunk(
@@ -140,14 +172,15 @@ async function tagChunk(
   const openrouter = createOpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY,
   });
-  const { text } = await with429Backoff(() =>
+  const { text, finishReason } = await with429Backoff(() =>
     acquireAiSlot().then(() =>
       generateText({
         model: openrouter.chat(modelId),
         system: BATCH_TAG_SYSTEM_PROMPT,
         prompt: buildBatchPrompt(items),
         temperature: 0.2,
-        maxOutputTokens: 2500,
+        // A full chunk needs ~150 tokens per entry; 2500 truncated mid-array.
+        maxOutputTokens: 6000,
         maxRetries: 1,
       })
     )
@@ -156,8 +189,25 @@ async function tagChunk(
     console.warn(`${LOG} batch via ${modelId}: empty model output`);
     return null;
   }
+  if (finishReason === "length") {
+    console.warn(
+      `${LOG} batch via ${modelId}: output truncated at token limit, attempting salvage`
+    );
+  }
   try {
-    const parsed = BatchTagSchema.safeParse(JSON.parse(extractJson(text)));
+    let raw: unknown;
+    try {
+      raw = JSON.parse(extractJson(text));
+    } catch (parseError) {
+      // Truncated output: salvage the complete entries instead of losing all.
+      const repaired = repairTruncatedJson(extractJson(text));
+      if (!repaired) throw parseError;
+      raw = JSON.parse(repaired);
+      console.warn(
+        `${LOG} batch via ${modelId}: salvaged partial entries from truncated output`
+      );
+    }
+    const parsed = BatchTagSchema.safeParse(raw);
     if (!parsed.success) {
       console.warn(
         `${LOG} batch via ${modelId}: output failed schema validation: ${text.slice(0, 200)}`

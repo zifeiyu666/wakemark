@@ -26,17 +26,22 @@ Please refer to the [Documentation](https://wakemark.app) for more information.
 
 Vercel Cron is disabled so the app remains compatible with the free Hobby plan.
 Use [Upstash QStash](https://console.upstash.com/qstash) to create a schedule
-that sends a `GET` request to:
+that sends a `POST` request to:
 
 ```text
 https://<your-domain>/api/cron/bookmarks?job=drain
 ```
 
-Set the request header `Authorization: Bearer <CRON_SECRET>` and choose a
-schedule such as `*/10 * * * *`. QStash will then continue large first-time
+Add an `Upstash-Forward` header whose forwarded key is `Authorization` and
+whose value is `<CRON_SECRET>` (the secret itself, without `Bearer `). Set
+`Upstash-Method` to `POST` and choose a schedule such as `*/10 * * * *`.
+QStash will then continue large first-time
 history imports and process the pending AI backlog. You may create a second
 daily schedule for `?job=daily` (for example `0 8 * * *`, UTC). Keep
 `CRON_SECRET` configured in Vercel and QStash; never commit its value.
+
+The route also accepts `Authorization: Bearer <CRON_SECRET>` for manual
+requests and compatibility with other schedulers.
 
 The endpoint is implemented in
 [`app/api/cron/bookmarks/route.ts`](./app/api/cron/bookmarks/route.ts). Its
