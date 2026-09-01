@@ -1,4 +1,5 @@
 import slugify from "slugify";
+import { BASE_URL } from "@/config/site";
 
 export function getURL(path: string = '') {
   let url =
@@ -30,6 +31,12 @@ export async function validateUrl(url: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// Shareable URL of a public bookmark list: /u/{x-username}/{slug}.
+export function publicListUrl(username: string, slug: string) {
+  const root = BASE_URL.charAt(BASE_URL.length - 1) === '/' ? BASE_URL.slice(0, -1) : BASE_URL;
+  return `${root}/u/${username}/${slug}`;
 }
 
 export function slugifyHostname(hostname: string) {

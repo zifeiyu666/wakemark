@@ -3,10 +3,15 @@
 import {
   getBookmarks,
   getBookmarkStats,
+  getBookmarkTags,
   updateBookmarksRead,
   type BookmarkRow,
 } from "@/actions/bookmarks/list";
 import { disconnectX } from "@/actions/bookmarks/connection";
+import {
+  setListVisibility,
+  type BookmarkListRow,
+} from "@/actions/bookmarks/lists";
 import { processPendingBookmarks } from "@/actions/bookmarks/process";
 import { syncBookmarks } from "@/actions/bookmarks/sync";
 import type { SyncStoppedReason } from "@/lib/bookmarks/sync-core";
@@ -25,15 +30,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   BOOKMARK_CATEGORIES,
   CATEGORY_COLORS,
+  tagColorChipClass,
   type BookmarkCategory,
 } from "@/config/bookmark-categories";
 import { cn } from "@/lib/utils";
+import { publicListUrl } from "@/lib/url";
 import {
   RefreshCw,
   Search,
   SquareCheckBig,
   BookmarkCheck,
   BookmarkX,
+  Copy,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -55,12 +65,17 @@ type Banner = { kind: "info" | "warn" | "error"; text: string };
 export function BookmarksBoard({
   view,
   oauthError,
+  list,
 }: {
   view: BookmarksView;
   oauthError?: string | null;
+  list?: BookmarkListRow | null;
 }) {
   const t = useTranslations("Bookmarks");
+  const tLists = useTranslations("Lists");
   const { mutate: globalMutate } = useSWRConfig();
+  const isListMode = !!list;
+  const [listMeta, setListMeta] = useState<BookmarkListRow | null>(list ?? null);
 
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [search, setSearch] = useState("");
@@ -79,6 +94,31 @@ export function BookmarksBoard({
   const stats = statsData?.success ? statsData.data : null;
   const connected = !!stats?.connected;
 
+  // Custom tags (user-added + AI-assigned) shown after the preset categories.
+  const tagsKey = "bookmarks-tags";
+  const { data: tagsData } = useSWR(
+    connected ? tagsKey : null,
+    getBookmarkTags
+  );
+  const tagColorMap = useMemo(() => {
+    const map: Record<string, string | null> = {};
+    if (tagsData?.success) {
+      for (const tag of tagsData.data?.tags ?? []) map[tag.name] = tag.color;
+    }
+    return map;
+  }, [tagsData]);
+  const customTags = useMemo(() => {
+    const fetched = Object.keys(tagColorMap);
+    // Keep a selected tag visible even if its usage just dropped to zero.
+    const extra = categories.filter(
+      (c) =>
+        !(BOOKMARK_CATEGORIES as readonly string[]).includes(c) &&
+        !fetched.includes(c)
+    );
+    return [...fetched, ...extra];
+  }, [tagColorMap, categories]);
+  const refreshTags = () => globalMutate(tagsKey);
+
   const filters = useMemo(
     () => ({
       view,
@@ -87,8 +127,9 @@ export function BookmarksBoard({
       sort,
       search: debouncedSearch || undefined,
       categories,
+      listId: list?.id,
     }),
-    [view, page, sort, debouncedSearch, categories]
+    [view, page, sort, debouncedSearch, categories, list?.id]
   );
   const listKey = JSON.stringify(["bookmarks", filters]);
   const { data: listData, isValidating, mutate: mutateList } = useSWR(
@@ -134,6 +175,36 @@ export function BookmarksBoard({
 
   const totalCount = listData?.success ? (listData.data?.totalCount ?? 0) : 0;
   const refreshStats = () => globalMutate(statsKey);
+  const refreshLists = () => globalMutate("bookmark-lists");
+
+  const toggleListVisibility = async () => {
+    if (!listMeta) return;
+    const nextPublic = !listMeta.isPublic;
+    const res = await setListVisibility(listMeta.id, nextPublic);
+    if (!res.success) {
+      toast.error(
+        res.customCode === "not-connected" ? t("errors.notConnected") : res.error
+      );
+      return;
+    }
+    setListMeta(res.data ?? null);
+    refreshLists();
+    toast.success(
+      nextPublic ? tLists("board.madePublic") : tLists("board.madePrivate")
+    );
+  };
+
+  const copyPublicUrl = async () => {
+    if (!listMeta?.isPublic) return;
+    if (!stats?.username) {
+      toast.error(t("errors.notConnected"));
+      return;
+    }
+    await navigator.clipboard.writeText(
+      publicListUrl(stats.username, listMeta.slug)
+    );
+    toast.success(tLists("board.copied"));
+  };
 
   // Dead or undecryptable X tokens can only be fixed by re-authorizing:
   // surface the reason briefly, then jump straight into the OAuth connect
@@ -219,6 +290,7 @@ export function BookmarksBoard({
     setSyncPhase("idle");
     mutateList();
     refreshStats();
+    refreshTags();
     if (stoppedReason === "rate-limit") {
       setBanner({ kind: "warn", text: t("syncBanner.rateLimit") });
     } else if (stoppedReason === "usage-capped") {
@@ -270,16 +342,24 @@ export function BookmarksBoard({
       {/* title */}
       <div className="flex items-baseline gap-2">
         <h1 className="text-2xl font-semibold">
-          {view === "all"
-            ? t("titles.all")
-            : view === "unread"
-              ? t("titles.unread")
-              : t("titles.read")}
+          {isListMode
+            ? listMeta?.name
+            : view === "all"
+              ? t("titles.all")
+              : view === "unread"
+                ? t("titles.unread")
+                : t("titles.read")}
         </h1>
-        {connected && (
+        {(connected || isListMode) && (
           <span className="text-sm text-muted-foreground">{totalCount}</span>
         )}
-        {connected && stats?.username && (
+        {isListMode && listMeta && (
+          <span className="text-sm text-muted-foreground">
+            ·{" "}
+            {listMeta.isPublic ? tLists("board.public") : tLists("board.private")}
+          </span>
+        )}
+        {connected && !isListMode && stats?.username && (
           <span className="ml-auto text-xs text-muted-foreground">
             {t("connectedAs", { username: stats.username })}
             <button
@@ -293,7 +373,7 @@ export function BookmarksBoard({
         )}
       </div>
 
-      {!connected ? (
+      {!connected && !isListMode ? (
         <ConnectXCard />
       ) : (
         <>
@@ -325,19 +405,39 @@ export function BookmarksBoard({
             </Button>
 
             <div className="ml-auto flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={runSync}
-                disabled={syncPhase !== "idle"}
-              >
-                <RefreshCw
-                  className={cn(
-                    "h-4 w-4",
-                    syncPhase !== "idle" && "animate-spin"
+              {isListMode && listMeta?.isPublic && (
+                <Button variant="outline" onClick={copyPublicUrl}>
+                  <Copy className="h-4 w-4" />
+                  {tLists("board.copyPublicUrl")}
+                </Button>
+              )}
+              {isListMode && listMeta && (
+                <Button variant="outline" onClick={toggleListVisibility}>
+                  {listMeta.isPublic ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
                   )}
-                />
-                {syncPhase === "syncing" ? t("toolbar.syncing") : t("toolbar.sync")}
-              </Button>
+                  {listMeta.isPublic
+                    ? tLists("board.makePrivate")
+                    : tLists("board.makePublic")}
+                </Button>
+              )}
+              {!isListMode && (
+                <Button
+                  variant="outline"
+                  onClick={runSync}
+                  disabled={syncPhase !== "idle"}
+                >
+                  <RefreshCw
+                    className={cn(
+                      "h-4 w-4",
+                      syncPhase !== "idle" && "animate-spin"
+                    )}
+                  />
+                  {syncPhase === "syncing" ? t("toolbar.syncing") : t("toolbar.sync")}
+                </Button>
+              )}
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -379,6 +479,37 @@ export function BookmarksBoard({
                     )}
                   />
                   {category}
+                </button>
+              );
+            })}
+            {customTags.map((tag) => {
+              const active = categories.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() =>
+                    setCategories((prev) =>
+                      active
+                        ? prev.filter((c) => c !== tag)
+                        : [...prev, tag]
+                    )
+                  }
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                    active
+                      ? "border-foreground bg-secondary text-foreground"
+                      : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      tagColorChipClass(tagColorMap[tag]) ??
+                        "bg-muted-foreground/60"
+                    )}
+                  />
+                  {tag}
                 </button>
               );
             })}
@@ -467,9 +598,12 @@ export function BookmarksBoard({
                     selectionMode={selectionMode}
                     selected={selected.includes(bookmark.id)}
                     onToggleSelected={toggleSelected}
+                    tagColors={tagColorMap}
                     onChanged={() => {
                       mutateList();
                       refreshStats();
+                      refreshTags();
+                      refreshLists();
                     }}
                   />
                 ))}

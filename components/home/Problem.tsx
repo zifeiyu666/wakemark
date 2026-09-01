@@ -41,8 +41,8 @@ export default function Problem() {
   }));
 
   return (
-    <section id="problem" className="w-full bg-muted">
-      <div className="container mx-auto">
+    <section id="problem" className="w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <p className="pt-16 md:pt-24 pb-6 text-xs font-medium uppercase tracking-widest text-muted-foreground">
           {t("label")}
         </p>

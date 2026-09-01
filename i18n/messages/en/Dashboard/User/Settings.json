@@ -28,6 +28,24 @@
     "errorUpdateAuthUser": "Failed to update auth user.",
     "errorUpdateUserProfile": "Failed to update user profile."
   },
+  "digest": {
+    "title": "Weekly digest",
+    "enabledLabel": "Email me a weekly digest",
+    "enabledHint": "A summary of your bookmarks arrives every Friday in your local time zone.",
+    "timeZoneLabel": "Time zone",
+    "timeZoneAuto": "{zone} (auto-detected)",
+    "timeZoneHint": "Detected from your browser; change it if you travel.",
+    "hourLabel": "Delivery hour",
+    "hourOption": "{hour}:00 on Friday",
+    "hourHint": "Local time, every Friday.",
+    "saveButton": "Save digest settings",
+    "toast": {
+      "saveSuccessTitle": "Digest settings saved",
+      "saveSuccessDescription": "Your weekly digest will follow the new schedule.",
+      "saveErrorTitle": "Update failed",
+      "saveErrorDescription": "Failed to save digest settings. Please try again later."
+    }
+  },
   "subscription": {
     "title": "Subscription",
     "manageStripeButton": "Manage Subscription (Stripe)",

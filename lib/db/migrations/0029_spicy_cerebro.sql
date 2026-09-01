@@ -1,0 +1,1 @@
+ALTER TABLE "bookmark_tags" ADD COLUMN "color" varchar(20);

@@ -1,4 +1,3 @@
-import BuiltWithButton from "@/components/BuiltWithButton";
 import { Newsletter } from "@/components/footer/Newsletter";
 import { TwitterX } from "@/components/social-icons/icons";
 import { siteConfig } from "@/config/site";
@@ -25,7 +24,7 @@ export default async function Footer() {
   });
 
   return (
-    <div className="bg-gray-900 text-gray-300 border-t border-gray-700">
+    <div className="bg-black text-gray-300 border-t border-neutral-800">
       <footer className="py-2 container max-w-8xl mx-auto">
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-12 lg:grid-cols-6">
@@ -139,7 +138,6 @@ export default async function Footer() {
                   )}
                 </div>
 
-                <BuiltWithButton />
               </div>
             </div>
 
@@ -187,7 +185,7 @@ export default async function Footer() {
             )}
           </div>
 
-          <div className="border-t border-gray-800 py-6 flex flex-col md:flex-row justify-between items-center">
+          <div className="border-t border-neutral-800 py-6 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
               {tFooter("Copyright", {
                 year: new Date().getFullYear(),

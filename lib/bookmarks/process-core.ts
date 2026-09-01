@@ -8,6 +8,12 @@ import { db } from "@/lib/db";
 import { bookmarks, type BookmarkStatus } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
 import { acquireAiSlot, with429Backoff } from "@/lib/bookmarks/ai-guard";
+import { extractJson, repairTruncatedJson } from "@/lib/ai/json";
+import {
+  applyTagDeltas,
+  listUserTags,
+  tagDeltas,
+} from "@/lib/bookmarks/tag-counts";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { embedMany, generateText } from "ai";
@@ -17,11 +23,13 @@ import { z } from "zod";
 const LOG = "[bookmarks:process]";
 
 // Tagging/summary runs against OpenRouter directly. DeepSeek V4 Flash is the
-// primary: burst-tested it tolerates 10 parallel requests without 429s, while
-// qwen3.8-flash's shared upstream pool rejects most of them. Override with
-// BOOKMARK_AI_MODEL; failures cascade through the fallback chain.
+// primary: burst-tested it tolerates 10 parallel requests without 429s (qwen
+// flash models were removed for constantly hitting upstream 429s). Override
+// with BOOKMARK_AI_MODEL; failures cascade through the fallback chain.
 const DEFAULT_BOOKMARK_MODEL = "deepseek/deepseek-v4-flash";
-const FALLBACK_CHAIN = ["z-ai/glm-5.3-flash", "qwen/qwen3.8-flash"];
+const FALLBACK_CHAIN = ["z-ai/glm-5.3-flash", "deepseek/deepseek-v4-flash"];
+
+export { DEFAULT_BOOKMARK_MODEL, FALLBACK_CHAIN };
 
 // Shared-pool upstreams reject bursts: tag only a few bookmarks concurrently.
 const TAG_CONCURRENCY = 3;
@@ -42,9 +50,9 @@ const TagSchema = z.object({
   category: z.enum(BOOKMARK_CATEGORIES).describe("Primary category"),
   subTags: z
     .array(z.string())
-    .min(1)
+    .min(0)
     .max(3)
-    .describe("1-3 specific sub-tags"),
+    .describe("1-3 tags picked from the provided allowed-tag list"),
   summary: z.string().describe("One-line practical summary of the tweet"),
 });
 
@@ -57,7 +65,7 @@ const BatchTagSchema = z.object({
     z.object({
       tweetId: z.coerce.string(),
       category: z.enum(BOOKMARK_CATEGORIES),
-      subTags: z.array(z.string()).min(1).max(3),
+      subTags: z.array(z.string()).min(0).max(3),
       summary: z.string(),
     })
   ),
@@ -86,16 +94,48 @@ const TAG_SYSTEM_PROMPT = [
   "You classify X (Twitter) bookmarks.",
   `Pick exactly one category from: ${BOOKMARK_CATEGORIES.join(", ")}.`,
   "Reply with ONLY a JSON object, no markdown, no extra text, in this shape:",
-  '{"category": string, "subTags": string[] (1-3 specific tags), "summary": string (one practical line)}',
+  '{"category": string, "subTags": string[], "summary": string (one practical line)}',
 ].join(" ");
 
 const BATCH_TAG_SYSTEM_PROMPT = [
   "You classify X (Twitter) bookmarks.",
   `Pick exactly one category per bookmark from: ${BOOKMARK_CATEGORIES.join(", ")}.`,
   "Reply with ONLY a JSON object, no markdown, no extra text, in this shape:",
-  '{"results": [{"tweetId": string, "category": string, "subTags": string[] (1-3 specific tags), "summary": string (one practical line)}]}',
+  '{"results": [{"tweetId": string, "category": string, "subTags": string[], "summary": string (one practical line)}]}',
   "Include exactly one entry per bookmark, keeping the given tweetIds.",
 ].join(" ");
+
+// The model may ONLY reuse tags already present in the user's bookmark
+// collection (loaded per processing run); it must never invent new ones.
+// No candidates yet (fresh account) -> subTags stays empty.
+function tagRuleSnippet(allowedTags: string[]): string {
+  if (allowedTags.length === 0) {
+    return 'subTags MUST be [] (empty array): no allowed tags exist yet, do not invent any.';
+  }
+  return [
+    `subTags: pick 1-3 from this allowed list ONLY, verbatim (no new/synonymous/translated tags): ${allowedTags.join(", ")}.`,
+    "If none fit, return [].",
+  ].join(" ");
+}
+
+// Existing tags (usage counters in bookmark_tags) become the ONLY subTag
+// candidates the model may use; the table is maintained on every subTags
+// write, so no jsonb scanning is needed here.
+const TAG_CANDIDATE_MAX = 100;
+
+async function loadAllowedTags(userId: string): Promise<string[]> {
+  const override = process.env.BOOKMARK_AI_TAGS;
+  if (override) {
+    return override
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, TAG_CANDIDATE_MAX);
+  }
+  return listUserTags(userId, TAG_CANDIDATE_MAX).then((rows) =>
+    rows.map((r) => r.name)
+  );
+}
 
 function buildBatchPrompt(items: BookmarkRowFull[]): string {
   const blocks = items.map((b) => {
@@ -110,60 +150,12 @@ function buildBatchPrompt(items: BookmarkRowFull[]): string {
   return `Classify and summarize each of these ${items.length} bookmarks.\n\n${blocks.join("\n\n---\n\n")}`;
 }
 
-function extractJson(text: string): string {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-  const candidate = fenced?.[1] ?? text;
-  // Support both object ({...}) and array ([...]) payloads.
-  const brace = candidate.indexOf("{");
-  const bracket = candidate.indexOf("[");
-  const starts = [brace, bracket].filter((i) => i !== -1);
-  if (starts.length === 0) return candidate.trim();
-  const start = Math.min(...starts);
-  const end =
-    start === brace
-      ? candidate.lastIndexOf("}")
-      : candidate.lastIndexOf("]");
-  if (end <= start) return candidate.trim();
-  return candidate.slice(start, end + 1);
-}
-
-// Salvage a batch payload truncated mid-JSON (finishReason=length): strip the
-// dangling incomplete entry and close the wrappers so the already-complete
-// entries survive, instead of losing the whole batch to a JSON.parse error.
-function repairTruncatedJson(text: string): string | null {
-  const endsWithClose = text.trimEnd().endsWith("}");
-  const suffixes = endsWithClose
-    ? ["]}", "", "]}]", '"]}']
-    : ["]}]", "]}", '"]}', '"]}'];
-  for (const suffix of suffixes) {
-    try {
-      JSON.parse(text + suffix);
-      return text + suffix;
-    } catch {
-      // try the next closing variant
-    }
-  }
-  // Drop the dangling partial entry and retry once.
-  const cut = Math.max(text.lastIndexOf("},"), text.lastIndexOf("}\n"));
-  if (cut > 0) {
-    const trimmed = text.slice(0, cut + 1);
-    for (const suffix of ["]}", '"]}']) {
-      try {
-        JSON.parse(trimmed + suffix);
-        return trimmed + suffix;
-      } catch {
-        // try the next closing variant
-      }
-    }
-  }
-  return null;
-}
-
 // Tag a whole chunk in ONE request; returns results keyed by tweetId so the
 // caller can verify which bookmarks actually got tagged.
 async function tagChunk(
   items: BookmarkRowFull[],
-  modelId: string
+  modelId: string,
+  allowedTags: string[]
 ): Promise<Map<string, TagResult> | null> {
   const startedAt = Date.now();
   console.log(
@@ -176,7 +168,7 @@ async function tagChunk(
     acquireAiSlot().then(() =>
       generateText({
         model: openrouter.chat(modelId),
-        system: BATCH_TAG_SYSTEM_PROMPT,
+        system: `${BATCH_TAG_SYSTEM_PROMPT} ${tagRuleSnippet(allowedTags)}`,
         prompt: buildBatchPrompt(items),
         temperature: 0.2,
         // A full chunk needs ~150 tokens per entry; 2500 truncated mid-array.
@@ -239,7 +231,8 @@ async function tagChunk(
 // instead of relying on provider-side structured output.
 async function tagBookmark(
   bookmark: typeof bookmarks.$inferSelect,
-  modelId: string
+  modelId: string,
+  allowedTags: string[]
 ): Promise<TagResult | null> {
   const startedAt = Date.now();
   console.log(`${LOG} tagging tweet ${bookmark.tweetId} via ${modelId}`);
@@ -250,7 +243,7 @@ async function tagBookmark(
     acquireAiSlot().then(() =>
       generateText({
         model: openrouter.chat(modelId),
-        system: TAG_SYSTEM_PROMPT,
+        system: `${TAG_SYSTEM_PROMPT} ${tagRuleSnippet(allowedTags)}`,
         prompt: buildTagPrompt(bookmark),
         // Shared-pool 429s won't recover within retries; fail fast and let the
         // caller fall back to another model.
@@ -332,6 +325,15 @@ async function processRows(
 
   let processed = 0;
   const chunks = chunk(rows, CHUNK_SIZE);
+  // The model may only reuse tags already present in this user's collection;
+  // loaded once per run and enforced again post-parse below.
+  const allowedTags = await loadAllowedTags(rows[0]?.userId ?? "");
+  const allowedSet = new Set(allowedTags);
+  const filterTags = (tags: string[]) =>
+    tags.filter((t) => allowedSet.has(t)).slice(0, 3);
+  console.log(
+    `${LOG} allowed subTag pool: ${allowedTags.length} tags${allowedTags.length ? ` (${allowedTags.slice(0, 10).join(", ")}${allowedTags.length > 10 ? ", ..." : ""})` : ""}`
+  );
   for (const [chunkIndex, currentChunk] of chunks.entries()) {
     console.log(
       `${LOG} chunk ${chunkIndex + 1}/${chunks.length}: ${currentChunk.length} bookmarks`
@@ -370,18 +372,21 @@ async function processRows(
     let missingItems = [...currentChunk];
     for (const modelId of candidates) {
       if (missingItems.length === 0) break;
-      const batch = await tagChunk(missingItems, modelId).catch((error) => {
-        console.warn(
-          `${LOG} batch on ${modelId} failed: ${getErrorMessage(error)}`
-        );
-        return null;
-      });
+      const batch = await tagChunk(missingItems, modelId, allowedTags).catch(
+        (error) => {
+          console.warn(
+            `${LOG} batch on ${modelId} failed: ${getErrorMessage(error)}`
+          );
+          return null;
+        }
+      );
       if (!batch) continue;
       const stillMissing: typeof missingItems = [];
       for (const r of missingItems) {
         const tag = batch.get(r.tweetId);
         if (tag) {
-          tagged.set(r.tweetId, tag);
+          // Hard-enforce the whitelist: drop anything not in the user's pool.
+          tagged.set(r.tweetId, { ...tag, subTags: filterTags(tag.subTags) });
           console.log(
             `${LOG} tweet ${r.tweetId} tagged -> category=${tag.category} subTags=[${tag.subTags.join(",")}] summary="${tag.summary.slice(0, 60)}"`
           );
@@ -403,13 +408,13 @@ async function processRows(
         TAG_CONCURRENCY,
         async (r) => {
           for (const [i, modelId] of candidates.entries()) {
-            const tag = await tagBookmark(r, modelId).catch((error) => {
+            const tag = await tagBookmark(r, modelId, allowedTags).catch((error) => {
               console.warn(
                 `${LOG} tagging ${r.tweetId} failed on ${modelId}: ${getErrorMessage(error)}`
               );
               return null;
             });
-            if (tag) return tag;
+            if (tag) return { ...tag, subTags: filterTags(tag.subTags) };
             if (i < candidates.length - 1) {
               console.log(
                 `${LOG} retrying ${r.tweetId} on next candidate ${candidates[i + 1]}`
@@ -462,6 +467,12 @@ async function processRows(
         console.log(
           `${LOG} tweet ${r.tweetId} saved: category=${tag?.category ?? "kept"} summary=${tag ? "yes" : "kept"} embedding=${vector ? `${vector.length}-dim` : "skipped"} -> ready`
         );
+        if (tag) {
+          await applyTagDeltas(
+            r.userId,
+            tagDeltas((r.subTags as string[] | null) ?? [], tag.subTags)
+          );
+        }
         processed += 1;
       })
     );

@@ -1,0 +1,15 @@
+{
+  "title": "Digests",
+  "latest": "Latest",
+  "bookmarksCount": "{count} bookmarks",
+  "highlightsStat": "Highlights",
+  "bookmarksStat": "Bookmarks",
+  "yourHighlights": "Your highlights",
+  "alsoBookmarked": "Also bookmarked",
+  "readOnX": "Read on X",
+  "highlightCount": "{count} highlights",
+  "highlightCountOne": "1 highlight",
+  "emptyTitle": "No digests yet",
+  "emptyDescription": "Your first weekly digest arrives on Friday — a summary of everything you bookmarked this week, highlights first.",
+  "loading": "Loading digest..."
+}

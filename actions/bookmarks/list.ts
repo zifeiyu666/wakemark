@@ -2,7 +2,15 @@
 
 import { ActionResult, actionResponse } from "@/lib/action-response";
 import { getSession } from "@/lib/auth/server";
-import { isBookmarkCategory } from "@/config/bookmark-categories";
+import {
+  isBookmarkCategory,
+  isTagColorId,
+} from "@/config/bookmark-categories";
+import {
+  applyTagDeltas,
+  listUserTags,
+  tagDeltas,
+} from "@/lib/bookmarks/tag-counts";
 import { db } from "@/lib/db";
 import { bookmarks } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
@@ -18,6 +26,7 @@ const FilterSchema = z.object({
   sort: z.enum(["newest", "oldest"]).default("newest"),
   search: z.string().optional(),
   categories: z.array(z.string()).default([]),
+  listId: z.string().uuid().optional(),
 });
 
 export type BookmarkFilters = z.infer<typeof FilterSchema>;
@@ -77,6 +86,12 @@ function buildWhere(
         ilike(bookmarks.authorUsername, `%${params.search}%`),
         ilike(bookmarks.authorName, `%${params.search}%`)
       ) as SQL
+    );
+  }
+
+  if (params.listId) {
+    conditions.push(
+      sql`exists (select 1 from bookmark_list_items bli where bli.bookmark_id = ${bookmarks.id} and bli.list_id = ${params.listId})`
     );
   }
 
@@ -216,12 +231,14 @@ const TagUpdateSchema = z.object({
   id: z.string().uuid(),
   add: z.string().trim().min(1).max(30).optional(),
   remove: z.string().trim().min(1).max(30).optional(),
+  color: z.string().trim().max(20).optional(),
 });
 
 export async function updateBookmarkTags(params: {
   id: string;
   add?: string;
   remove?: string;
+  color?: string;
 }): Promise<ActionResult> {
   const session = await getSession();
   const user = session?.user;
@@ -259,9 +276,33 @@ export async function updateBookmarkTags(params: {
       .update(bookmarks)
       .set({ primaryCategory, subTags })
       .where(eq(bookmarks.id, row.id));
+    await applyTagDeltas(
+      user.id,
+      tagDeltas((row.subTags as string[] | null) ?? [], subTags),
+      parsed.add && parsed.color && isTagColorId(parsed.color)
+        ? new Map([[parsed.add, parsed.color]])
+        : undefined
+    );
     return actionResponse.success();
   } catch (error) {
     console.error("Error updating bookmark tags", error);
+    return actionResponse.error(getErrorMessage(error));
+  }
+}
+
+// Custom tags for the filter bar, most-used first (usage counters live in
+// bookmark_tags, maintained on every subTags write).
+export async function getBookmarkTags(): Promise<
+  ActionResult<{ tags: Array<{ name: string; color: string | null }> }>
+> {
+  const session = await getSession();
+  const user = session?.user;
+  if (!user) return actionResponse.unauthorized();
+
+  try {
+    return actionResponse.success({ tags: await listUserTags(user.id, 40) });
+  } catch (error) {
+    console.error("Error getting bookmark tags", error);
     return actionResponse.error(getErrorMessage(error));
   }
 }

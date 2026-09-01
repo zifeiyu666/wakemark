@@ -16,4 +16,9 @@ export const REDIS_RATE_LIMIT_CONFIGS = {
     maxRequests: 10,
     window: "1 d",
   },
+  askAi: {
+    prefix: `${LOWER_CASE_SITE_NAME}:rl:ask-ai`,
+    maxRequests: 30,
+    window: "1 d",
+  },
 };

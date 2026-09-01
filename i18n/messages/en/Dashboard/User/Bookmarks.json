@@ -34,6 +34,8 @@
     "unread": "Unread",
     "addTag": "Add tag",
     "customTagPlaceholder": "Custom tag…",
+    "create": "Create",
+    "cancel": "Cancel",
     "openTweet": "Open tweet",
     "processing": "AI processing…",
     "failed": "Processing failed",

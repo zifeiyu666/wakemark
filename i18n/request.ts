@@ -22,6 +22,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Settings: (await import(`./messages/${locale}/Dashboard/User/Settings.json`)).default,
       CreditHistory: (await import(`./messages/${locale}/Dashboard/User/CreditHistory.json`)).default,
       Bookmarks: (await import(`./messages/${locale}/Dashboard/User/Bookmarks.json`)).default,
+      Digests: (await import(`./messages/${locale}/Dashboard/User/Digests.json`)).default,
+      Lists: (await import(`./messages/${locale}/Dashboard/User/Lists.json`)).default,
+      AskAi: (await import(`./messages/${locale}/Dashboard/User/AskAi.json`)).default,
 
       // Dashboard - Admin
       Overview: (await import(`./messages/${locale}/Dashboard/Admin/Overview.json`)).default,

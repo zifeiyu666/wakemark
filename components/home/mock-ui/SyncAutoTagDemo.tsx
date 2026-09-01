@@ -172,8 +172,7 @@ export default function SyncAutoTagDemo() {
   });
 
   return (
-    <div className="flex w-full items-center justify-center rounded-md bg-muted/60 px-4 py-8 sm:px-8 sm:py-12">
-      <div className="w-full max-w-md overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="w-full overflow-hidden rounded-xl bg-card">
         {/* Header: collection name + ever-spinning sync indicator */}
         <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">
@@ -199,6 +198,5 @@ export default function SyncAutoTagDemo() {
           />
         ))}
       </div>
-    </div>
   );
 }

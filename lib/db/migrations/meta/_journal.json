@@ -197,6 +197,41 @@
       "when": 1787900850999,
       "tag": "0027_productive_groot",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1788139117720,
+      "tag": "0028_windy_major_mapleleaf",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1788144515819,
+      "tag": "0029_spicy_cerebro",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1788145452795,
+      "tag": "0030_messy_victor_mancha",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1788149129510,
+      "tag": "0031_digests_and_preferences",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1788157653612,
+      "tag": "0032_watery_johnny_blaze",
+      "breakpoints": true
     }
   ]
 }

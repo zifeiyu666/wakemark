@@ -2,6 +2,7 @@
 
 import { DynamicIcon } from "@/components/DynamicIcon";
 import { BookmarksSidebarMenu } from "@/components/bookmarks/BookmarksSidebarMenu";
+import { ListsSidebarMenu } from "@/components/bookmarks/ListsSidebarMenu";
 import { SidebarUserNav } from "@/components/header/SidebarUserNav";
 import {
   Sidebar,
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Link as I18nLink, usePathname } from "@/i18n/routing";
 import { authClient } from "@/lib/auth/auth-client";
+import { MailOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
@@ -35,6 +37,7 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const t = useTranslations("Login");
   const tHome = useTranslations("Home");
+  const tDigests = useTranslations("Digests");
 
   const isAdmin = user?.role === "admin";
 
@@ -83,6 +86,22 @@ export function DashboardSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <BookmarksSidebarMenu />
+              <ListsSidebarMenu />
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/digests")}
+                >
+                  <I18nLink
+                    href="/dashboard/digests"
+                    title={tDigests("title")}
+                    prefetch={false}
+                  >
+                    <MailOpen className="h-4 w-4" />
+                    {!isCollapsed && <span>{tDigests("title")}</span>}
+                  </I18nLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               {userMenus.map((menu) => (
                 <SidebarMenuItem key={menu.href}>
                   <SidebarMenuButton asChild isActive={isActive(menu.href)}>

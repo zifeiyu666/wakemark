@@ -12,6 +12,7 @@ import { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Settings from "./Setting";
+import DigestSection from "./DigestSection";
 import SubscriptionSection from "./SubscriptionSection";
 
 type User = typeof userSchema.$inferSelect;
@@ -66,6 +67,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-10">
       <Settings user={user} />
+      <DigestSection />
       <SubscriptionSection
         isMember={isMember}
         subscriptionProvider={subscriptionProvider}

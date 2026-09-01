@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/carousel";
 import SearchFilterDemo from "@/components/home/mock-ui/SearchFilterDemo";
 import SyncAutoTagDemo from "@/components/home/mock-ui/SyncAutoTagDemo";
+import ChatAiDemo from "@/components/home/mock-ui/ChatAiDemo";
+import DigestDemo from "@/components/home/mock-ui/DigestDemo";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -39,10 +41,10 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
   return (
     <div key={feature.title} className="w-full py-4">
       <div className=" mx-auto">
-        <div className="grid  px-8 py-4 md:py-8 grid-cols-1 gap-8 items-center lg:grid-cols-2">
+        <div className="flex flex-col gap-8 px-8 py-4 md:py-8 lg:flex-row lg:items-center lg:justify-between">
           <div
             className={cn(
-              "flex gap-10 flex-col",
+              "flex min-w-0 gap-10 flex-col lg:w-[45%]",
               feature.reverse && "lg:order-2"
             )}
           >
@@ -58,13 +60,13 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
               <div className="flex gap-2 flex-col">
                 <h3
                   className={cn(
-                    "text-3xl lg:text-5xl tracking-tighter max-w-xl text-left font-regular",
+                    "text-4xl lg:text-6xl tracking-tighter text-left font-regular",
                     feature.badge && "font-serif"
                   )}
                 >
                   {feature.title}
                 </h3>
-                <p className="text-lg leading-relaxed tracking-tight text-muted-foreground max-w-xl text-left">
+                <p className="text-xl leading-relaxed tracking-tight text-muted-foreground text-left">
                   {feature.description}
                 </p>
               </div>
@@ -88,7 +90,8 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
           </div>
           <div
             className={cn(
-              "w-full rounded-lg border p-2",
+              "w-full",
+              feature.mockUi ? "lg:w-[42%]" : "rounded-lg border p-2",
               feature.reverse && "lg:order-1"
             )}
           >
@@ -153,6 +156,23 @@ export default function Features() {
       description:
         "Full-text search across all your bookmarks. Filter by tag, sort by date or engagement, and find exactly what you're looking for without endless scrolling.",
       mockUi: <SearchFilterDemo />,
+    },
+    {
+      badge: "Chat AI",
+      badgeColor: "#d24b8f",
+      title: "Your bookmarks have answers",
+      description:
+        "Ask a question, get an instant answer pulled from your own saved tweets with links back to the original posts. No more digging through hundreds of bookmarks to find that one thread.",
+      mockUi: <ChatAiDemo />,
+    },
+    {
+      badge: "Email Digest",
+      badgeColor: "#ed9124",
+      reverse: true,
+      title: "A briefing in your inbox, not another app",
+      description:
+        "AI reads your bookmarks and distills them into a clean, topic-grouped email delivered daily or weekly. Catch up on 30 saved tweets in the time it takes to drink your coffee.",
+      mockUi: <DigestDemo />,
     },
     ...t.raw("items"),
   ];

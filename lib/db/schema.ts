@@ -621,3 +621,194 @@ export const bookmarks = pgTable(
     }
   }
 )
+
+// Per-user tag usage counters, maintained on every subTags write (AI tagging
+// and manual add/remove). Sources the AI-tagging whitelist and the filter
+// bar's custom tag chips without scanning bookmarks.sub_tags jsonb.
+export const bookmarkTags = pgTable(
+  'bookmark_tags',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar('name', { length: 60 }).notNull(),
+    usage: integer('usage').notNull().default(0),
+    // Palette id from TAG_COLORS (null = default neutral chip).
+    color: varchar('color', { length: 20 }),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => {
+    return {
+      userTagUnique: unique('bookmark_tags_user_id_name_unique').on(
+        table.userId,
+        table.name
+      ),
+      userUsageIdx: index('idx_bookmark_tags_user_usage').on(
+        table.userId,
+        table.usage
+      ),
+    }
+  }
+)
+
+// User-curated bookmark collections. Public lists are shareable via
+// /u/{x-username}/{slug}; the slug is regenerated on every visibility flip so
+// previously shared links stop resolving once the list goes private.
+export const bookmarkLists = pgTable(
+  'bookmark_lists',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    name: varchar('name', { length: 60 }).notNull(),
+    slug: text('slug').notNull(),
+    isPublic: boolean('is_public').default(false).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => {
+    return {
+      userSlugUnique: unique('bookmark_lists_user_id_slug_unique').on(
+        table.userId,
+        table.slug
+      ),
+      userIdx: index('idx_bookmark_lists_user_id').on(table.userId),
+    }
+  }
+)
+
+export const bookmarkListItems = pgTable(
+  'bookmark_list_items',
+  {
+    listId: uuid('list_id')
+      .references(() => bookmarkLists.id, { onDelete: 'cascade' })
+      .notNull(),
+    bookmarkId: uuid('bookmark_id')
+      .references(() => bookmarks.id, { onDelete: 'cascade' })
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({ columns: [table.listId, table.bookmarkId] }),
+      bookmarkIdx: index('idx_bookmark_list_items_bookmark_id').on(
+        table.bookmarkId
+      ),
+    }
+  }
+)
+
+export const digestStatusEnum = pgEnum('digest_status', [
+  'generating',
+  'ready',
+  'failed',
+])
+export type DigestStatus = (typeof digestStatusEnum.enumValues)[number]
+
+export const digestEmailStatusEnum = pgEnum('digest_email_status', [
+  'pending',
+  'sent',
+  'failed',
+  'skipped',
+])
+export type DigestEmailStatus =
+  (typeof digestEmailStatusEnum.enumValues)[number]
+
+// Weekly bookmark summary, generated on each user's local Friday by the
+// hourly digest cron. weekKey is the local Friday date (YYYY-MM-DD) in the
+// user's timezone; the unique (userId, weekKey) keeps hourly ticks idempotent
+// while still allowing a same-Friday catch-up send after downtime.
+export const digests = pgTable(
+  'digests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    weekKey: varchar('week_key', { length: 10 }).notNull(),
+    periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+    periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
+    overview: text('overview').notNull().default(''),
+    highlightCount: integer('highlight_count').notNull().default(0),
+    bookmarkCount: integer('bookmark_count').notNull().default(0),
+    // Structured render payload: { highlightGroups, alsoBookmarked }.
+    content: jsonb('content').notNull().default('{}'),
+    status: digestStatusEnum('status').default('generating').notNull(),
+    emailStatus: digestEmailStatusEnum('email_status')
+      .default('pending')
+      .notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      userWeekUnique: unique('digests_user_id_week_key_unique').on(
+        table.userId,
+        table.weekKey
+      ),
+      userCreatedIdx: index('idx_digests_user_created').on(
+        table.userId,
+        table.createdAt
+      ),
+    }
+  }
+)
+
+// Per-user digest delivery preferences. timeZone (IANA name) is captured
+// implicitly from the browser and may be overridden in Settings; null falls
+// back to UTC so every connected user eventually gets a digest.
+export const userPreferences = pgTable('user_preferences', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  timeZone: text('time_zone'),
+  digestHour: integer('digest_hour').notNull().default(9),
+  digestEnabled: boolean('digest_enabled').notNull().default(true),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .defaultNow()
+    .notNull()
+    .$onUpdate(() => new Date()),
+})
+
+// Ask AI drawer chat transcript. sessionId groups messages per "New chat";
+// only plain text is stored (tool calls stay ephemeral).
+export const askAiMessages = pgTable(
+  'ask_ai_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull(),
+    sessionId: uuid('session_id').notNull(),
+    role: varchar('role', { length: 20 }).notNull(), // 'user' | 'assistant'
+    content: text('content').notNull(),
+    modelId: varchar('model_id', { length: 100 }),
+    promptTokens: integer('prompt_tokens'),
+    completionTokens: integer('completion_tokens'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => {
+    return {
+      userSessionIdx: index('idx_ask_ai_messages_user_session').on(
+        table.userId,
+        table.sessionId,
+        table.createdAt
+      ),
+    }
+  }
+)

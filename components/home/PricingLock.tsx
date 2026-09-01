@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import FeatureBadge from "@/components/shared/FeatureBadge";
 import { Link as I18nLink } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, Medal, ShieldCheck } from "lucide-react";
@@ -295,19 +296,20 @@ export default function PricingLock() {
   const included = t.raw("included") as string[];
 
   return (
-    <section id="pricing-lock" className="w-full bg-muted">
+    <section id="pricing-lock" className="w-full">
       <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 py-16 sm:px-6 md:gap-20 md:py-24 lg:px-8">
-        <header className="flex flex-col items-center gap-6 text-center">
-          <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-            {t("eyebrow")}
-          </p>
-          <h2 className="max-w-3xl font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-            {t("title")}
+        <header className="text-center">
+          <FeatureBadge
+            label={t("eyebrow")}
+            text={t("note")}
+            className="mb-8"
+          />
+          <h2 className="text-center z-10 text-lg md:text-5xl font-sans font-semibold mb-4">
+            <span className="title-gradient">{t("title")}</span>
           </h2>
-          <p className="max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
             {t("description")}
           </p>
-          <p className="text-sm text-muted-foreground md:text-base">{t("note")}</p>
         </header>
 
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-8">

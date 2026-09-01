@@ -1,0 +1,11 @@
+{
+  "trigger": "Ask AI",
+  "title": "Ask your bookmarks",
+  "newChat": "New chat",
+  "placeholder": "Ask a question...",
+  "searching": "Searching your bookmarks…",
+  "emptyTitle": "Ask anything about your bookmarks",
+  "emptyDescription": "Counts, lists, or content questions — answers come with source links.",
+  "error": "Something went wrong. Please try again.",
+  "rateLimited": "Too many questions today. Please try again tomorrow."
+}

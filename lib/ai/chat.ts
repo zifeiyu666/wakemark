@@ -1,5 +1,5 @@
 import { getLanguageModel } from "@/config/ai-providers";
-import { streamText } from "ai";
+import { streamText, type StopCondition, type Tool } from "ai";
 
 interface ChatOptions {
   provider: string;
@@ -7,6 +7,15 @@ interface ChatOptions {
   messages?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
   prompt?: string;
   system?: string;
+  /** Optional tool set for agentic (tool-calling) chats. */
+  tools?: Record<string, Tool>;
+  /** Optional stop condition, e.g. stepCountIs(n) for multi-step tool loops. */
+  stopWhen?: StopCondition<any>;
+  /** Optional completion hook, e.g. persist the assistant reply. */
+  onFinish?: (result: {
+    text: string;
+    usage?: { inputTokens?: number; outputTokens?: number };
+  }) => void | Promise<void>;
 }
 
 /**
@@ -24,9 +33,15 @@ export function streamChat(options: ChatOptions) {
     model,
     system: options.system,
     messages,
-    onFinish: ({ text }) => {
-      console.log(text);
-      // you can insert data to database here
+    tools: options.tools,
+    stopWhen: options.stopWhen,
+    onFinish: async ({ text, usage }) => {
+      if (options.onFinish) {
+        await options.onFinish({ text, usage });
+      } else {
+        console.log(text);
+        // you can insert data to database here
+      }
     },
   });
 }

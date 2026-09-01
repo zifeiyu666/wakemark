@@ -96,8 +96,7 @@ export default function SearchFilterDemo() {
   const exiting = phase === "exit";
 
   return (
-    <div className="flex w-full items-center justify-center rounded-md bg-muted/60 px-4 py-8 sm:px-8 sm:py-12">
-      <div className="w-full max-w-md overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="w-full overflow-hidden rounded-xl bg-card">
         {/* Search bar + sort + filter chips */}
         <div className="border-b bg-muted/40 px-4 py-4 sm:px-5">
           <div className="flex items-center gap-3">
@@ -208,6 +207,5 @@ export default function SearchFilterDemo() {
           )}
         </div>
       </div>
-    </div>
   );
 }
