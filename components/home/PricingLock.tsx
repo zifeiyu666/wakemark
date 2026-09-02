@@ -144,12 +144,12 @@ const PriceChart = ({ tiers, chart }: { tiers: Tier[]; chart: ChartCopy }) => {
     PLOT.bottom -
     ((price - PLOT.min) / (PLOT.max - PLOT.min)) * (PLOT.bottom - PLOT.top);
 
-  const activeIndex = Math.max(
-    tiers.findIndex((tier) => tier.status === "active"),
-    0
-  );
-  const activeX = xAt(activeIndex);
-  const activeY = yAt(prices[activeIndex]);
+  // Locked-price marker anchors at the first tier (Founders)
+  const lockedIndex = 0;
+  const activeX = xAt(lockedIndex);
+  const activeY = yAt(prices[lockedIndex]);
+  // Keep the 166-wide label pill inside the viewBox when anchored at the left edge
+  const labelX = Math.min(Math.max(activeX, 83), 760 - 83);
   const linePath = prices
     .map((price, i) => `${i === 0 ? "M" : "L"}${xAt(i)},${yAt(price)}`)
     .join(" ");
@@ -223,7 +223,7 @@ const PriceChart = ({ tiers, chart }: { tiers: Tier[]; chart: ChartCopy }) => {
       />
 
       {prices.map((price, i) => {
-        if (i === activeIndex) return null;
+        if (i === lockedIndex) return null;
         return tiers[i].status === "upnext" ? (
           <circle
             key={tiers[i].id}
@@ -252,7 +252,7 @@ const PriceChart = ({ tiers, chart }: { tiers: Tier[]; chart: ChartCopy }) => {
 
       <g>
         <rect
-          x={activeX - 83}
+          x={labelX - 83}
           y={activeY - 58}
           width="166"
           height="32"
@@ -260,7 +260,7 @@ const PriceChart = ({ tiers, chart }: { tiers: Tier[]; chart: ChartCopy }) => {
           className="fill-background"
         />
         <text
-          x={activeX}
+          x={labelX}
           y={activeY - 42}
           textAnchor="middle"
           dominantBaseline="central"
@@ -296,7 +296,7 @@ export default function PricingLock() {
   const included = t.raw("included") as string[];
 
   return (
-    <section id="pricing-lock" className="w-full">
+    <section id="pricing" className="w-full">
       <div className="mx-auto flex max-w-7xl flex-col gap-16 px-4 py-16 sm:px-6 md:gap-20 md:py-24 lg:px-8">
         <header className="text-center">
           <FeatureBadge

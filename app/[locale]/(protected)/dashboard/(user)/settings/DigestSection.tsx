@@ -4,7 +4,6 @@ import {
   getDigestPreferences,
   updateDigestPreferences,
 } from "@/actions/digests";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -14,10 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import SettingsCard from "./SettingsCard";
 
 // Curated IANA subset for the Settings select; the browser-detected zone and
 // the stored zone are always merged in so the current value stays selectable.
@@ -108,8 +107,18 @@ export default function DigestSection() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-xl font-semibold mb-4">{t("digest.title")}</h2>
-      <div className="rounded-lg border p-6 space-y-6">
+      <SettingsCard
+        title={t("digest.title")}
+        description={t("digest.description")}
+        footerHint={t("digest.footerHint")}
+        submitLabel={t("digest.saveButton")}
+        submitting={saving}
+        submitDisabled={!loaded}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSave();
+        }}
+      >
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <Label>{t("digest.enabledLabel")}</Label>
@@ -165,12 +174,7 @@ export default function DigestSection() {
             </p>
           </div>
         </div>
-
-        <Button onClick={handleSave} disabled={saving || !loaded}>
-          {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-          {t("digest.saveButton")}
-        </Button>
-      </div>
+      </SettingsCard>
     </div>
   );
 }

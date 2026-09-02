@@ -50,6 +50,7 @@ export default function AskAiWidget() {
       {!open && (
         <button
           type="button"
+          data-onboarding-target="askAi"
           onClick={() => setOpen(true)}
           aria-label={t("trigger")}
           className="group fixed right-6 bottom-6 z-50 flex h-14 items-center rounded-full bg-primary px-[15px] text-primary-foreground shadow-lg transition-shadow hover:shadow-xl"

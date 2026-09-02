@@ -41,18 +41,16 @@ export function DashboardSidebar() {
 
   const isAdmin = user?.role === "admin";
 
-  // Hide personal order/credit entries for admins (covered by admin menus)
-  const hiddenAdminUserMenuHrefs = [
+  // Hide personal order/credit entries from the sidebar
+  const hiddenUserMenuHrefs = [
     "/dashboard/my-orders",
     "/dashboard/credit-history",
   ];
 
   const allUserMenus: Menu[] = t.raw("UserMenus");
-  const userMenus = isAdmin
-    ? allUserMenus.filter(
-        (menu) => !hiddenAdminUserMenuHrefs.includes(menu.href)
-      )
-    : allUserMenus;
+  const userMenus = allUserMenus.filter(
+    (menu) => !hiddenUserMenuHrefs.includes(menu.href)
+  );
   const adminMenus: Menu[] = t.raw("AdminMenus");
 
   const isActive = (href: string) => pathname === href;
@@ -87,7 +85,7 @@ export function DashboardSidebar() {
             <SidebarMenu>
               <BookmarksSidebarMenu />
               <ListsSidebarMenu />
-              <SidebarMenuItem>
+              <SidebarMenuItem data-onboarding-target="digests">
                 <SidebarMenuButton
                   asChild
                   isActive={isActive("/dashboard/digests")}
@@ -102,25 +100,6 @@ export function DashboardSidebar() {
                   </I18nLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {userMenus.map((menu) => (
-                <SidebarMenuItem key={menu.href}>
-                  <SidebarMenuButton asChild isActive={isActive(menu.href)}>
-                    <I18nLink
-                      href={menu.href}
-                      title={menu.name}
-                      prefetch={true}
-                      target={menu.target}
-                    >
-                      {menu.icon ? (
-                        <DynamicIcon name={menu.icon} className="h-4 w-4" />
-                      ) : (
-                        <span>{menu.name.slice(0, 1)}</span>
-                      )}
-                      {!isCollapsed && <span>{menu.name}</span>}
-                    </I18nLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -154,6 +133,27 @@ export function DashboardSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <SidebarMenu>
+          {userMenus.map((menu) => (
+            <SidebarMenuItem key={menu.href}>
+              <SidebarMenuButton asChild isActive={isActive(menu.href)}>
+                <I18nLink
+                  href={menu.href}
+                  title={menu.name}
+                  prefetch={true}
+                  target={menu.target}
+                >
+                  {menu.icon ? (
+                    <DynamicIcon name={menu.icon} className="h-4 w-4" />
+                  ) : (
+                    <span>{menu.name.slice(0, 1)}</span>
+                  )}
+                  {!isCollapsed && <span>{menu.name}</span>}
+                </I18nLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
         <SidebarUserNav user={user} />
       </SidebarFooter>
     </Sidebar>

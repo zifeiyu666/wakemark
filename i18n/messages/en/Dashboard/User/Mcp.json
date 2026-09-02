@@ -1,0 +1,63 @@
+{
+  "title": "MCP",
+  "description": "Connect WakeMark to AI agents with the Model Context Protocol.",
+  "subtitle": "Let agents like Claude, ChatGPT and Cursor search, read and organize your X bookmarks through a secure MCP server.",
+  "docsHint": "Step-by-step setup guide and tool reference:",
+  "docsLink": "Read the MCP guide",
+  "endpoint": {
+    "title": "Server URL",
+    "description": "Point your MCP client at this Streamable HTTP endpoint and authenticate with an API key below.",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "keys": {
+    "title": "API Keys",
+    "description": "Each key grants full access to your WakeMark data via MCP. Treat keys like passwords.",
+    "empty": "No API keys yet. Create one to connect your first MCP client.",
+    "create": "Create API key",
+    "createTitle": "Create a new API key",
+    "createDescription": "Give the key a name so you can tell clients apart later.",
+    "nameLabel": "Key name",
+    "namePlaceholder": "e.g. Claude Desktop",
+    "expiresLabel": "Expiration",
+    "expiresNever": "Never expires",
+    "expiresDays": "{days} days",
+    "createSubmit": "Create key",
+    "creating": "Creating...",
+    "createdTitle": "Your new API key",
+    "createdDescription": "Copy the key now. For security it will not be shown again.",
+    "copyKey": "Copy key",
+    "done": "Done",
+    "revoke": "Revoke",
+    "revokeConfirmTitle": "Revoke this API key?",
+    "revokeConfirmDescription": "Clients using this key will immediately lose access. This cannot be undone.",
+    "cancel": "Cancel",
+    "columnName": "Name",
+    "columnKey": "Key",
+    "columnCreated": "Created",
+    "columnLastUsed": "Last used",
+    "columnExpires": "Expires",
+    "never": "Never",
+    "neverUsed": "Never used",
+    "toastCreatedTitle": "API key created",
+    "toastRevokedTitle": "API key revoked",
+    "toastErrorTitle": "Something went wrong"
+  },
+  "clients": {
+    "title": "Connect an MCP client",
+    "description": "Copy the config for your client. The placeholder key is replaced automatically once you create a key above.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "claudeDesktop": "Claude Desktop",
+    "claudeCode": "Claude Code",
+    "cursor": "Cursor",
+    "chatgpt": "ChatGPT",
+    "vscode": "VS Code",
+    "chatgptSteps": "ChatGPT has no config file: open Settings > Connectors > Advanced, add a custom connector with the Server URL above, and paste your API key when asked for authentication.",
+    "claudeCodeHint": "Run this command in your terminal."
+  },
+  "tools": {
+    "title": "Available tools",
+    "description": "What agents can do once connected."
+  }
+}

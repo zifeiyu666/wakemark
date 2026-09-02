@@ -1,0 +1,74 @@
+{
+  "title": "WakeMark MCP",
+  "description": "Connect WakeMark to Claude, ChatGPT, Cursor and any MCP-compatible agent. Setup guide, client configs and tool reference.",
+  "hero": {
+    "eyebrow": "Developer docs",
+    "title": "WakeMark MCP Server",
+    "subtitle": "Give AI agents secure access to your X bookmarks through the Model Context Protocol. Search, read, organize and semantically query your bookmarks from Claude, ChatGPT, Cursor and more."
+  },
+  "overview": {
+    "title": "Overview",
+    "p1": "WakeMark exposes a remote MCP server over Streamable HTTP. Instead of running anything locally, your MCP client connects straight to your WakeMark account using an API key.",
+    "points": {
+      "endpoint": "Endpoint",
+      "transport": "Transport: Streamable HTTP (stateless, request/response)",
+      "auth": "Authentication: API key via Authorization header (Bearer token)",
+      "scope": "Scope: your bookmarks, tags, Lists and read state — nothing else"
+    }
+  },
+  "quickstart": {
+    "title": "Quickstart",
+    "step1Title": "Create an API key",
+    "step1Body": "Open Dashboard > MCP and create a key. Copy it immediately — it is only shown once.",
+    "step1Link": "Go to the MCP dashboard",
+    "step2Title": "Add the server to your client",
+    "step2Body": "Paste the config for your client from the section below, replacing the placeholder with your key.",
+    "step3Title": "Ask your agent",
+    "step3Body": "Try: \"What did I bookmark about design systems this month?\" or \"Summarize my unread bookmarks.\""
+  },
+  "clients": {
+    "title": "Installation by client",
+    "claudeDesktopTitle": "Claude Desktop",
+    "claudeDesktopBody": "Open Settings > Developer > Edit Config, then add this to claude_desktop_config.json:",
+    "claudeCodeTitle": "Claude Code",
+    "claudeCodeBody": "Run this in your terminal:",
+    "cursorTitle": "Cursor",
+    "cursorBody": "Open Settings > MCP > Add new global MCP server, or add this to your project's .cursor/mcp.json:",
+    "chatgptTitle": "ChatGPT",
+    "chatgptBody": "Open Settings > Connectors > Advanced and add a custom connector. Use the server URL above; when asked for authentication, paste your API key.",
+    "vscodeTitle": "VS Code (GitHub Copilot)",
+    "vscodeBody": "Add this to .vscode/mcp.json in your workspace:",
+    "otherTitle": "Any other MCP client",
+    "otherBody": "Any client that supports remote Streamable HTTP MCP servers works: point it at the server URL and set the Authorization header to Bearer plus your key."
+  },
+  "tools": {
+    "title": "Tool reference",
+    "intro": "Tools exposed to connected agents:",
+    "colName": "Tool",
+    "colDescription": "Description"
+  },
+  "limits": {
+    "title": "Rate limits & quotas",
+    "body": "Each API key allows 120 requests per minute. When the limit is reached, requests are rejected with a rate-limit error until the window resets. ask_bookmarks additionally shares your account's AI usage limits."
+  },
+  "security": {
+    "title": "Security notes",
+    "p1": "An API key grants full MCP access to your WakeMark data. Never commit keys to a repository or share them publicly.",
+    "points": {
+      "revoke": "Revoke a compromised key immediately from Dashboard > MCP — access stops instantly.",
+      "expiry": "Prefer keys with an expiration date for short-lived experiments.",
+      "storage": "Keys are stored hashed; the plaintext value is shown exactly once at creation time."
+    }
+  },
+  "faq": {
+    "title": "Troubleshooting",
+    "q1": "The client reports 401 Unauthorized",
+    "a1": "Check that the Authorization header is exactly 'Bearer ' followed by the full key (wkm_...). Keys are shown only once; if you lost it, revoke it and create a new one.",
+    "q2": "Requests fail with a rate-limit error",
+    "a2": "You exceeded 120 requests per minute for this key. Wait for the window to reset, or reduce tool-call frequency in your agent.",
+    "q3": "How do I verify the connection works?",
+    "a3": "Use the official MCP Inspector:",
+    "q4": "The agent sees no bookmarks",
+    "a4": "Bookmarks come from your connected X account. Make sure X sync is set up in the dashboard and that at least one sync has completed."
+  }
+}

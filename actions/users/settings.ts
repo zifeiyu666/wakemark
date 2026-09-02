@@ -43,10 +43,20 @@ export async function updateUserSettingsAction({
       namespace: "Settings",
     });
 
-    const fullName = formData.get("fullName") as string;
+    const fullName = formData.get("fullName") as string | null;
     const avatar = formData.get("avatar") as File | null;
 
-    if (!fullName || !isValidFullName(fullName.trim()) || fullName.trim().length > FULL_NAME_MAX_LENGTH) {
+    // Supports partial updates: clients may submit only one of the fields
+    // (e.g. the name card or the avatar card on the settings page).
+    if (fullName === null && !avatar) {
+      return actionResponse.badRequest(t("toast.updateErrorDescription"));
+    }
+
+    if (
+      fullName !== null &&
+      (!isValidFullName(fullName.trim()) ||
+        fullName.trim().length > FULL_NAME_MAX_LENGTH)
+    ) {
       return actionResponse.badRequest(t("toast.errorInvalidFullName"));
     }
 
@@ -100,12 +110,13 @@ export async function updateUserSettingsAction({
     }
 
     try {
+      const updates: { name?: string; image?: string | null } = {};
+      if (fullName !== null) updates.name = fullName.trim();
+      if (avatarUrl) updates.image = avatarUrl;
+
       await db
         .update(userSchema)
-        .set({
-          name: fullName.trim(),
-          image: avatarUrl || authUser.image || null,
-        })
+        .set(updates)
         .where(eq(userSchema.id, authUser.id));
     } catch (updateUserError) {
       console.error("Update user profile error:", updateUserError);

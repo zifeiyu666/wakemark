@@ -1,0 +1,17 @@
+{
+  "title": "Add your email address",
+  "description": "You signed in with X, which didn't share your email. Add one so we can send you weekly digests and important account updates.",
+  "label": "Email address",
+  "placeholder": "name@example.com",
+  "hint": "We'll send a verification link to this address.",
+  "submitButton": "Save & Verify",
+  "submittingButton": "Saving...",
+  "skipButton": "Maybe later",
+  "toast": {
+    "successTitle": "Verification email sent",
+    "successDescription": "Check your inbox and click the link to verify your email.",
+    "errorTitle": "Could not save email",
+    "invalidEmailDescription": "Please enter a valid email address.",
+    "takenDescription": "This email is already used by another account."
+  }
+}

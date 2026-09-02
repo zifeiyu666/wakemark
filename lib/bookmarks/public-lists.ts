@@ -80,7 +80,8 @@ export async function loadPublicList(
     .from(bookmarkListItems)
     .innerJoin(bookmarks, eq(bookmarks.id, bookmarkListItems.bookmarkId))
     .where(eq(bookmarkListItems.listId, list.id))
-    .orderBy(desc(bookmarks.syncedAt))
+    // Tie-break by snowflake tweet id: same-batch rows share syncedAt.
+    .orderBy(desc(bookmarks.syncedAt), desc(bookmarks.tweetId))
     .limit(200);
 
   return {

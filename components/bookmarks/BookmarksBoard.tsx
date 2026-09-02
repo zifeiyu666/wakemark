@@ -35,6 +35,8 @@ import {
 } from "@/config/bookmark-categories";
 import { cn } from "@/lib/utils";
 import { publicListUrl } from "@/lib/url";
+import { DEFAULT_LOCALE } from "@/i18n/routing";
+import { authClient } from "@/lib/auth/auth-client";
 import {
   RefreshCw,
   Search,
@@ -45,7 +47,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
@@ -73,6 +75,7 @@ export function BookmarksBoard({
 }) {
   const t = useTranslations("Bookmarks");
   const tLists = useTranslations("Lists");
+  const locale = useLocale();
   const { mutate: globalMutate } = useSWRConfig();
   const isListMode = !!list;
   const [listMeta, setListMeta] = useState<BookmarkListRow | null>(list ?? null);
@@ -211,7 +214,14 @@ export function BookmarksBoard({
   // flow (same entry as the "Sync with X" button).
   const startReconnect = () => {
     toast.error(t("syncBanner.authError"));
-    window.setTimeout(() => window.location.assign("/api/x/connect"), 800);
+    const prefix = locale === DEFAULT_LOCALE ? "" : `/${locale}`;
+    window.setTimeout(() => {
+      authClient.linkSocial({
+        provider: "twitter",
+        callbackURL: `${prefix}/dashboard/bookmarks`,
+        errorCallbackURL: `${prefix}/dashboard/bookmarks?error=link-failed`,
+      });
+    }, 800);
   };
 
   const runSync = async () => {
@@ -340,7 +350,7 @@ export function BookmarksBoard({
   return (
     <div className="space-y-4">
       {/* title */}
-      <div className="flex items-baseline gap-2">
+      <div data-onboarding-target="sync" className="flex items-baseline gap-2">
         <h1 className="text-2xl font-semibold">
           {isListMode
             ? listMeta?.name
@@ -378,7 +388,7 @@ export function BookmarksBoard({
       ) : (
         <>
           {/* toolbar */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div data-onboarding-target="find" className="flex flex-wrap items-center gap-2">
             <Select
               value={sort}
               onValueChange={(value) => setSort(value as "newest" | "oldest")}
@@ -451,7 +461,7 @@ export function BookmarksBoard({
           </div>
 
           {/* category filter */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div data-onboarding-target="find" className="flex flex-wrap items-center gap-2">
             {BOOKMARK_CATEGORIES.map((category) => {
               const active = categories.includes(category);
               return (

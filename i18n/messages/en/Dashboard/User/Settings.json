@@ -2,13 +2,19 @@
   "title": "Settings",
   "description": "Manage your account settings and profile information.",
   "form": {
+    "saveButton": "Save",
     "emailLabel": "Email",
+    "emailDescription": "This is the email address associated with your account. Sign-in links and digest emails are sent here.",
+    "emailPlaceholder": "name@example.com",
+    "emailHint": "Changing your email sends a verification link to the new address.",
     "fullNameLabel": "Full Name",
+    "fullNameDescription": "This is your display name within WakeMark. For example, your real name or a nickname.",
     "fullNamePlaceholder": "Enter your full name",
+    "fullNameHint": "Please use {maxLength} characters at maximum.",
     "avatarLabel": "Avatar",
+    "avatarDescription": "This is your profile picture, shown next to your name across WakeMark. Upload a custom avatar from your files.",
     "avatarHint": "Max file size: {maxSizeInMB} MB. Allowed types: {allowedTypes}.",
-    "updateButton": "Update Settings",
-    "updatingButton": "Updating..."
+    "avatarFooterHint": "An avatar is optional but strongly recommended."
   },
   "toast": {
     "fullNameLengthError": "Full name must be less than {maxLength} characters",
@@ -26,10 +32,14 @@
     "errorDeleteOldAvatar": "Failed to delete old avatar.",
     "errorUploadAvatar": "Failed to upload avatar.",
     "errorUpdateAuthUser": "Failed to update auth user.",
-    "errorUpdateUserProfile": "Failed to update user profile."
+    "errorUpdateUserProfile": "Failed to update user profile.",
+    "emailInvalid": "Please enter a valid email address.",
+    "emailSentTitle": "Verification email sent",
+    "emailSentDescription": "Check your inbox and click the link to verify your new email."
   },
   "digest": {
     "title": "Weekly digest",
+    "description": "Control when and where your weekly bookmark summary arrives.",
     "enabledLabel": "Email me a weekly digest",
     "enabledHint": "A summary of your bookmarks arrives every Friday in your local time zone.",
     "timeZoneLabel": "Time zone",
@@ -38,7 +48,8 @@
     "hourLabel": "Delivery hour",
     "hourOption": "{hour}:00 on Friday",
     "hourHint": "Local time, every Friday.",
-    "saveButton": "Save digest settings",
+    "saveButton": "Save",
+    "footerHint": "Changes apply from the next scheduled digest.",
     "toast": {
       "saveSuccessTitle": "Digest settings saved",
       "saveSuccessDescription": "Your weekly digest will follow the new schedule.",
@@ -48,6 +59,7 @@
   },
   "subscription": {
     "title": "Subscription",
+    "description": "Manage your plan, billing and payment details.",
     "manageStripeButton": "Manage Subscription (Stripe)",
     "manageCreemButton": "Manage Subscription (Creem)",
     "loadingButton": "Loading...",
@@ -55,6 +67,7 @@
     "creemPortalHint": "You will be redirected to manage your subscription details.",
     "portalUnavailable": "Unable to load subscription management portal.",
     "notSubscribed": "You are currently not subscribed to any plan.",
-    "upgradePlan": "Upgrade Plan"
+    "upgradePlan": "Upgrade Plan",
+    "footerHint": "Upgrade anytime to unlock more credits and features."
   }
 }

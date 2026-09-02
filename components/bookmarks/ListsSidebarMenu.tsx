@@ -150,7 +150,7 @@ export function ListsSidebarMenu() {
 
   if (isCollapsed) {
     return (
-      <SidebarMenuItem>
+      <SidebarMenuItem data-onboarding-target="lists">
         <SidebarMenuButton asChild isActive={pathname.startsWith("/dashboard/lists")}>
           <I18nLink href="/dashboard/lists" title={t("sidebar.group")}>
             <ListTree className="h-4 w-4" />
@@ -161,7 +161,11 @@ export function ListsSidebarMenu() {
   }
 
   return (
-    <Collapsible defaultOpen={pathname.startsWith("/dashboard/lists")} className="group/collapsible">
+    <Collapsible
+      data-onboarding-target="lists"
+      defaultOpen={pathname.startsWith("/dashboard/lists")}
+      className="group/collapsible"
+    >
       <SidebarMenuItem>
         <div className="relative">
           <CollapsibleTrigger asChild>

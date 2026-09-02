@@ -2,11 +2,10 @@
 
 import { updateUserSettingsAction } from "@/actions/users/settings";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth/auth-client";
 import { user as userSchema } from "@/lib/db/schema";
+import { isSyntheticEmail, normalizeEmail, validateEmail } from "@/lib/email";
 import {
   AVATAR_ACCEPT_ATTRIBUTE,
   AVATAR_ALLOWED_EXTENSIONS,
@@ -15,11 +14,11 @@ import {
   FULL_NAME_MAX_LENGTH,
   isValidFullName,
 } from "@/lib/validations";
-import { Loader2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import SettingsCard from "./SettingsCard";
 
 type User = typeof userSchema.$inferSelect;
 
@@ -27,17 +26,57 @@ export default function Settings({ user }: { user: User }) {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isAvatarLoading, setIsAvatarLoading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [fullNameError, setFullNameError] = useState<string>("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Email is managed through better-auth changeEmail (sends a verification
+  // link); synthetic X-login placeholders show as empty.
+  const [emailValue, setEmailValue] = useState("");
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
 
   const t = useTranslations("Settings");
   const locale = useLocale();
 
   useEffect(() => {
     setFullName(user?.name || "");
+    setEmailValue(isSyntheticEmail(user?.email) ? "" : user?.email || "");
   }, [user]);
+
+  const handleEmailSave = async () => {
+    const normalized = normalizeEmail(emailValue);
+    if (!validateEmail(normalized).isValid) {
+      toast.error(t("toast.updateErrorTitle"), {
+        description: t("toast.emailInvalid"),
+      });
+      return;
+    }
+
+    setIsEmailLoading(true);
+    try {
+      const { error } = await authClient.changeEmail({ newEmail: normalized });
+      if (error) {
+        toast.error(t("toast.updateErrorTitle"), {
+          description: error.message || t("toast.updateErrorDescription"),
+        });
+        return;
+      }
+      toast.success(t("toast.emailSentTitle"), {
+        description: t("toast.emailSentDescription"),
+      });
+      await authClient.getSession({
+        query: {
+          disableCookieCache: true,
+        },
+      });
+      router.refresh();
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
 
   const handleFullNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -85,7 +124,7 @@ export default function Settings({ user }: { user: User }) {
     setPreviewUrl(url);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleFullNameSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (fullNameError || !fullName.trim()) {
@@ -100,9 +139,48 @@ export default function Settings({ user }: { user: User }) {
     try {
       const formData = new FormData();
       formData.append("fullName", fullName.trim());
-      if (avatarFile) {
-        formData.append("avatar", avatarFile);
+
+      const result = await updateUserSettingsAction({
+        formData,
+        locale: locale || undefined,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
       }
+
+      toast.success(t("toast.updateSuccessTitle"), {
+        description: t("toast.updateSuccessDescription"),
+      });
+
+      await authClient.getSession({
+        query: {
+          disableCookieCache: true,
+        },
+      });
+      router.refresh();
+    } catch (error) {
+      toast.error(t("toast.updateErrorTitle"), {
+        description:
+          error instanceof Error
+            ? error.message
+            : t("toast.updateErrorDescription"),
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAvatarSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!avatarFile) return;
+
+    setIsAvatarLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("avatar", avatarFile);
 
       const result = await updateUserSettingsAction({
         formData,
@@ -129,11 +207,8 @@ export default function Settings({ user }: { user: User }) {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
       }
-      const fileInput = document.querySelector(
-        'input[type="file"]'
-      ) as HTMLInputElement;
-      if (fileInput) {
-        fileInput.value = "";
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     } catch (error) {
       toast.error(t("toast.updateErrorTitle"), {
@@ -143,7 +218,7 @@ export default function Settings({ user }: { user: User }) {
             : t("toast.updateErrorDescription"),
       });
     } finally {
-      setIsLoading(false);
+      setIsAvatarLoading(false);
     }
   };
 
@@ -157,66 +232,102 @@ export default function Settings({ user }: { user: User }) {
   }, [previewUrl]);
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-6">{t("title")}</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label>{t("form.emailLabel")}</Label>
-          <Input defaultValue={user.email} disabled className="bg-muted" />
-        </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
 
-        <div className="space-y-2">
-          <Label>{t("form.fullNameLabel")}</Label>
+      <SettingsCard
+        title={t("form.emailLabel")}
+        description={t("form.emailDescription")}
+        footerHint={t("form.emailHint")}
+        submitLabel={t("form.saveButton")}
+        submitting={isEmailLoading}
+        submitDisabled={
+          !emailValue ||
+          normalizeEmail(emailValue) === normalizeEmail(user.email)
+        }
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleEmailSave();
+        }}
+      >
+        <Input
+          id="settings-email"
+          type="email"
+          value={emailValue}
+          onChange={(e) => setEmailValue(e.target.value)}
+          placeholder={t("form.emailPlaceholder")}
+          disabled={isEmailLoading}
+          className="max-w-sm"
+          aria-label={t("form.emailLabel")}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        title={t("form.fullNameLabel")}
+        description={t("form.fullNameDescription")}
+        footerHint={t("form.fullNameHint", {
+          maxLength: FULL_NAME_MAX_LENGTH,
+        })}
+        submitLabel={t("form.saveButton")}
+        submitting={isLoading}
+        submitDisabled={
+          !!fullNameError ||
+          !fullName.trim() ||
+          fullName.trim() === (user.name ?? "").trim()
+        }
+        onSubmit={handleFullNameSubmit}
+      >
+        <div className="max-w-sm space-y-2">
           <Input
             value={fullName}
             onChange={handleFullNameChange}
             placeholder={t("form.fullNamePlaceholder")}
             maxLength={FULL_NAME_MAX_LENGTH}
+            aria-label={t("form.fullNameLabel")}
+            aria-invalid={!!fullNameError}
           />
           {fullNameError && (
-            <p className="text-sm text-red-500 mt-1">{fullNameError}</p>
+            <p className="text-sm text-destructive">{fullNameError}</p>
           )}
         </div>
+      </SettingsCard>
 
-        <div className="space-y-2">
-          <Label>{t("form.avatarLabel")}</Label>
-          <div className="flex items-center gap-4">
-            <Avatar className="w-20 h-20">
-              <AvatarImage
-                src={previewUrl || user.image || undefined}
-                alt={user.name || "User avatar"}
-              />
-              <AvatarFallback>{user.email[0] || ""}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-1">
-              <Input
-                type="file"
-                accept={AVATAR_ACCEPT_ATTRIBUTE}
-                onChange={handleAvatarChange}
-                className="max-w-[300px] hover:cursor-pointer"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("form.avatarHint", {
-                  maxSizeInMB: AVATAR_MAX_FILE_SIZE / 1024 / 1024,
-                  allowedTypes:
-                    AVATAR_ALLOWED_EXTENSIONS.join(", ").toUpperCase(),
-                })}
-              </p>
-            </div>
+      <SettingsCard
+        title={t("form.avatarLabel")}
+        description={t("form.avatarDescription")}
+        footerHint={t("form.avatarFooterHint")}
+        submitLabel={t("form.saveButton")}
+        submitting={isAvatarLoading}
+        submitDisabled={!avatarFile}
+        onSubmit={handleAvatarSubmit}
+      >
+        <div className="flex items-center gap-4">
+          <Avatar className="w-20 h-20">
+            <AvatarImage
+              src={previewUrl || user.image || undefined}
+              alt={user.name || "User avatar"}
+            />
+            <AvatarFallback>{user.email[0] || ""}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 space-y-1">
+            <Input
+              ref={fileInputRef}
+              type="file"
+              accept={AVATAR_ACCEPT_ATTRIBUTE}
+              onChange={handleAvatarChange}
+              className="max-w-[300px] hover:cursor-pointer"
+              aria-label={t("form.avatarLabel")}
+            />
+            <p className="text-xs text-muted-foreground">
+              {t("form.avatarHint", {
+                maxSizeInMB: AVATAR_MAX_FILE_SIZE / 1024 / 1024,
+                allowedTypes:
+                  AVATAR_ALLOWED_EXTENSIONS.join(", ").toUpperCase(),
+              })}
+            </p>
           </div>
         </div>
-
-        <Button type="submit" disabled={isLoading || !!fullNameError}>
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />{" "}
-              {t("form.updatingButton")}
-            </>
-          ) : (
-            t("form.updateButton")
-          )}
-        </Button>
-      </form>
+      </SettingsCard>
     </div>
   );
 }

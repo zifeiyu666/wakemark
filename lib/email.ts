@@ -1,3 +1,16 @@
+// X login placeholder email: X may not return a verified email, but
+// better-auth requires an email to register a social user. A synthetic,
+// detectable placeholder is stored until the user supplies a real one.
+export const SYNTHETIC_EMAIL_DOMAIN = "users.wakemark.local";
+
+export function syntheticEmailFor(username: string): string {
+  return `${username.toLowerCase()}@${SYNTHETIC_EMAIL_DOMAIN}`;
+}
+
+export function isSyntheticEmail(email: string | null | undefined): boolean {
+  return !!email && email.toLowerCase().endsWith(`@${SYNTHETIC_EMAIL_DOMAIN}`);
+}
+
 export type EmailValidationError =
   | 'invalid_email_format'
   | 'email_part_too_long'

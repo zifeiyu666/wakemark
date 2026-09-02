@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (session?.user) {
-      router.replace("/");
+      router.replace("/dashboard/bookmarks");
     }
   }, [session?.user]);
 
@@ -28,17 +28,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center flex-1 py-12">
-      <div className="flex flex-col space-y-6">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
+    <div className="flex items-center justify-center flex-1 py-12 px-4">
+      <div className="flex w-full max-w-xl flex-col items-center space-y-8 text-center">
+        <div className="flex flex-col space-y-3">
+          <h1 className="text-3xl font-semibold tracking-tight">
             {t("title")}
           </h1>
-          <p className="text-sm text-muted-foreground">{t("description")}</p>
+          <p className="text-base text-muted-foreground">{t("description")}</p>
         </div>
 
         <Suspense fallback={<Loader2 className="w-4 h-4 animate-spin" />}>
-          <LoginForm className="w-[300px]" />
+          <LoginForm className="w-full max-w-md" />
         </Suspense>
       </div>
     </div>

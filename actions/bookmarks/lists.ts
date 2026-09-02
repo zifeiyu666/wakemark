@@ -2,6 +2,7 @@
 
 import { ActionResult, actionResponse } from "@/lib/action-response";
 import { getSession } from "@/lib/auth/server";
+import { listListsWithCounts } from "@/lib/bookmarks/query";
 import { db } from "@/lib/db";
 import {
   bookmarkListItems,
@@ -10,7 +11,7 @@ import {
   xConnections,
 } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
-import { and, asc, count, eq, sql } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import slugify from "slugify";
 import { z } from "zod";
 
@@ -60,24 +61,6 @@ async function buildSlug(
   return candidate;
 }
 
-async function selectListsWithCounts(userId: string) {
-  const rows = await db
-    .select({
-      id: bookmarkLists.id,
-      name: bookmarkLists.name,
-      slug: bookmarkLists.slug,
-      isPublic: bookmarkLists.isPublic,
-      createdAt: bookmarkLists.createdAt,
-      count: sql<number>`count(${bookmarkListItems.bookmarkId})::int`,
-    })
-    .from(bookmarkLists)
-    .leftJoin(bookmarkListItems, eq(bookmarkListItems.listId, bookmarkLists.id))
-    .where(eq(bookmarkLists.userId, userId))
-    .groupBy(bookmarkLists.id)
-    .orderBy(asc(bookmarkLists.createdAt));
-  return rows.map((r) => ({ ...r, count: Number(r.count ?? 0) }));
-}
-
 export async function getLists(): Promise<
   ActionResult<BookmarkListRow[]>
 > {
@@ -86,7 +69,7 @@ export async function getLists(): Promise<
   if (!user) return actionResponse.unauthorized();
 
   try {
-    return actionResponse.success(await selectListsWithCounts(user.id));
+    return actionResponse.success(await listListsWithCounts(user.id));
   } catch (error) {
     console.error("Error getting bookmark lists", error);
     return actionResponse.error(getErrorMessage(error));
@@ -102,7 +85,7 @@ export async function getList(
 
   try {
     ListIdSchema.parse(listId);
-    const [row] = await selectListsWithCounts(user.id).then((rows) =>
+    const [row] = await listListsWithCounts(user.id).then((rows) =>
       rows.filter((r) => r.id === listId)
     );
     if (!row) return actionResponse.notFound();
@@ -222,7 +205,7 @@ export async function setListVisibility(
       .set({ isPublic, slug })
       .where(eq(bookmarkLists.id, existing.id))
       .returning();
-    const [withCount] = await selectListsWithCounts(user.id).then((rows) =>
+    const [withCount] = await listListsWithCounts(user.id).then((rows) =>
       rows.filter((r) => r.id === row.id)
     );
     return actionResponse.success(withCount ?? { ...row, count: 0 });
@@ -240,7 +223,7 @@ export async function getListsForBookmark(
   if (!user) return actionResponse.unauthorized();
 
   try {
-    const lists = await selectListsWithCounts(user.id);
+    const lists = await listListsWithCounts(user.id);
     const memberships = await db
       .select({ listId: bookmarkListItems.listId })
       .from(bookmarkListItems)

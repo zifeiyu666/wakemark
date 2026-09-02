@@ -1,4 +1,3 @@
-import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { LanguageDetectionAlert } from "@/components/LanguageDetectionAlert";
 import ConsentBanner from "@/components/shared/CookieConsent/ConsentBanner";
 import ConsentGate from "@/components/shared/CookieConsent/ConsentGate";
@@ -102,7 +101,6 @@ export default async function LocaleLayout({
             </PostHogProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
-        <GoogleOneTap />
         <CrispChat />
         <Toaster richColors />
         <TailwindIndicator />

@@ -1,7 +1,7 @@
 import { siteConfig } from "@/config/site";
 import * as React from "react";
 
-interface MagicLinkEmailProps {
+interface EmailVerificationEmailProps {
   url: string;
 }
 
@@ -88,9 +88,9 @@ const styles = {
   },
 };
 
-export const MagicLinkEmail: React.FC<Readonly<MagicLinkEmailProps>> = ({
-  url,
-}) => (
+export const EmailVerificationEmail: React.FC<
+  Readonly<EmailVerificationEmailProps>
+> = ({ url }) => (
   <div style={styles.container}>
     <div style={styles.card}>
       <div style={styles.logo}>
@@ -111,15 +111,16 @@ export const MagicLinkEmail: React.FC<Readonly<MagicLinkEmailProps>> = ({
         </a>
       </h1>
 
-      <h2 style={styles.contentTitle}>Hi there!</h2>
+      <h2 style={styles.contentTitle}>Verify your email</h2>
 
       <p style={styles.paragraph}>
-        Click the button below to sign in to your {siteConfig.name} account:
+        Click the button below to verify your email address and finish setting
+        up your {siteConfig.name} account:
       </p>
 
       <div style={styles.buttonContainer}>
         <a href={url} style={styles.button}>
-          Sign In to {siteConfig.name}
+          Verify Email Address
         </a>
       </div>
 
@@ -136,4 +137,4 @@ export const MagicLinkEmail: React.FC<Readonly<MagicLinkEmailProps>> = ({
   </div>
 );
 
-export default MagicLinkEmail;
+export default EmailVerificationEmail;

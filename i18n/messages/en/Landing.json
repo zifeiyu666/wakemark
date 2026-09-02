@@ -5,7 +5,7 @@
       "text": "Smart Bookmarks Sync & AI Weekly Drop",
       "href": "/#pricing"
     },
-    "title": "Wake your sleeping bookmarks",
+    "title": "Wake your sleeping X/Twitter bookmarks.",
     "description": "Your saved tweets, auto-tagged, organized into lists, and summarized in a digest that arrives on your schedule.",
     "cta": "Organize my bookmarks",
     "ctaNote": "Free for seven days. No charge today, cancel anytime.",
@@ -16,7 +16,7 @@
       "description": "From your first sync to your weekly digest. Watch how thousands of saved tweets become a tidy library you actually revisit.",
       "playLabel": "Play the product intro video",
       "closeLabel": "Close the video",
-      "poster": "/images/features/user-1.png",
+      "poster": "/dashboard_screenshot.avif",
       "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
     }
   },
@@ -57,9 +57,12 @@
         "discount": "-40%",
         "discountTone": "tint",
         "monthly": "$4.92/mo",
-        "status": "soldout",
-        "statusLabel": "Sold out",
-        "medal": true
+        "status": "active",
+        "statusLabel": "",
+        "medal": true,
+        "remaining": "143 of 150 remaining",
+        "progress": 5,
+        "cta": "Get started"
       },
       {
         "id": "early-bird",
@@ -69,12 +72,9 @@
         "discount": "-30%",
         "discountTone": "tint",
         "monthly": "$5.75/mo",
-        "status": "active",
-        "statusLabel": "",
-        "medal": true,
-        "remaining": "143 of 150 remaining",
-        "progress": 5,
-        "cta": "Get started"
+        "status": "upnext",
+        "statusLabel": "Up next",
+        "medal": true
       },
       {
         "id": "early-access",
@@ -127,6 +127,9 @@
     "title": "Bookmarks that organize themselves",
     "description": "WakeMark syncs your X bookmarks, tags them by topic, sorts them into lists, and turns them into digests that arrive on your schedule. No setup, no manual sorting.",
     "items": []
+  },
+  "TextReveal": {
+    "text": "Your X/Tweet bookmarks, finally organized, summarized, and understood"
   },
   "FAQ": {
     "eyebrow": "FAQ",

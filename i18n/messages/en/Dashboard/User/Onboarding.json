@@ -1,0 +1,47 @@
+{
+  "stepLabel": "Step {step} of {total}",
+  "back": "Back",
+  "skip": "Skip",
+  "next": "Next",
+  "finish": "Get started",
+  "sync": {
+    "title": "Your bookmarks are already on their way",
+    "subtitle": "Everything lands here, automatically",
+    "body1": "WakeMark is syncing your Twitter/X bookmarks in the background right now. Nothing to configure — just watch the library fill up.",
+    "body2Lead": "As each bookmark arrives, AI reads it and files it under tags like",
+    "body2Tail": "— no manual sorting, ever.",
+    "noteLabel": "Good to know:",
+    "noteBody": "Sync keeps running on a schedule, so your library stays current without you lifting a finger."
+  },
+  "find": {
+    "title": "Find anything in seconds",
+    "subtitle": "Search, filter and sort — your way",
+    "body1": "The search bar matches bookmark text and authors as you type. Stack it with AI tags, the Unread / Read views, or sorting by date and engagement to zero in on any bookmark.",
+    "noteLabel": "Try it:",
+    "noteBody": "Search \"design\", filter by Tech and sort by most liked — that one tweet resurfaces in seconds."
+  },
+  "lists": {
+    "title": "Curate lists worth sharing",
+    "subtitle": "Your best finds, collected",
+    "body1": "Group bookmarks into themed lists — a design inspiration board, a startup resource shelf, a reading queue for your team.",
+    "body2": "Flip a list to public and it gets a shareable link anyone can open, no WakeMark account needed.",
+    "noteLabel": "Idea:",
+    "noteBody": "Build a \"Best of 2026\" list and drop the link in your next post."
+  },
+  "digests": {
+    "title": "Your first digest is on us",
+    "subtitle": "A weekly recap, written by AI",
+    "body1": "Once your bookmarks start flowing in, we turn the best unread ones into a digest of summaries and themes — in the sidebar and in your inbox.",
+    "body2": "After the free first issue, a fresh digest arrives every Friday morning. Nothing for you to do.",
+    "noteLabel": "What you get:",
+    "noteBody": "AI summaries, themed sections and highlights, delivered straight to your inbox."
+  },
+  "askAi": {
+    "title": "Chat with your bookmarks",
+    "subtitle": "A research assistant that knows your library",
+    "body1": "See the floating button in the bottom-right corner? It opens Ask AI, your bookmark-aware assistant.",
+    "body2": "Ask anything — \"What did I save about pricing?\", \"Summarize this week's AI threads\". Answers are synthesized from your own bookmarks, with sources attached.",
+    "noteLabel": "Think of it as:",
+    "noteBody": "a private search engine that only reads what you saved."
+  }
+}

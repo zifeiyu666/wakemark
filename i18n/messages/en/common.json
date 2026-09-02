@@ -5,47 +5,17 @@
     "description": "WakeMark syncs your X/Twitter bookmarks, auto-tags them by topic, organizes them into lists, and sends you AI digests on your schedule. Try it free for 7 days."
   },
   "Login": {
-    "title": "Welcome back",
-    "description": "Sign in with the following methods",
+    "title": "Let's organize your bookmarks",
+    "description": "Connect your X account and we'll pull in your bookmarks automatically. Read-only — we never post or message as you.",
     "Toast": {
-      "rateLimitTitle": "Too many requests",
-      "rateLimitDescription": "Please wait a moment before trying again.",
-      "Email": {
-        "successTitle": "Magic link sent!",
-        "successDescription": "Please check your email for the login link.",
+      "X": {
         "errorTitle": "Error",
-        "errorDescription": "Failed to send magic link. Please try again."
-      },
-      "OTP": {
-        "errorTitle": "Error",
-        "sendSuccessTitle": "Code sent!",
-        "sendSuccessDescription": "Please check your email for the verification code.",
-        "sendErrorDescription": "Failed to send verification code. Please try again.",
-        "verifySuccessTitle": "Success!",
-        "verifySuccessDescription": "You have been signed in successfully.",
-        "verifyErrorDescription": "Invalid or expired verification code. Please try again."
-      },
-      "Google": {
-        "errorTitle": "Error",
-        "errorDescription": "Failed to sign in with Google. Please try again."
-      },
-      "Github": {
-        "errorTitle": "Error",
-        "errorDescription": "Failed to sign in with Github. Please try again."
+        "errorDescription": "Failed to sign in with X. Please try again."
       }
     },
     "signInMethods": {
-      "or": "Or continue with",
-      "signInWithGoogle": "Continue with Google",
-      "signInWithGithub": "Continue with Github",
-      "signInWithEmail": "Continue with Email",
-      "otpMethod": "Verification Code",
-      "magicLinkMethod": "Magic Link",
-      "sendOTP": "Send Code",
-      "verifyOTP": "Verify Code",
-      "resendOTP": "Didn't receive the code? Resend",
-      "backToEmail": "Back",
-      "otpSentTo": "We sent a verification code to"
+      "signInWithX": "Connect X account",
+      "consent": "By signing in, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
     },
     "Button": {
       "signIn": "Sign In",
@@ -57,6 +27,11 @@
         "name": "Settings",
         "href": "/dashboard/settings",
         "icon": "Settings"
+      },
+      {
+        "name": "MCP",
+        "href": "/dashboard/mcp",
+        "icon": "Cable"
       },
       {
         "name": "My Orders",
@@ -410,6 +385,10 @@
               "name": "Docs",
               "href": "https://wakemark.app/docs",
               "target": "_blank"
+            },
+            {
+              "name": "MCP",
+              "href": "/docs/mcp"
             },
             {
               "name": "Roadmap",

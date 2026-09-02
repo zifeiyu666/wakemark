@@ -17,6 +17,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Pricing: (await import(`./messages/${locale}/Pricing.json`)).default,
       NotFound: (await import(`./messages/${locale}/NotFound.json`)).default,
       Glossary: (await import(`./messages/${locale}/Glossary.json`)).default,
+      McpDocs: (await import(`./messages/${locale}/McpDocs.json`)).default,
 
       // Dashboard - User
       Settings: (await import(`./messages/${locale}/Dashboard/User/Settings.json`)).default,
@@ -25,6 +26,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Digests: (await import(`./messages/${locale}/Dashboard/User/Digests.json`)).default,
       Lists: (await import(`./messages/${locale}/Dashboard/User/Lists.json`)).default,
       AskAi: (await import(`./messages/${locale}/Dashboard/User/AskAi.json`)).default,
+      Onboarding: (await import(`./messages/${locale}/Dashboard/User/Onboarding.json`)).default,
+      EmailPrompt: (await import(`./messages/${locale}/Dashboard/User/EmailPrompt.json`)).default,
+      Mcp: (await import(`./messages/${locale}/Dashboard/User/Mcp.json`)).default,
 
       // Dashboard - Admin
       Overview: (await import(`./messages/${locale}/Dashboard/Admin/Overview.json`)).default,

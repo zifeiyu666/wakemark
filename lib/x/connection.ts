@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { xConnections } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { decryptText, encryptText } from "./crypto";
-import { refreshXTokens, XTokenError } from "./oauth";
+import { refreshXTokens, XTokenError } from "./token-refresh";
 
 export type XConnection = typeof xConnections.$inferSelect;
 

@@ -11,92 +11,25 @@ import {
   listUserTags,
   tagDeltas,
 } from "@/lib/bookmarks/tag-counts";
+import {
+  bookmarkFilterSchema,
+  queryBookmarks,
+  setBookmarksRead,
+  type BookmarkFilters,
+  type BookmarkRow,
+} from "@/lib/bookmarks/query";
 import { db } from "@/lib/db";
 import { bookmarks } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
-import { and, count, desc, asc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-const PAGE_SIZE_DEFAULT = 24;
-
-const FilterSchema = z.object({
-  view: z.enum(["all", "unread", "read"]).default("all"),
-  pageIndex: z.coerce.number().default(0),
-  pageSize: z.coerce.number().default(PAGE_SIZE_DEFAULT),
-  sort: z.enum(["newest", "oldest"]).default("newest"),
-  search: z.string().optional(),
-  categories: z.array(z.string()).default([]),
-  listId: z.string().uuid().optional(),
-});
-
-export type BookmarkFilters = z.infer<typeof FilterSchema>;
-
-export type BookmarkRow = {
-  id: string;
-  tweetId: string;
-  text: string;
-  authorUsername: string | null;
-  authorName: string | null;
-  authorProfileImageUrl: string | null;
-  tweetCreatedAt: Date | null;
-  mediaUrls: string[];
-  mediaTypes: string[];
-  metrics: { likes: number; retweets: number; replies: number } | null;
-  primaryCategory: string | null;
-  subTags: string[];
-  summary: string | null;
-  status: string;
-  isRead: boolean;
-  syncedAt: Date;
-};
+export type { BookmarkFilters, BookmarkRow };
 
 export type GetBookmarksResult = ActionResult<{
   bookmarks: BookmarkRow[];
   totalCount: number;
 }>;
-
-function buildWhere(
-  userId: string,
-  params: BookmarkFilters
-): SQL {
-  const conditions: SQL[] = [eq(bookmarks.userId, userId)];
-
-  if (params.view === "unread") {
-    conditions.push(eq(bookmarks.isRead, false));
-  } else if (params.view === "read") {
-    conditions.push(eq(bookmarks.isRead, true));
-  }
-
-  if (params.categories.length > 0) {
-    const categoryConditions: SQL[] = [
-      inArray(bookmarks.primaryCategory, params.categories),
-    ];
-    for (const category of params.categories) {
-      categoryConditions.push(
-        sql`${bookmarks.subTags} @> ${JSON.stringify([category])}::jsonb`
-      );
-    }
-    conditions.push(or(...categoryConditions) as SQL);
-  }
-
-  if (params.search) {
-    conditions.push(
-      or(
-        ilike(bookmarks.text, `%${params.search}%`),
-        ilike(bookmarks.authorUsername, `%${params.search}%`),
-        ilike(bookmarks.authorName, `%${params.search}%`)
-      ) as SQL
-    );
-  }
-
-  if (params.listId) {
-    conditions.push(
-      sql`exists (select 1 from bookmark_list_items bli where bli.bookmark_id = ${bookmarks.id} and bli.list_id = ${params.listId})`
-    );
-  }
-
-  return and(...conditions) as SQL;
-}
 
 export async function getBookmarks(
   params: BookmarkFilters
@@ -106,54 +39,12 @@ export async function getBookmarks(
   if (!user) return actionResponse.unauthorized();
 
   try {
-    const parsed = FilterSchema.parse(params);
-    const where = buildWhere(user.id, parsed);
-
-    const [rows, totalCountResult] = await Promise.all([
-      db
-        .select({
-          id: bookmarks.id,
-          tweetId: bookmarks.tweetId,
-          text: bookmarks.text,
-          authorUsername: bookmarks.authorUsername,
-          authorName: bookmarks.authorName,
-          authorProfileImageUrl: bookmarks.authorProfileImageUrl,
-          tweetCreatedAt: bookmarks.tweetCreatedAt,
-          mediaUrls: bookmarks.mediaUrls,
-          mediaTypes: bookmarks.mediaTypes,
-          metrics: bookmarks.metrics,
-          primaryCategory: bookmarks.primaryCategory,
-          subTags: bookmarks.subTags,
-          summary: bookmarks.summary,
-          status: bookmarks.status,
-          isRead: bookmarks.isRead,
-          syncedAt: bookmarks.syncedAt,
-        })
-        .from(bookmarks)
-        .where(where)
-        .orderBy(
-          parsed.sort === "oldest"
-            ? asc(bookmarks.syncedAt)
-            : desc(bookmarks.syncedAt)
-        )
-        .offset(parsed.pageIndex * parsed.pageSize)
-        .limit(parsed.pageSize),
-      db.select({ value: count() }).from(bookmarks).where(where),
-    ]);
-
-    const bookmarksOut: BookmarkRow[] = rows.map((row) => ({
-      ...row,
-      mediaUrls: (row.mediaUrls as string[] | null) ?? [],
-      mediaTypes: (row.mediaTypes as string[] | null) ?? [],
-      metrics:
-        (row.metrics as BookmarkRow["metrics"] | null) ?? null,
-      subTags: (row.subTags as string[] | null) ?? [],
-    }));
-
-    return actionResponse.success({
-      bookmarks: bookmarksOut,
-      totalCount: totalCountResult[0]?.value ?? 0,
-    });
+    const parsed = bookmarkFilterSchema.parse(params);
+    const { bookmarks: rows, totalCount } = await queryBookmarks(
+      user.id,
+      parsed
+    );
+    return actionResponse.success({ bookmarks: rows, totalCount });
   } catch (error) {
     console.error("Error getting bookmarks", error);
     return actionResponse.error(getErrorMessage(error));
@@ -214,12 +105,7 @@ export async function updateBookmarksRead(
 
   try {
     const parsed = ReadUpdateSchema.parse({ ids, isRead });
-    await db
-      .update(bookmarks)
-      .set({ isRead: parsed.isRead })
-      .where(
-        and(eq(bookmarks.userId, user.id), inArray(bookmarks.id, parsed.ids))
-      );
+    await setBookmarksRead(user.id, parsed.ids, parsed.isRead);
     return actionResponse.success();
   } catch (error) {
     console.error("Error updating bookmarks read state", error);

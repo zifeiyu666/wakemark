@@ -87,6 +87,41 @@ export const verification = pgTable("verification", {
     .notNull(),
 });
 
+// better-auth API Keys plugin (model name "apikey"). Powers the WakeMark MCP
+// endpoint: agents authenticate with a Bearer key instead of a cookie session.
+export const apikey = pgTable("apikey", {
+  id: uuid("id").primaryKey(),
+  name: text("name"),
+  start: text("start"),
+  prefix: text("prefix"),
+  key: text("key").notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  refillInterval: integer("refill_interval"),
+  refillAmount: integer("refill_amount"),
+  lastRefillAt: timestamp("last_refill_at", { withTimezone: true }),
+  enabled: boolean("enabled"),
+  rateLimitEnabled: boolean("rate_limit_enabled"),
+  rateLimitTimeWindow: integer("rate_limit_time_window"),
+  rateLimitMax: integer("rate_limit_max"),
+  requestCount: integer("request_count"),
+  remaining: integer("remaining"),
+  lastRequest: timestamp("last_request", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  permissions: text("permissions"),
+  metadata: text("metadata"),
+}, (table) => ({
+  // verifyApiKey looks up rows by hashed key on every MCP request.
+  keyIdx: index("idx_apikey_key").on(table.key),
+  userIdx: index("idx_apikey_user_id").on(table.userId),
+}));
+
 // User source/attribution tracking
 export const userSource = pgTable(
   'user_source',
@@ -777,6 +812,11 @@ export const userPreferences = pgTable('user_preferences', {
   timeZone: text('time_zone'),
   digestHour: integer('digest_hour').notNull().default(9),
   digestEnabled: boolean('digest_enabled').notNull().default(true),
+  // Set once the new-user onboarding tour is finished or dismissed; the tour
+  // only auto-opens while this stays NULL.
+  onboardingCompletedAt: timestamp('onboarding_completed_at', {
+    withTimezone: true,
+  }),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .defaultNow()
     .notNull()

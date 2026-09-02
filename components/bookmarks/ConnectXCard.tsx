@@ -1,11 +1,28 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useTranslations } from "next-intl";
+import { DEFAULT_LOCALE } from "@/i18n/routing";
+import { authClient } from "@/lib/auth/auth-client";
+import { useLocale, useTranslations } from "next-intl";
 import { Inbox } from "lucide-react";
+import { useState } from "react";
 
 export function ConnectXCard() {
   const t = useTranslations("Bookmarks");
+  const locale = useLocale();
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  // Re-authorize through the auth provider so the refreshed X tokens land in
+  // both the account table and the xConnections store.
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    const prefix = locale === DEFAULT_LOCALE ? "" : `/${locale}`;
+    await authClient.linkSocial({
+      provider: "twitter",
+      callbackURL: `${prefix}/dashboard/bookmarks`,
+      errorCallbackURL: `${prefix}/dashboard/bookmarks?error=link-failed`,
+    });
+  };
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-border bg-background px-6 py-16 text-center">
@@ -18,8 +35,8 @@ export function ConnectXCard() {
           {t("connect.description")}
         </p>
       </div>
-      <Button asChild>
-        <a href="/api/x/connect">{t("connect.button")}</a>
+      <Button onClick={handleConnect} disabled={isConnecting}>
+        {t("connect.button")}
       </Button>
       <p className="text-xs text-muted-foreground">{t("connect.note")}</p>
     </div>

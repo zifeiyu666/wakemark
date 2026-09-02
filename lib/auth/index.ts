@@ -1,10 +1,10 @@
 import { sendEmail } from "@/actions/resend";
 import { siteConfig } from "@/config/site";
-import MagicLinkEmail from '@/emails/magic-link-email';
-import OTPCodeEmail from '@/emails/otp-code-email';
+import EmailVerificationEmail from "@/emails/email-verification";
 import { UserWelcomeEmail } from "@/emails/user-welcome";
 import { db } from "@/lib/db";
-import { account, session, user, verification } from "@/lib/db/schema";
+import { account, apikey, session, user, verification } from "@/lib/db/schema";
+import { isSyntheticEmail, syntheticEmailFor } from "@/lib/email";
 import {
   buildUserSourceData,
   parseTrackingCookie,
@@ -13,10 +13,11 @@ import {
 } from "@/lib/tracking/server";
 import { isTrackingEnabled } from "@/lib/tracking/shared";
 import { redis } from "@/lib/upstash";
+import { upsertXConnectionFromAccount } from "@/lib/x/connection-store";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin, anonymous, captcha, emailOTP, lastLoginMethod, magicLink, oneTap } from "better-auth/plugins";
+import { admin, apiKey } from "better-auth/plugins";
 import { cookies } from "next/headers";
 
 export const auth = betterAuth({
@@ -39,18 +40,6 @@ export const auth = betterAuth({
     max: 100, // 100 requests per window (global default)
     customRules: {
       "/get-session": false,
-      "/sign-in/magic-link": {
-        window: 60, // 60 seconds
-        max: 3, // Max 3 magic link requests per 60 seconds
-      },
-      "/email-otp/send-verification-otp": {
-        window: 60,
-        max: 3,
-      },
-      "/sign-in/email-otp": {
-        window: 60,
-        max: 5,
-      },
     },
     // Use Upstash Redis for rate limit storage (works with serverless)
     ...(redis && {
@@ -73,17 +62,31 @@ export const auth = betterAuth({
     },
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
-    // freshAge: 0
   },
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ['google', 'github'],
+      trustedProviders: ['twitter'],
     },
   },
   user: {
+    changeEmail: {
+      enabled: true,
+    },
     deleteUser: {
       enabled: true,
+    },
+  },
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url }) => {
+      await sendEmail({
+        email: user.email,
+        subject: `Verify your email for ${siteConfig.name}`,
+        react: EmailVerificationEmail,
+        reactProps: {
+          url,
+        },
+      });
     },
   },
   database: drizzleAdapter(db, {
@@ -93,16 +96,50 @@ export const auth = betterAuth({
       session: session,
       account: account,
       verification: verification,
+      apikey: apikey,
     },
   }),
   socialProviders: {
-    github: {
-      clientId: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    },
-    google: {
-      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    twitter: {
+      clientId: process.env.X_CLIENT_ID!,
+      clientSecret: process.env.X_CLIENT_SECRET!,
+      // Stacked on top of the provider defaults
+      // (users.read tweet.read offline.access users.email).
+      scope: ["bookmark.read"],
+      // X may not hand back a verified email; better-auth requires one to
+      // register the user, so fall back to a detectable synthetic address
+      // that the email-prompt flow replaces later.
+      getUserInfo: async (token) => {
+        const res = await fetch(
+          "https://api.x.com/2/users/me?user.fields=profile_image_url,confirmed_email",
+          {
+            headers: { Authorization: `Bearer ${token.accessToken}` },
+          }
+        );
+        if (!res.ok) return null;
+        const json = (await res.json()) as {
+          data?: {
+            id: string;
+            username: string;
+            name?: string;
+            profile_image_url?: string;
+            confirmed_email?: string;
+          };
+        };
+        if (!json.data) return null;
+        const profile = json.data;
+        const email = profile.confirmed_email?.toLowerCase();
+        return {
+          user: {
+            id: profile.id,
+            name: profile.name || profile.username,
+            email: email || syntheticEmailFor(profile.username),
+            image: profile.profile_image_url,
+            emailVerified: !!email,
+          },
+          data: profile,
+        };
+      },
     },
   },
   databaseHooks: {
@@ -127,8 +164,8 @@ export const auth = betterAuth({
             }
           }
 
-          // Send welcome email
-          if (createdUser.email) {
+          // Send welcome email (skip synthetic X-login placeholders)
+          if (createdUser.email && !isSyntheticEmail(createdUser.email)) {
             try {
               const unsubscribeToken = Buffer.from(createdUser.email).toString('base64');
               const unsubscribeLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/newsletter?token=${unsubscribeToken}`;
@@ -152,45 +189,67 @@ export const auth = betterAuth({
         },
       },
     },
+    account: {
+      create: {
+        // First X sign-in or linkSocial connect: mirror the fresh tokens
+        // into x_connections so the sync engine works immediately.
+        after: async (createdAccount) => {
+          if (createdAccount.providerId !== "twitter" || !createdAccount.accessToken) return;
+          try {
+            await upsertXConnectionFromAccount({
+              userId: createdAccount.userId,
+              accountId: createdAccount.accountId,
+              accessToken: createdAccount.accessToken,
+              refreshToken: createdAccount.refreshToken,
+              accessTokenExpiresAt: createdAccount.accessTokenExpiresAt,
+              scope: createdAccount.scope,
+            });
+          } catch (error) {
+            console.error("Failed to upsert X connection from account:", error);
+          }
+        },
+      },
+      update: {
+        // Repeated X sign-ins rotate in fresh tokens; keep x_connections in
+        // sync so the sync engine never holds a stale refresh token.
+        after: async (updatedAccount) => {
+          if (updatedAccount.providerId !== "twitter" || !updatedAccount.accessToken) return;
+          try {
+            await upsertXConnectionFromAccount({
+              userId: updatedAccount.userId,
+              accountId: updatedAccount.accountId,
+              accessToken: updatedAccount.accessToken,
+              refreshToken: updatedAccount.refreshToken,
+              accessTokenExpiresAt: updatedAccount.accessTokenExpiresAt,
+              scope: updatedAccount.scope,
+            });
+          } catch (error) {
+            console.error("Failed to upsert X connection from account:", error);
+          }
+        },
+      },
+    },
   },
   trustedOrigins: process.env.NODE_ENV === 'development' ? [process.env.NEXT_PUBLIC_SITE_URL!, 'http://localhost:3000'] : [process.env.NEXT_PUBLIC_SITE_URL!],
   plugins: [
-    ...(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? [oneTap()] : []),
-    ...(process.env.TURNSTILE_SECRET_KEY ? [captcha({
-      provider: "cloudflare-turnstile",
-      secretKey: process.env.TURNSTILE_SECRET_KEY,
-    })] : []),
-    magicLink({
-      sendMagicLink: async ({ email, url, token }) => {
-        await sendEmail({
-          email,
-          subject: `Sign in to ${siteConfig.name}`,
-          react: MagicLinkEmail,
-          reactProps: {
-            url
-          }
-        })
-      },
-      expiresIn: 60 * 5,
-    }),
-    emailOTP({
-      otpLength: 6,
-      expiresIn: 60 * 10, // 10 minutes
-      sendVerificationOTP: async ({ email, otp, type }) => {
-        await sendEmail({
-          email,
-          subject: `Your ${siteConfig.name} verification code: ${otp}`,
-          react: OTPCodeEmail,
-          reactProps: {
-            otp,
-            type
-          }
-        })
-      },
-    }),
-    lastLoginMethod(),
     admin(),
-    anonymous(),
+    // User-scoped API keys for the WakeMark MCP endpoint (/api/mcp). Agents
+    // send "Authorization: Bearer wkm_..."; verifyApiKey resolves the owner.
+    apiKey({
+      apiKeyHeaders: ["authorization", "x-api-key"],
+      defaultPrefix: "wkm_",
+      defaultKeyLength: 48,
+      requireName: true,
+      maximumNameLength: 60,
+      enableMetadata: true,
+      startingCharactersConfig: { shouldStore: true, charactersLength: 9 },
+      keyExpiration: { defaultExpiresIn: null, maxExpiresIn: 365 },
+      rateLimit: {
+        enabled: true,
+        timeWindow: 60 * 1000, // per-minute window
+        maxRequests: 120,
+      },
+    }),
     nextCookies() // make sure this is the last plugin in the array
   ]
 });
