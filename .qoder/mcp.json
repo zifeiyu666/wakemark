@@ -1,0 +1,10 @@
+{
+	"mcpServers": {
+		"wakemark": {
+			"url": "http://localhost:3000/api/mcp",
+			"headers": {
+				"Authorization": "Bearer wkm_ESCOlOqOJCtgbdNsBHeiPAXIMWLWoHEixSgWYkRsovfZblRd"
+			}
+		}
+	}
+}

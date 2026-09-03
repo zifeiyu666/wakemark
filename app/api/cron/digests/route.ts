@@ -26,6 +26,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  // Fast path: it is Friday somewhere on Earth only between Thursday 10:00
+  // UTC (UTC+14 just hit Friday midnight) and Saturday 12:00 UTC (UTC-12
+  // just left Friday). Outside that window no user can be in their send
+  // window, so return without touching the database — keeps the Neon
+  // serverless instance suspended for most hourly ticks.
+  const utcSlot = new Date().getUTCDay() * 24 + new Date().getUTCHours();
+  if (utcSlot < 4 * 24 + 10 || utcSlot >= 6 * 24 + 12) {
+    return NextResponse.json({
+      job: "weekly",
+      skipped: "no-local-friday-anywhere",
+    });
+  }
+
   const configured = Number(process.env.CRON_TICK_BUDGET_MS ?? 240_000);
   const tickBudgetMs = Math.min(
     Number.isFinite(configured) && configured > 0 ? configured : 240_000,

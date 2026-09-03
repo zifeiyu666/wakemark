@@ -1,6 +1,5 @@
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import HeaderLinks from "@/components/header/HeaderLinks";
 import MobileMenu from "@/components/header/MobileMenu";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -12,7 +11,6 @@ export default async function SidebarInsetHeader() {
         <div className="flex items-center gap-2">
           <SidebarTrigger />
           <Separator orientation="vertical" className="h-4" />
-          <HeaderLinks />
         </div>
 
         <div className="flex items-center gap-x-2 flex-1 justify-end">
@@ -24,7 +22,7 @@ export default async function SidebarInsetHeader() {
 
           {/* Mobile */}
           <div className="flex lg:hidden">
-            <MobileMenu />
+            <MobileMenu showThemeToggle />
           </div>
         </div>
       </nav>

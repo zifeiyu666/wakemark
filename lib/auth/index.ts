@@ -164,27 +164,26 @@ export const auth = betterAuth({
             }
           }
 
-          // Send welcome email (skip synthetic X-login placeholders)
+          // Send welcome email (skip synthetic X-login placeholders).
+          // Detached fire-and-forget: signup must not wait on the mail
+          // provider, and a send failure must never break registration.
           if (createdUser.email && !isSyntheticEmail(createdUser.email)) {
-            try {
-              const unsubscribeToken = Buffer.from(createdUser.email).toString('base64');
-              const unsubscribeLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/newsletter?token=${unsubscribeToken}`;
+            const unsubscribeToken = Buffer.from(createdUser.email).toString('base64');
+            const unsubscribeLink = `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/newsletter?token=${unsubscribeToken}`;
 
-              await sendEmail({
+            void sendEmail({
+              email: createdUser.email,
+              subject: `Welcome to ${siteConfig.name}!`,
+              react: UserWelcomeEmail,
+              reactProps: {
+                name: createdUser.name,
                 email: createdUser.email,
-                subject: `Welcome to ${siteConfig.name}!`,
-                react: UserWelcomeEmail,
-                reactProps: {
-                  name: createdUser.name,
-                  email: createdUser.email,
-                  unsubscribeLink: unsubscribeLink,
-                },
-                isAddContacts: true
-              });
-              console.log(`Welcome email sent to ${createdUser.email}`);
-            } catch (error) {
-              console.error('Failed to send welcome email:', error);
-            }
+                unsubscribeLink: unsubscribeLink,
+              },
+              isAddContacts: true
+            })
+              .then(() => console.log(`Welcome email sent to ${createdUser.email}`))
+              .catch((error) => console.error('Failed to send welcome email:', error));
           }
         },
       },

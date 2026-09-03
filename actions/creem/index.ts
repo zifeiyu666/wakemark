@@ -33,17 +33,32 @@ export async function syncCreemSubscriptionData(
   let planId = subscription.metadata?.planId;
   let productId = subscription.product.id;
 
+  // Always read the existing row (if any): used both as a userId fallback and
+  // to preserve trial dates once the subscription converts from trialing to paid.
+  let existing:
+    | {
+        userId: string;
+        trialStart: Date | null;
+        trialEnd: Date | null;
+      }
+    | undefined;
+  try {
+    const storeSubscription = await db
+      .select({
+        userId: subscriptionsSchema.userId,
+        trialStart: subscriptionsSchema.trialStart,
+        trialEnd: subscriptionsSchema.trialEnd,
+      })
+      .from(subscriptionsSchema)
+      .where(eq(subscriptionsSchema.subscriptionId, subscriptionId))
+      .limit(1);
+    existing = storeSubscription[0];
+  } catch (err) {
+    console.error(`Error retrieving existing subscription ${subscription.id}:`, err);
+  }
+
   if (!userId) {
-    try {
-      const storeSubscription = await db
-        .select({ userId: subscriptionsSchema.userId })
-        .from(subscriptionsSchema)
-        .where(eq(subscriptionsSchema.subscriptionId, subscriptionId))
-        .limit(1);
-      userId = storeSubscription[0]?.userId;
-    } catch (err) {
-      console.error(`Error retrieving user for subscription ${subscription.id}:`, err);
-    }
+    userId = existing?.userId;
   }
 
   if (!planId) {
@@ -71,8 +86,14 @@ export async function syncCreemSubscriptionData(
     cancelAtPeriodEnd: subscription.status === 'scheduled_cancel',
     canceledAt: toDate(subscription.canceled_at),
     endedAt: subscription.status === 'canceled' ? toDate(subscription.current_period_end_date) : null,
-    trialStart: null,
-    trialEnd: null,
+    // During trialing the first charge date (next_transaction_date) marks the
+    // trial end; fall back to the current period end when absent.
+    trialStart: subscription.status === 'trialing'
+      ? (toDate(subscription.current_period_start_date) ?? toDate(subscription.created_at))
+      : existing?.trialStart ?? null,
+    trialEnd: subscription.status === 'trialing'
+      ? (toDate(subscription.next_transaction_date) ?? toDate(subscription.current_period_end_date))
+      : existing?.trialEnd ?? null,
     metadata: {
       ...metadata,
       creemSubscriptionId: subscription.id,

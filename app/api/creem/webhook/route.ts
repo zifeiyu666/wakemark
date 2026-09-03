@@ -1,6 +1,6 @@
 import { handleCreemInvoicePaid, handleCreemPaymentRefunded, handleCreemPaymentSucceeded, handleCreemSubscriptionUpdated } from '@/app/api/creem/webhook/handlers';
 import { apiResponse } from '@/lib/api-response';
-import { CreemCheckoutCompletedEvent, CreemRefundCreatedEvent, CreemSubscriptionActiveEvent, CreemSubscriptionCanceledEvent, CreemSubscriptionExpiredEvent, CreemSubscriptionPaidEvent, CreemSubscriptionUpdateEvent, CreemWebhookEvent } from '@/lib/creem/types';
+import { CreemCheckoutCompletedEvent, CreemRefundCreatedEvent, CreemSubscriptionActiveEvent, CreemSubscriptionCanceledEvent, CreemSubscriptionExpiredEvent, CreemSubscriptionPaidEvent, CreemSubscriptionTrialingEvent, CreemSubscriptionUpdateEvent, CreemWebhookEvent } from '@/lib/creem/types';
 import { getErrorMessage } from '@/lib/error-utils';
 import * as crypto from 'crypto';
 import { headers } from 'next/headers';
@@ -70,6 +70,9 @@ async function processWebhookEvent(payload: CreemWebhookEvent) {
     case 'subscription.update':
     case 'subscription.expired':
       await handleCreemSubscriptionUpdated(payload as CreemSubscriptionUpdateEvent | CreemSubscriptionActiveEvent | CreemSubscriptionExpiredEvent);
+      break;
+    case 'subscription.trialing':
+      await handleCreemSubscriptionUpdated(payload as CreemSubscriptionTrialingEvent);
       break;
     case 'subscription.canceled':
       await handleCreemSubscriptionUpdated(payload as CreemSubscriptionCanceledEvent, true);

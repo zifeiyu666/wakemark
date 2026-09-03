@@ -18,6 +18,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       NotFound: (await import(`./messages/${locale}/NotFound.json`)).default,
       Glossary: (await import(`./messages/${locale}/Glossary.json`)).default,
       McpDocs: (await import(`./messages/${locale}/McpDocs.json`)).default,
+      Roadmap: (await import(`./messages/${locale}/Roadmap.json`)).default,
 
       // Dashboard - User
       Settings: (await import(`./messages/${locale}/Dashboard/User/Settings.json`)).default,

@@ -8,6 +8,21 @@
   "annual": "Annual",
   "monthly": "Monthly",
   "onetime": "One-Time",
-  "saveTip": "Save 20%"
+  "saveTip": "Save 20%",
+  "Subscribe": {
+    "title": "Start your free trial",
+    "subtitle": "7 days free, then lock in your price forever.",
+    "periodYear": "/yr",
+    "periodMonth": "/mo",
+    "monthlyNote": "{amount}/mo · billed annually",
+    "spotsRemaining": "10 spots remaining",
+    "progress": 5,
+    "cta": "Start your 7-day free trial",
+    "noCharge": "No charge today. First charge on {date}. One click cancels before then.",
+    "fallbackName": "Early Bird Pricing",
+    "fallbackPrice": "$69",
+    "fallbackMonthlyAmount": "$5.75",
+    "fallbackDiscount": "-30%",
+    "mcpSupport": "MCP support: connect Claude, ChatGPT, Cursor, and other AI clients to search and organize your bookmarks."
+  }
 }
-

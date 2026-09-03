@@ -5,8 +5,8 @@ import {
   getBookmarkStats,
   getBookmarkTags,
   updateBookmarksRead,
-  type BookmarkRow,
 } from "@/actions/bookmarks/list";
+import type { BookmarkRow } from "@/lib/bookmarks/query";
 import { disconnectX } from "@/actions/bookmarks/connection";
 import {
   setListVisibility,
@@ -17,6 +17,7 @@ import { syncBookmarks } from "@/actions/bookmarks/sync";
 import type { SyncStoppedReason } from "@/lib/bookmarks/sync-core";
 import { BookmarkCard } from "@/components/bookmarks/BookmarkCard";
 import { ConnectXCard } from "@/components/bookmarks/ConnectXCard";
+import { useImportProgress } from "@/components/bookmarks/ImportProgressProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -55,6 +56,7 @@ import useSWR from "swr";
 import { useDebounce } from "use-debounce";
 
 const PAGE_SIZE = 24;
+const SYNC_COOLDOWN_MS = 30 * 60 * 1000;
 
 // One syncBookmarks() call pulls <=500 bookmarks (serverless timeout cap); a
 // multi-thousand first import loops the action here until X runs out of pages.
@@ -78,18 +80,32 @@ export function BookmarksBoard({
   const locale = useLocale();
   const { mutate: globalMutate } = useSWRConfig();
   const isListMode = !!list;
-  const [listMeta, setListMeta] = useState<BookmarkListRow | null>(list ?? null);
+  const [listMeta, setListMeta] = useState<BookmarkListRow | null>(
+    list ?? null,
+  );
 
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 300);
+  const normalizedSearch = debouncedSearch.trim();
   const [categories, setCategories] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const [syncPhase, setSyncPhase] = useState<"idle" | "syncing" | "processing">("idle");
+  const [syncPhase, setSyncPhase] = useState<"idle" | "syncing" | "processing">(
+    "idle",
+  );
+  // Tells the ImportProgressBanner to stand down while the manual Sync loop
+  // owns the connection (shared via the dashboard's ImportProgressProvider).
+  const { setManualSyncActive } = useImportProgress();
+  useEffect(() => {
+    setManualSyncActive(syncPhase !== "idle");
+    return () => setManualSyncActive(false);
+  }, [syncPhase, setManualSyncActive]);
   const [syncAdded, setSyncAdded] = useState(0);
   const [syncRemaining, setSyncRemaining] = useState(0);
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const [banner, setBanner] = useState<Banner | null>(null);
 
   const statsKey = "bookmarks-stats";
@@ -101,7 +117,7 @@ export function BookmarksBoard({
   const tagsKey = "bookmarks-tags";
   const { data: tagsData } = useSWR(
     connected ? tagsKey : null,
-    getBookmarkTags
+    getBookmarkTags,
   );
   const tagColorMap = useMemo(() => {
     const map: Record<string, string | null> = {};
@@ -116,7 +132,7 @@ export function BookmarksBoard({
     const extra = categories.filter(
       (c) =>
         !(BOOKMARK_CATEGORIES as readonly string[]).includes(c) &&
-        !fetched.includes(c)
+        !fetched.includes(c),
     );
     return [...fetched, ...extra];
   }, [tagColorMap, categories]);
@@ -128,18 +144,20 @@ export function BookmarksBoard({
       pageIndex: page,
       pageSize: PAGE_SIZE,
       sort,
-      search: debouncedSearch || undefined,
+      search: normalizedSearch || undefined,
       categories,
       listId: list?.id,
     }),
-    [view, page, sort, debouncedSearch, categories, list?.id]
+    [view, page, sort, normalizedSearch, categories, list?.id],
   );
   const listKey = JSON.stringify(["bookmarks", filters]);
-  const { data: listData, isValidating, mutate: mutateList } = useSWR(
-    connected ? listKey : null,
-    () => getBookmarks(filters),
-    { keepPreviousData: true }
-  );
+  const {
+    data: listData,
+    isValidating,
+    mutate: mutateList,
+  } = useSWR(connected ? listKey : null, () => getBookmarks(filters), {
+    keepPreviousData: true,
+  });
 
   const [items, setItems] = useState<BookmarkRow[]>([]);
   useEffect(() => {
@@ -148,10 +166,7 @@ export function BookmarksBoard({
     setItems((prev) =>
       filters.pageIndex === 0
         ? rows
-        : [
-            ...prev,
-            ...rows.filter((r) => !prev.some((p) => p.id === r.id)),
-          ]
+        : [...prev, ...rows.filter((r) => !prev.some((p) => p.id === r.id))],
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [listData]);
@@ -159,7 +174,20 @@ export function BookmarksBoard({
   // Reset pagination when filters change.
   useEffect(() => {
     setPage(0);
-  }, [view, sort, debouncedSearch, categories]);
+  }, [view, sort, normalizedSearch, categories]);
+
+  useEffect(() => {
+    if (!cooldownUntil) return;
+
+    const updateClock = () => {
+      const nextNow = Date.now();
+      setNow(nextNow);
+      if (nextNow >= cooldownUntil) setCooldownUntil(null);
+    };
+    updateClock();
+    const interval = window.setInterval(updateClock, 1000);
+    return () => window.clearInterval(interval);
+  }, [cooldownUntil]);
 
   // OAuth callback feedback.
   useEffect(() => {
@@ -179,6 +207,12 @@ export function BookmarksBoard({
   const totalCount = listData?.success ? (listData.data?.totalCount ?? 0) : 0;
   const refreshStats = () => globalMutate(statsKey);
   const refreshLists = () => globalMutate("bookmark-lists");
+  const cooldownRemainingMs = Math.max((cooldownUntil ?? 0) - now, 0);
+  const isSyncCoolingDown = cooldownRemainingMs > 0;
+  const cooldownSeconds = Math.ceil(cooldownRemainingMs / 1000);
+  const cooldownLabel = `${Math.floor(cooldownSeconds / 60)
+    .toString()
+    .padStart(2, "0")}:${(cooldownSeconds % 60).toString().padStart(2, "0")}`;
 
   const toggleListVisibility = async () => {
     if (!listMeta) return;
@@ -186,14 +220,16 @@ export function BookmarksBoard({
     const res = await setListVisibility(listMeta.id, nextPublic);
     if (!res.success) {
       toast.error(
-        res.customCode === "not-connected" ? t("errors.notConnected") : res.error
+        res.customCode === "not-connected"
+          ? t("errors.notConnected")
+          : res.error,
       );
       return;
     }
     setListMeta(res.data ?? null);
     refreshLists();
     toast.success(
-      nextPublic ? tLists("board.madePublic") : tLists("board.madePrivate")
+      nextPublic ? tLists("board.madePublic") : tLists("board.madePrivate"),
     );
   };
 
@@ -204,7 +240,7 @@ export function BookmarksBoard({
       return;
     }
     await navigator.clipboard.writeText(
-      publicListUrl(stats.username, listMeta.slug)
+      publicListUrl(stats.username, listMeta.slug),
     );
     toast.success(tLists("board.copied"));
   };
@@ -225,7 +261,7 @@ export function BookmarksBoard({
   };
 
   const runSync = async () => {
-    if (syncPhase !== "idle") return;
+    if (syncPhase !== "idle" || isSyncCoolingDown) return;
     setBanner(null);
     setSyncPhase("syncing");
     setSyncAdded(0);
@@ -235,12 +271,18 @@ export function BookmarksBoard({
     let added = 0;
     let pendingCount = 0;
     let stoppedReason: SyncStoppedReason = "done";
+    let cooldownStarted = false;
     for (let round = 0; round < MAX_SYNC_ROUNDS; round++) {
       const res = await syncBookmarks();
       if (!res.success) {
         setSyncPhase("idle");
         if (res.customCode === "auth-error") {
           startReconnect();
+          return;
+        }
+        if (res.customCode === "sync-busy") {
+          // Another tab or the cron tick holds the sync lock: not a failure.
+          setBanner({ kind: "warn", text: t("syncBanner.syncBusy") });
           return;
         }
         setBanner({
@@ -252,12 +294,22 @@ export function BookmarksBoard({
         });
         return;
       }
+      const responseStoppedReason = res.data?.stoppedReason ?? "done";
+      if (!cooldownStarted && responseStoppedReason !== "auth-error") {
+        setCooldownUntil(Date.now() + SYNC_COOLDOWN_MS);
+        cooldownStarted = true;
+      }
       added += res.data?.added ?? 0;
       pendingCount = res.data?.pendingCount ?? 0;
-      stoppedReason = res.data?.stoppedReason ?? "done";
+      stoppedReason = responseStoppedReason;
       console.log(
         "[bookmarks] sync round:",
-        JSON.stringify({ round: round + 1, added, pendingCount, stoppedReason })
+        JSON.stringify({
+          round: round + 1,
+          added,
+          pendingCount,
+          stoppedReason,
+        }),
       );
       setSyncAdded(added);
       mutateList();
@@ -272,7 +324,7 @@ export function BookmarksBoard({
       let guard = 0;
       while (remaining > 0 && guard < 200) {
         console.log(
-          `[bookmarks] calling processPendingBookmarks (remaining=${remaining}, round=${guard + 1})`
+          `[bookmarks] calling processPendingBookmarks (remaining=${remaining}, round=${guard + 1})`,
         );
         const processed = await processPendingBookmarks();
         console.log(
@@ -280,8 +332,8 @@ export function BookmarksBoard({
           JSON.stringify(
             processed.success
               ? { success: true, data: processed.data }
-              : { success: false, error: processed.error }
-          )
+              : { success: false, error: processed.error },
+          ),
         );
         if (!processed.success) {
           setBanner({ kind: "error", text: processed.error });
@@ -317,7 +369,7 @@ export function BookmarksBoard({
 
   const toggleSelected = (id: string) => {
     setSelected((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
@@ -366,7 +418,9 @@ export function BookmarksBoard({
         {isListMode && listMeta && (
           <span className="text-sm text-muted-foreground">
             ·{" "}
-            {listMeta.isPublic ? tLists("board.public") : tLists("board.private")}
+            {listMeta.isPublic
+              ? tLists("board.public")
+              : tLists("board.private")}
           </span>
         )}
         {connected && !isListMode && stats?.username && (
@@ -388,7 +442,10 @@ export function BookmarksBoard({
       ) : (
         <>
           {/* toolbar */}
-          <div data-onboarding-target="find" className="flex flex-wrap items-center gap-2">
+          <div
+            data-onboarding-target="find"
+            className="flex flex-wrap items-center gap-2"
+          >
             <Select
               value={sort}
               onValueChange={(value) => setSort(value as "newest" | "oldest")}
@@ -397,8 +454,12 @@ export function BookmarksBoard({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">{t("toolbar.newestFirst")}</SelectItem>
-                <SelectItem value="oldest">{t("toolbar.oldestFirst")}</SelectItem>
+                <SelectItem value="newest">
+                  {t("toolbar.newestFirst")}
+                </SelectItem>
+                <SelectItem value="oldest">
+                  {t("toolbar.oldestFirst")}
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -437,15 +498,19 @@ export function BookmarksBoard({
                 <Button
                   variant="outline"
                   onClick={runSync}
-                  disabled={syncPhase !== "idle"}
+                  disabled={syncPhase !== "idle" || isSyncCoolingDown}
                 >
                   <RefreshCw
                     className={cn(
                       "h-4 w-4",
-                      syncPhase !== "idle" && "animate-spin"
+                      syncPhase !== "idle" && "animate-spin",
                     )}
                   />
-                  {syncPhase === "syncing" ? t("toolbar.syncing") : t("toolbar.sync")}
+                  {syncPhase === "syncing"
+                    ? t("toolbar.syncing")
+                    : isSyncCoolingDown
+                      ? t("toolbar.syncCooldown", { remaining: cooldownLabel })
+                      : t("toolbar.sync")}
                 </Button>
               )}
               <div className="relative">
@@ -454,14 +519,17 @@ export function BookmarksBoard({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("toolbar.searchPlaceholder")}
-                  className="w-56 pl-8"
+                  className="h-10 w-64 pl-9"
                 />
               </div>
             </div>
           </div>
 
           {/* category filter */}
-          <div data-onboarding-target="find" className="flex flex-wrap items-center gap-2">
+          <div
+            data-onboarding-target="find"
+            className="flex flex-wrap items-center gap-2"
+          >
             {BOOKMARK_CATEGORIES.map((category) => {
               const active = categories.includes(category);
               return (
@@ -472,20 +540,20 @@ export function BookmarksBoard({
                     setCategories((prev) =>
                       active
                         ? prev.filter((c) => c !== category)
-                        : [...prev, category]
+                        : [...prev, category],
                     )
                   }
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                     active
                       ? "border-foreground bg-secondary text-foreground"
-                      : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
                   <span
                     className={cn(
                       "h-2 w-2 rounded-full",
-                      CATEGORY_COLORS[category as BookmarkCategory].dot
+                      CATEGORY_COLORS[category as BookmarkCategory].dot,
                     )}
                   />
                   {category}
@@ -500,23 +568,21 @@ export function BookmarksBoard({
                   type="button"
                   onClick={() =>
                     setCategories((prev) =>
-                      active
-                        ? prev.filter((c) => c !== tag)
-                        : [...prev, tag]
+                      active ? prev.filter((c) => c !== tag) : [...prev, tag],
                     )
                   }
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                     active
                       ? "border-foreground bg-secondary text-foreground"
-                      : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
                   <span
                     className={cn(
                       "h-2 w-2 rounded-full",
                       tagColorChipClass(tagColorMap[tag]) ??
-                        "bg-muted-foreground/60"
+                        "bg-muted-foreground/60",
                     )}
                   />
                   {tag}
@@ -546,7 +612,7 @@ export function BookmarksBoard({
                   ? "border-destructive/40 bg-destructive/10 text-destructive"
                   : banner.kind === "warn"
                     ? "border-border bg-secondary text-foreground"
-                    : "border-border bg-secondary text-foreground"
+                    : "border-border bg-secondary text-foreground",
               )}
             >
               {banner.text}
@@ -586,18 +652,26 @@ export function BookmarksBoard({
               ))}
             </div>
           ) : items.length === 0 ? (
-            <div className="rounded-lg border border-border bg-background px-6 py-16 text-center">
-              <h2 className="text-lg font-semibold">
-                {debouncedSearch || categories.length > 0
-                  ? t("empty.noResults")
-                  : t("empty.title")}
-              </h2>
-              {!debouncedSearch && categories.length === 0 && (
+            normalizedSearch || categories.length > 0 ? (
+              <div className="mx-auto flex min-h-80 max-w-2xl flex-col items-center justify-center px-6 py-16 text-center">
+                <div className="flex h-24 w-24 items-center justify-center border border-border bg-secondary/30">
+                  <Search className="h-10 w-10 text-muted-foreground" />
+                </div>
+                <h2 className="mt-8 font-serif text-3xl font-semibold text-foreground">
+                  {t("empty.noResults")}
+                </h2>
+                <p className="mt-4 text-lg text-muted-foreground">
+                  {t("empty.noResultsDescription")}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border bg-background px-6 py-16 text-center">
+                <h2 className="text-lg font-semibold">{t("empty.title")}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {t("empty.description")}
                 </p>
-              )}
-            </div>
+              </div>
+            )
           ) : (
             <>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

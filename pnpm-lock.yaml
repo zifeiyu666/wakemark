@@ -59,9 +59,6 @@ importers:
       '@fal-ai/client':
         specifier: ^1.9.1
         version: 1.9.1
-      '@fontsource/science-gothic':
-        specifier: ^5.2.1
-        version: 5.2.1
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.2.1(react-hook-form@7.62.0(react@19.2.3))
@@ -1314,9 +1311,6 @@ packages:
 
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
-
-  '@fontsource/science-gothic@5.2.1':
-    resolution: {integrity: sha512-mkhQ4jkQFC04+4f/wo5qofP0+L1QX9d4N4FpbhoDhqTFTevHe56uppkUzNxIYTJdIGgS4LZ/DA9Ji2vGAUA1VQ==}
 
   '@formatjs/ecma402-abstract@2.3.4':
     resolution: {integrity: sha512-qrycXDeaORzIqNhBOx0btnhpD1c+/qFIHAN9znofuMJX6QBwtbrmlpWfD4oiUUD2vJUOIYFA/gYtg2KAMGG7sA==}
@@ -8043,7 +8037,7 @@ snapshots:
       '@babel/types': 7.28.5
       '@jridgewell/remapping': 2.3.5
       convert-source-map: 2.0.0
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@8.1.1)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -8115,7 +8109,7 @@ snapshots:
       '@babel/parser': 7.28.5
       '@babel/template': 7.27.2
       '@babel/types': 7.28.5
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -8430,8 +8424,6 @@ snapshots:
       react-dom: 19.2.3(react@19.2.3)
 
   '@floating-ui/utils@0.2.10': {}
-
-  '@fontsource/science-gothic@5.2.1': {}
 
   '@formatjs/ecma402-abstract@2.3.4':
     dependencies:
@@ -10935,7 +10927,7 @@ snapshots:
       '@typescript-eslint/types': 8.48.1
       '@typescript-eslint/typescript-estree': 8.48.1(supports-color@8.1.1)(typescript@5.9.2)
       '@typescript-eslint/visitor-keys': 8.48.1
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@8.1.1)
       eslint: 9.34.0(jiti@2.6.1)(supports-color@8.1.1)
       typescript: 5.9.2
     transitivePeerDependencies:
@@ -10945,7 +10937,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.48.1(typescript@5.9.2)
       '@typescript-eslint/types': 8.48.1
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@8.1.1)
       typescript: 5.9.2
     transitivePeerDependencies:
       - supports-color
@@ -10979,7 +10971,7 @@ snapshots:
       '@typescript-eslint/tsconfig-utils': 8.48.1(typescript@5.9.2)
       '@typescript-eslint/types': 8.48.1
       '@typescript-eslint/visitor-keys': 8.48.1
-      debug: 4.4.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@8.1.1)
       minimatch: 9.0.5
       semver: 7.7.3
       tinyglobby: 0.2.15

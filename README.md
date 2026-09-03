@@ -34,11 +34,13 @@ https://<your-domain>/api/cron/bookmarks?job=drain
 
 Add an `Upstash-Forward` header whose forwarded key is `Authorization` and
 whose value is `<CRON_SECRET>` (the secret itself, without `Bearer `). Set
-`Upstash-Method` to `POST` and choose a schedule such as `*/10 * * * *`.
-QStash will then continue large first-time
-history imports and process the pending AI backlog. You may create a second
-daily schedule for `?job=daily` (for example `0 8 * * *`, UTC). Keep
-`CRON_SECRET` configured in Vercel and QStash; never commit its value.
+`Upstash-Method` to `POST` and choose a schedule such as `0 */3 * * *`.
+Active users drive their own first-time history import and AI tagging from
+the dashboard (resumable progress banner); this schedule is the fallback that
+continues backlogs and pending AI work for users who stay away. You may
+create a second daily schedule for `?job=daily` (for example `0 8 * * *`,
+UTC). Keep `CRON_SECRET` configured in Vercel and QStash; never commit its
+value.
 
 The route also accepts `Authorization: Bearer <CRON_SECRET>` for manual
 requests and compatibility with other schedulers.
@@ -60,12 +62,16 @@ https://<your-domain>/api/cron/digests?job=weekly
 ```
 
 Use the same `Upstash-Forward` `Authorization: <CRON_SECRET>` header as the
-bookmark sync schedules and a cron expression of `0 * * * *`. Each hourly tick
-checks every user's local clock (IANA time zone via `Intl`, DST-safe): when it
-is Friday past the preferred hour and no digest exists for that local week
-(`digests.week_key`), the digest is generated and emailed exactly once. A tick
-missed during downtime is caught up by the next tick on the same Friday; a
-fully missed Friday is skipped rather than sending a stale summary.
+bookmark sync schedules and a cron expression of `0 * * * 4,5,6` (hourly,
+Thursday–Saturday UTC — a user's local Friday can start as early as Thursday
+10:00 UTC in UTC+14 and end as late as Saturday 12:00 UTC in UTC-12). Each
+hourly tick checks every user's local clock (IANA time zone via `Intl`,
+DST-safe): when it is Friday past the preferred hour and no digest exists for
+that local week (`digests.week_key`), the digest is generated and emailed
+exactly once. When it is not Friday anywhere on Earth the tick returns before
+touching the database (keeps Neon suspended). A tick missed during downtime is
+caught up by the next tick on the same Friday; a fully missed Friday is
+skipped rather than sending a stale summary.
 
 The endpoint is implemented in
 [`app/api/cron/digests/route.ts`](./app/api/cron/digests/route.ts) and reuses

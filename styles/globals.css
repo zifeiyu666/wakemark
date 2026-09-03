@@ -238,7 +238,7 @@
   --secondary: rgb(235, 235, 235);
   --secondary-foreground: rgb(0, 0, 0);
   --muted: rgb(245, 245, 245);
-  --muted-foreground: rgb(82, 82, 82);
+  --muted-foreground: rgb(102, 102, 102);
   --accent: rgb(235, 235, 235);
   --accent-foreground: rgb(0, 0, 0);
   --destructive: rgb(229, 75, 79);
@@ -395,8 +395,6 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 }
-
-
 /*
   ---break---
 */
@@ -407,5 +405,530 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+/* Attio-style showcase backdrop: a light-blue field (lighter in the
+   middle, deeper at the edges) with WHITE pinstripes on top, fading
+   out towards the top of the stage. Always rendered so a hint of the
+   blue gradient is visible even at the very top of the page. */
+.showcase-stripes {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.55) 0 1px,
+      transparent 1px 8px
+    ),
+    linear-gradient(
+      to right,
+      rgb(190 198 246) 0%,
+      rgb(228 232 252) 50%,
+      rgb(190 198 246) 100%
+    );
+  -webkit-mask-image: linear-gradient(to bottom, transparent 30%, black 80%);
+  mask-image: linear-gradient(to bottom, transparent 30%, black 80%);
+}
+.dark .showcase-stripes {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.07) 0 1px,
+      transparent 1px 8px
+    ),
+    linear-gradient(
+      to right,
+      rgb(30 36 71) 0%,
+      rgb(38 44 85) 50%,
+      rgb(30 36 71) 100%
+    );
+}
+
+/* Fine dot grid used behind the text reveal, matching the reference's
+   quiet drafting-paper texture without competing with the copy. */
+.text-reveal-dots {
+  background-image: radial-gradient(
+    circle,
+    rgb(142 157 190 / 0.34) 0 1px,
+    transparent 1.1px
+  );
+  background-size: 16px 16px;
+}
+.dark .text-reveal-dots {
+  background-image: radial-gradient(
+    circle,
+    rgb(255 255 255 / 0.14) 0 1px,
+    transparent 1.1px
+  );
+}
+
+/* The feature heading borrows the hero's 8px pinstripe rhythm and runs flush
+   to the section edges. */
+.feature-heading-stripes {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 13rem;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgb(228 228 228 / 0.8) 0 1px,
+      transparent 1px 8px
+    ),
+    linear-gradient(to top, rgb(241 245 249 / 0.55), transparent 80%);
+  -webkit-mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgb(0 0 0 / 0.68) 45%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgb(0 0 0 / 0.68) 45%,
+    transparent 100%
+  );
+}
+
+.dark .feature-heading-stripes {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgb(63 63 70 / 0.9) 0 1px,
+      transparent 1px 8px
+    ),
+    linear-gradient(to top, rgb(39 39 42 / 0.42), transparent 80%);
+}
+
+/* Dark CTA field with the same compact vertical rhythm as the showcase. */
+.cta-grid {
+  background-color: rgb(15 15 16);
+  background-image: radial-gradient(
+    ellipse 54% 78% at 50% 50%,
+    rgb(39 39 42 / 0.42),
+    transparent 72%
+  );
+}
+
+.cta-grid::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0.06) 0 1px,
+    transparent 1px 8px
+  );
+  content: "";
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black 0%,
+    rgb(0 0 0 / 0.36) 22%,
+    transparent 40%,
+    transparent 60%,
+    rgb(0 0 0 / 0.36) 78%,
+    black 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    black 0%,
+    rgb(0 0 0 / 0.36) 22%,
+    transparent 40%,
+    transparent 60%,
+    rgb(0 0 0 / 0.36) 78%,
+    black 100%
+  );
+}
+
+.cta-grid-meteors {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black 0%,
+    rgb(0 0 0 / 0.3) 28%,
+    transparent 50%,
+    rgb(0 0 0 / 0.3) 72%,
+    black 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    black 0%,
+    rgb(0 0 0 / 0.3) 28%,
+    transparent 50%,
+    rgb(0 0 0 / 0.3) 72%,
+    black 100%
+  );
+}
+
+.cta-grid-meteors span {
+  position: absolute;
+  top: -7rem;
+  width: 1px;
+  height: var(--meteor-length, 5rem);
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgb(255 255 255 / 0.62) 46%,
+    transparent
+  );
+  animation: cta-meteor-fall var(--meteor-duration, 7s) linear infinite;
+  animation-delay: var(--meteor-delay, 0s);
+}
+
+.cta-grid-meteors span:nth-child(1) {
+  left: 4%;
+  --meteor-length: 4.5rem;
+  --meteor-duration: 8.6s;
+  --meteor-delay: -5.3s;
+}
+
+.cta-grid-meteors span:nth-child(2) {
+  left: 12%;
+  --meteor-length: 7rem;
+  --meteor-duration: 11.2s;
+  --meteor-delay: -8.1s;
+}
+
+.cta-grid-meteors span:nth-child(3) {
+  left: 22%;
+  --meteor-length: 3.5rem;
+  --meteor-duration: 7.4s;
+  --meteor-delay: -2.7s;
+}
+
+.cta-grid-meteors span:nth-child(4) {
+  left: 31%;
+  --meteor-length: 6rem;
+  --meteor-duration: 10.1s;
+  --meteor-delay: -6.8s;
+}
+
+.cta-grid-meteors span:nth-child(5) {
+  left: 63%;
+  --meteor-length: 4rem;
+  --meteor-duration: 8.2s;
+  --meteor-delay: -3.4s;
+}
+
+.cta-grid-meteors span:nth-child(6) {
+  left: 69%;
+  --meteor-length: 7.5rem;
+  --meteor-duration: 11.8s;
+  --meteor-delay: -9.2s;
+}
+
+.cta-grid-meteors span:nth-child(7) {
+  left: 77%;
+  --meteor-length: 3rem;
+  --meteor-duration: 7.8s;
+  --meteor-delay: -1.9s;
+}
+
+.cta-grid-meteors span:nth-child(8) {
+  left: 84%;
+  --meteor-length: 5.5rem;
+  --meteor-duration: 9.4s;
+  --meteor-delay: -7.5s;
+}
+
+.cta-grid-meteors span:nth-child(9) {
+  left: 91%;
+  --meteor-length: 4.25rem;
+  --meteor-duration: 8.9s;
+  --meteor-delay: -4.6s;
+}
+
+.cta-grid-meteors span:nth-child(10) {
+  left: 97%;
+  --meteor-length: 6.5rem;
+  --meteor-duration: 10.6s;
+  --meteor-delay: -10s;
+}
+
+@keyframes cta-meteor-fall {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  24%,
+  72% {
+    opacity: 0.7;
+  }
+  90%,
+  100% {
+    opacity: 0;
+    transform: translateY(44rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-grid-meteors span {
+    animation: none;
+  }
+}
+
+/* Homepage sections below the showcase share one measured drawing frame.
+   The 25px outside gutter leaves the two vertical rails visible from the
+   first section through the CTA; section borders lock into those rails. */
+.home-grid-frame {
+  position: relative;
+  width: auto;
+  max-width: 1440px;
+  margin-inline: 25px;
+  border-inline: 1px solid rgb(228 228 228 / 0.8);
+}
+
+.home-grid-frame > section {
+  position: relative;
+  border-bottom: 1px solid rgb(228 228 228 / 0.8);
+}
+
+.home-grid-frame > section:last-child {
+  border-bottom: 0;
+}
+
+/* Small crosshair marks make each section boundary read as a precise grid
+   junction, without adding visual noise to narrow screens. */
+@media (min-width: 768px) {
+  .home-grid-frame > section::before,
+  .home-grid-frame > section::after {
+    position: absolute;
+    top: -5px;
+    z-index: 10;
+    color: rgb(152 152 152 / 0.75);
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1;
+    content: "+";
+    pointer-events: none;
+  }
+
+  .home-grid-frame > section::before {
+    left: -4px;
+  }
+
+  .home-grid-frame > section::after {
+    right: -4px;
+  }
+}
+
+.home-grid-frame .title-gradient {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: inherit;
+}
+
+.dark .home-grid-frame,
+.dark .home-grid-frame > section {
+  border-color: rgb(63 63 70 / 0.9);
+}
+
+/* Changelog uses the same vertical drafting rhythm as the rest of the
+   homepage frame. The outer rails continue through the tick field. */
+.changelog-timeline {
+  margin-inline: -1.25rem;
+}
+
+.changelog-ticks-edge {
+  display: none;
+}
+
+.changelog-ticks {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 4.75rem;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(228 228 228 / 0.9) 0 1px,
+    transparent 1px 10px
+  );
+  -webkit-mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgb(0 0 0 / 0.72) 48%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to top,
+    black 0%,
+    rgb(0 0 0 / 0.72) 48%,
+    transparent 100%
+  );
+}
+
+.changelog-ticks::after {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(100 116 139 / 0.82) 0 1px,
+    transparent 1px 10px
+  );
+  content: "";
+  opacity: 0;
+  transition: opacity 200ms ease;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    black 0%,
+    rgb(0 0 0 / 0.7) 45%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    black 0%,
+    rgb(0 0 0 / 0.7) 45%,
+    transparent 100%
+  );
+}
+
+.group:hover .changelog-ticks,
+.group:focus-visible .changelog-ticks {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(228 228 228 / 0.9) 0 1px,
+    transparent 1px 10px
+  );
+}
+
+.group:hover .changelog-ticks::after,
+.group:focus-visible .changelog-ticks::after {
+  opacity: 1;
+}
+
+.dark .changelog-ticks {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(63 63 70 / 0.92) 0 1px,
+    transparent 1px 10px
+  );
+}
+
+.dark .changelog-ticks::after {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgb(161 161 170 / 0.9) 0 1px,
+    transparent 1px 10px
+  );
+}
+
+@media (min-width: 640px) {
+  .changelog-timeline {
+    margin-inline: -2.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .changelog-timeline {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) 2.5rem;
+  }
+
+  .changelog-release-grid {
+    grid-column: 2;
+  }
+
+  .changelog-ticks-edge {
+    position: relative;
+    display: block;
+    grid-row: 1;
+    align-self: end;
+  }
+
+  .changelog-ticks-edge:first-child {
+    grid-column: 1;
+  }
+
+  .changelog-ticks-edge:last-child {
+    grid-column: 3;
+  }
+}
+
+@media (min-width: 1024px) {
+  .changelog-timeline {
+    margin-inline: -5rem;
+    grid-template-columns: 5rem minmax(0, 1fr) 5rem;
+  }
+}
+
+@media (min-width: 1490px) {
+  .home-grid-frame {
+    margin-inline: auto;
+  }
+}
+
+/* Feature card backdrop: the hero dashboard screenshot stretched full-bleed
+   behind each demo card, fading out towards the right edge and the bottom
+   so it melts into the page background in either theme. */
+.feature-backdrop-fade {
+  -webkit-mask-image:
+    linear-gradient(to right, black 42%, transparent 88%),
+    linear-gradient(to bottom, black 35%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, black 42%, transparent 88%),
+    linear-gradient(to bottom, black 35%, transparent 100%);
+  mask-composite: intersect;
+}
+
+/* Eyebrow badge border beam: a thin teal→indigo light streak that
+   travels around the pill border, masked to a 1px ring so it reads
+   as a glow running along the border itself. */
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes border-beam {
+  from {
+    --beam-angle: 0deg;
+  }
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+.eyebrow-beam {
+  position: relative;
+}
+
+.eyebrow-beam::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 240deg,
+    rgb(45 212 191 / 0) 252deg,
+    rgb(45 212 191) 300deg,
+    rgb(99 102 241) 340deg,
+    transparent 352deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: border-beam 4s linear infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eyebrow-beam::after {
+    animation: none;
   }
 }

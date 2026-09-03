@@ -5,20 +5,10 @@
       "text": "Smart Bookmarks Sync & AI Weekly Drop",
       "href": "/#pricing"
     },
-    "title": "Wake your sleeping X/Twitter bookmarks.",
-    "description": "Your saved tweets, auto-tagged, organized into lists, and summarized in a digest that arrives on your schedule.",
+    "title": "Wake up your X bookmarks.",
+    "description": "Your saved tweets: auto-tagged, queryable via chat and MCP, and summarized in a digest that arrives on your schedule.",
     "cta": "Organize my bookmarks",
-    "ctaNote": "Free for seven days. No charge today, cancel anytime.",
-    "video": {
-      "title": "See WakeMark in action",
-      "eyebrow": "See it in action",
-      "heading": "A 60-second tour of <accent>WakeMark.</accent>",
-      "description": "From your first sync to your weekly digest. Watch how thousands of saved tweets become a tidy library you actually revisit.",
-      "playLabel": "Play the product intro video",
-      "closeLabel": "Close the video",
-      "poster": "/dashboard_screenshot.avif",
-      "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-    }
+    "ctaNote": "Free for seven days. No charge today, cancel anytime."
   },
   "Problem": {
     "label": "The Problem",
@@ -27,27 +17,27 @@
         "stat": "3,000+",
         "statLabel": "Bookmarks saved, on average",
         "title": "Bookmarks pile up",
-        "description": "You save tweets all day long. But X/Twitter buries them in a single unsorted list you will never scroll back through."
+        "description": "Every save lands in one endless feed. By the time you need it, the post is already buried."
       },
       {
         "stat": "97%",
         "statLabel": "Never opened again",
-        "title": "Gone the moment you save",
-        "description": "No reminders, no search, no tags. X/Twitter treats your bookmarks as a write-only database."
+        "title": "Save now. Forget forever.",
+        "description": "No resurfacing, no useful context. Your bookmarks become a write-only archive the moment you save them."
       },
       {
-        "stat": "12 sec",
-        "statLabel": "Avg. catch-up with a digest",
-        "title": "Life is too short to scroll",
-        "description": "You don't have 30 minutes to re-read old tweets. A daily digest takes less time than making coffee."
+        "stat": "30 min+",
+        "statLabel": "Wasted searching each week",
+        "title": "Lost in the feed",
+        "description": "Looking for an old post turns into a scroll through thousands of saves, with no way to narrow it down."
       }
     ]
   },
   "PricingLock": {
     "eyebrow": "PRICING",
-    "title": "Lock in your price before it's gone",
-    "description": "Your price stays the same as long as you're subscribed. Join early, pay less. Simple as that.",
-    "note": "One plan. Every feature. Price rises as spots fill.",
+    "title": "Lock in early pricing.",
+    "description": "Your rate is guaranteed for life as long as you stay subscribed. The earlier you join, the less you pay.",
+    "note": "One plan. Full access. Price increases as seats fill.",
     "tiers": [
       {
         "id": "founders",
@@ -61,7 +51,7 @@
         "statusLabel": "",
         "medal": true,
         "remaining": "143 of 150 remaining",
-        "progress": 5,
+        "progress": 95,
         "cta": "Get started"
       },
       {
@@ -102,20 +92,20 @@
       }
     ],
     "chart": {
-      "title": "Price for new subscribers increases as more people join",
+      "title": "Price progression trajectory",
       "axisLabel": "Price/yr",
       "lockedLabel": "your price (locked)",
-      "footnote": "Subscribe now to lock in your price. Your rate never goes up once you're in.",
-      "yTicks": [40, 55, 70, 85, 100]
+      "footnote": "Lock in early pricing. Kept forever."
     },
+    "fullPriceLabel": "Full price",
     "includedLabel": "Included at every price",
     "included": [
-      "Every bookmark, synced automatically",
-      "Auto-sorted by topic with AI",
-      "Weekly digest in your inbox",
-      "Create & share themed lists",
-      "Ask AI anything about your bookmarks",
-      "Syncs on its own, or on demand"
+      "Your bookmarks, synced automatically",
+      "AI organizes every bookmark by topic",
+      "A weekly digest, delivered to your inbox",
+      "Build and share themed lists",
+      "Ask AI about anything you've saved",
+      "Use your bookmarks with AI via MCP"
     ],
     "trial": "Try free for 7 days"
   },
@@ -129,50 +119,50 @@
     "items": []
   },
   "TextReveal": {
-    "text": "Your X/Tweet bookmarks, finally organized, summarized, and understood"
+    "text": "\" Your X/Tweet bookmarks, finally organized, summarized, and understood \""
   },
   "FAQ": {
     "eyebrow": "FAQ",
-    "title": "Questions you might have",
+    "title": "Questions you may have",
     "items": [
       {
-        "question": "How do you access my bookmarks? Do I have to give you my X/Twitter password?",
-        "answer": "Never. You connect via X/Twitter's official OAuth flow, which grants read-only access to your bookmarks. We never see your password, and you can revoke access from your X/Twitter settings at any time."
+        "question": "How do you access my bookmarks? Do I need to share my X/Twitter password?",
+        "answer": "No. You connect through X/Twitter's official OAuth flow, which gives WakeMark read-only access to your bookmarks. We never see your password, and you can revoke access anytime from your X/Twitter settings."
       },
       {
         "question": "What happens to my data if I cancel?",
-        "answer": "Your bookmarks and lists stay yours. If you cancel, you keep everything you've already synced. Resubscribe anytime to pick up where you left off."
+        "answer": "Your bookmarks and lists remain yours. If you cancel, you keep everything you've already synced, and you can resubscribe anytime to pick up where you left off."
       },
       {
-        "question": "How is this different from saving tweets to Notion or Readwise?",
-        "answer": "Those tools store links. WakeMark actually reads, categorizes, and summarizes your bookmarks for you. You get auto-tagging by topic, shareable themed lists, and a digest that surfaces what matters instead of another pile of unread saves."
+        "question": "How is WakeMark different from saving tweets to Notion or Readwise?",
+        "answer": "Those tools store links. WakeMark reads, categorizes, and summarizes your bookmarks for you. You get topic-based auto-tagging, shareable themed lists, and a digest that surfaces what matters instead of creating another pile of unread saves."
       },
       {
-        "question": "What does the AI auto-tagging actually do?",
-        "answer": "When your bookmarks sync, our AI reads each one and assigns topic tags like \"startup fundraising\" or \"CSS layout\" or \"machine learning.\" You don't configure anything. Tags appear automatically, and you can use them to filter, search, or build lists."
+        "question": "What does AI auto-tagging actually do?",
+        "answer": "When your bookmarks sync, our AI reads each one and assigns topic tags such as \"startup fundraising,\" \"CSS layout,\" or \"machine learning.\" There is nothing to configure: tags appear automatically, ready for filtering, searching, and list-building."
       },
       {
         "question": "Is there a free trial?",
-        "answer": "Yes. Every account starts with a 7-day free trial. After that, pricing starts at $59/year depending on when you join. Your price locks in for as long as you stay subscribed. Cancel anytime."
+        "answer": "Yes. Every account starts with a 7-day free trial. After that, plans start at $59/year, depending on when you join. Your price is locked in for as long as you stay subscribed, and you can cancel anytime."
       },
       {
         "question": "How often do bookmarks sync?",
-        "answer": "Bookmarks sync automatically every day, plus you can trigger a manual sync whenever you want. There's no bookmark limit."
+        "answer": "Bookmarks sync automatically every day, and you can trigger a manual sync whenever you want. There is no bookmark limit."
       },
       {
         "question": "What does the email digest look like?",
-        "answer": "It's a clean summary of your recent bookmarks, grouped by topic. Each entry includes the key takeaway in a sentence or two, plus a direct link to the original tweet. Think of it as a personal briefing, not a wall of links."
+        "answer": "It is a clean summary of your recent bookmarks, grouped by topic. Each entry includes the key takeaway in a sentence or two, along with a direct link to the original tweet. Think of it as a personal briefing, not a wall of links."
       },
       {
-        "question": "Is there a risk X/Twitter will block this or change their API?",
-        "answer": "We use X/Twitter's official API within their published rate limits. If X/Twitter changes something on their end, we adapt. Your bookmarks already synced to WakeMark stay safe regardless of what happens with the API."
+        "question": "Could X/Twitter block this or change its API?",
+        "answer": "We use X/Twitter's official API within its published rate limits. If X/Twitter changes something on its end, we adapt. Bookmarks already synced to WakeMark remain safe regardless of what happens with the API."
       }
     ]
   },
   "CTA": {
-    "title": "You already saved the best parts of X/Twitter. Time to actually read them.",
-    "description": "Your bookmark graveyard becomes a morning briefing. Try WakeMark free for 7 days.",
-    "button": "Turn my bookmarks into a briefing",
+    "title": "Stop saving. Start reading.",
+    "description": "Turn your bookmark graveyard into a daily morning briefing.",
+    "button": "Wake my bookmarks",
     "trustText": "Free for seven days. No charge today, cancel anytime."
   }
 }

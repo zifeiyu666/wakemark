@@ -29,6 +29,15 @@ export const REDIS_KEYS_CONFIGS = {
     externalId: (externalId: string) => `${LOWER_CASE_SITE_NAME}:vtask:ext:${externalId}`,
   },
 
+  sync: {
+    /**
+     * Per-connection distributed sync lock (manual Sync / cron / signup
+     * fast-sync must not pull the X API concurrently for one connection).
+     * @example wakemark:lock:sync:{connectionId}
+     */
+    lock: (connectionId: string) => `${LOWER_CASE_SITE_NAME}:lock:sync:${connectionId}`,
+  },
+
   // Add other modules here as needed
   // user: { ... },
   // cache: { ... },

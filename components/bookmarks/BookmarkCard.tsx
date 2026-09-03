@@ -1,6 +1,6 @@
 "use client";
 
-import type { BookmarkRow } from "@/actions/bookmarks/list";
+import type { BookmarkRow } from "@/lib/bookmarks/query";
 import { updateBookmarkTags, updateBookmarksRead } from "@/actions/bookmarks/list";
 import {
   createList,

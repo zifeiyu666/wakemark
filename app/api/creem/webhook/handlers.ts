@@ -6,6 +6,7 @@ import {
   CreemSubscriptionCanceledEvent,
   CreemSubscriptionExpiredEvent,
   CreemSubscriptionPaidEvent,
+  CreemSubscriptionTrialingEvent,
   CreemSubscriptionUpdateEvent,
   CreemTransaction
 } from '@/lib/creem/types';
@@ -212,7 +213,7 @@ export async function handleCreemInvoicePaid(
 }
 
 export async function handleCreemSubscriptionUpdated(
-  payload: CreemSubscriptionUpdateEvent | CreemSubscriptionActiveEvent | CreemSubscriptionExpiredEvent | CreemSubscriptionCanceledEvent,
+  payload: CreemSubscriptionUpdateEvent | CreemSubscriptionActiveEvent | CreemSubscriptionExpiredEvent | CreemSubscriptionCanceledEvent | CreemSubscriptionTrialingEvent,
   isDeleted: boolean = false
 ) {
   const subscription = payload.object

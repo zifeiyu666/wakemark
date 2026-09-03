@@ -48,3 +48,17 @@ export function fridayWeekKey(timeZone: string): string | null {
   if (get("weekday") !== "Fri") return null;
   return `${get("year")}-${get("month")}-${get("day")}`;
 }
+
+// Returns the user's local date (YYYY-MM-DD) regardless of weekday. Used as
+// the weekKey for the new-user welcome digest; the unique (userId, weekKey)
+// constraint keeps same-day re-triggers idempotent.
+export function todayWeekKey(timeZone: string): string {
+  const parts = safeFormat(timeZone, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}

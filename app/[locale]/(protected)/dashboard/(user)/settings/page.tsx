@@ -2,10 +2,12 @@ import { getUserBenefits } from "@/actions/usage/benefits";
 import { getSession } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import {
+  pricingPlans as pricingPlansSchema,
   subscriptions as subscriptionsSchema,
   user as userSchema,
 } from "@/lib/db/schema";
 import { constructMetadata } from "@/lib/metadata";
+import { PricingPlanLangJsonb } from "@/types/pricing";
 import { desc, eq } from "drizzle-orm";
 import { Metadata } from "next";
 import { Locale } from "next-intl";
@@ -13,7 +15,9 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Settings from "./Setting";
 import DigestSection from "./DigestSection";
-import SubscriptionSection from "./SubscriptionSection";
+import SubscriptionSection, {
+  SubscriptionPlanDisplay,
+} from "./SubscriptionSection";
 
 type User = typeof userSchema.$inferSelect;
 
@@ -52,26 +56,61 @@ export default async function SettingsPage() {
   const [benefits, subscriptionResults] = await Promise.all([
     getUserBenefits(user.id),
     db
-      .select({ provider: subscriptionsSchema.provider })
+      .select({
+        provider: subscriptionsSchema.provider,
+        status: subscriptionsSchema.status,
+        trialEnd: subscriptionsSchema.trialEnd,
+        currentPeriodEnd: subscriptionsSchema.currentPeriodEnd,
+        planId: subscriptionsSchema.planId,
+      })
       .from(subscriptionsSchema)
       .where(eq(subscriptionsSchema.userId, user.id))
       .orderBy(desc(subscriptionsSchema.createdAt))
       .limit(1),
   ]);
 
-  const subscriptionProvider = subscriptionResults[0]?.provider || null;
+  const subscription = subscriptionResults[0] ?? null;
   const isMember =
     benefits.subscriptionStatus === "active" ||
     benefits.subscriptionStatus === "trialing";
 
+  let plan: SubscriptionPlanDisplay | null = null;
+  if (subscription?.planId) {
+    const planResults = await db
+      .select({
+        cardTitle: pricingPlansSchema.cardTitle,
+        langJsonb: pricingPlansSchema.langJsonb,
+        price: pricingPlansSchema.price,
+        displayPrice: pricingPlansSchema.displayPrice,
+        recurringInterval: pricingPlansSchema.recurringInterval,
+      })
+      .from(pricingPlansSchema)
+      .where(eq(pricingPlansSchema.id, subscription.planId))
+      .limit(1);
+    const planRow = planResults[0];
+    plan = planRow
+      ? {
+          ...planRow,
+          recurringInterval: planRow.recurringInterval ?? null,
+          langJsonb: (planRow.langJsonb ?? {}) as PricingPlanLangJsonb,
+        }
+      : null;
+  }
+
   return (
     <div className="space-y-10">
-      <Settings user={user} />
-      <DigestSection />
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {(await getTranslations("Settings"))("title")}
+        </h1>
+      </div>
       <SubscriptionSection
         isMember={isMember}
-        subscriptionProvider={subscriptionProvider}
+        subscription={subscription}
+        plan={plan}
       />
+      <Settings user={user} />
+      <DigestSection />
     </div>
   );
 }

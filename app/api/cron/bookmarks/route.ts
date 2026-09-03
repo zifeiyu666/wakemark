@@ -1,5 +1,6 @@
 import { processPendingForUser } from "@/lib/bookmarks/process-core";
 import {
+  SyncBusyError,
   SyncRefreshError,
   syncBookmarksForUser,
   XNotConnectedError,
@@ -82,7 +83,10 @@ export async function GET(request: NextRequest) {
       const expected =
         error instanceof XNotConnectedError ||
         error instanceof XReconnectRequiredError ||
-        error instanceof SyncRefreshError;
+        error instanceof SyncRefreshError ||
+        // Foreground Sync holds the distributed lock: skip and revisit on a
+        // later tick without alarming the logs.
+        error instanceof SyncBusyError;
       if (!expected) {
         console.error(
           `[bookmarks:cron] user ${conn.userId} tick failed`,

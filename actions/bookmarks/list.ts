@@ -24,8 +24,6 @@ import { getErrorMessage } from "@/lib/error-utils";
 import { and, count, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 
-export type { BookmarkFilters, BookmarkRow };
-
 export type GetBookmarksResult = ActionResult<{
   bookmarks: BookmarkRow[];
   totalCount: number;
@@ -57,6 +55,10 @@ export type BookmarkStats = {
   total: number;
   unread: number;
   pending: number;
+  // True while a history backfill checkpoint exists; the dashboard's
+  // ImportProgressBanner uses it (together with `pending`) to auto-resume
+  // the frontend-driven import/tagging loop.
+  importing: boolean;
 };
 
 export async function getBookmarkStats(): Promise<ActionResult<BookmarkStats>> {
@@ -83,6 +85,7 @@ export async function getBookmarkStats(): Promise<ActionResult<BookmarkStats>> {
       total: Number(stats?.total ?? 0),
       unread: Number(stats?.unread ?? 0),
       pending: Number(stats?.pending ?? 0),
+      importing: conn?.paginationToken != null,
     });
   } catch (error) {
     console.error("Error getting bookmark stats", error);

@@ -1,8 +1,8 @@
+import { poppinsMediumItalic } from "@/app/fonts";
 import HeaderLinks from "@/components/header/HeaderLinks";
 import MobileMenu from "@/components/header/MobileMenu";
 import { UserActions } from "@/components/header/UserActions";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Link as I18nLink } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/server";
 import { user as userSchema } from "@/lib/db/schema";
@@ -29,7 +29,8 @@ const Header = async () => {
             <Image src="/logo.png" alt="Logo" width={28} height={28} />
             <span
               className={cn(
-                "text-xl font-semibold text-primary font-science-gothic"
+                "text-xl font-medium italic text-primary",
+                poppinsMediumItalic.className
               )}
             >
               {t("title")}
@@ -43,7 +44,6 @@ const Header = async () => {
           {/* PC */}
           <div className="hidden lg:flex items-center gap-x-2">
             <LocaleSwitcher />
-            <ThemeToggle />
             <UserActions user={user as User} />
           </div>
 

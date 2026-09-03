@@ -1,5 +1,6 @@
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import AskAiWidget from "@/components/bookmarks/ask-ai/AskAiWidget";
+import { ImportProgressProvider } from "@/components/bookmarks/ImportProgressProvider";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
 import EmailPromptDialog from "@/components/shared/EmailPromptDialog";
 import SidebarInsetHeader from "@/components/header/SidebarInsetHeader";
@@ -8,7 +9,9 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getSession } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { userPreferences } from "@/lib/db/schema";
+import { hasActiveSubscription } from "@/lib/payments/subscription";
 import { eq } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import React from "react";
 import { DashboardSidebar } from "./DashboardSidebar";
 
@@ -22,6 +25,19 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
+
+  // Keep authentication and entitlement checks in this server layout so no
+  // dashboard child can render before the decision is made.
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  // Subscription gate: every dashboard route, including admin routes,
+  // requires a valid subscription (trial included).
+  if (!(await hasActiveSubscription(session.user.id))) {
+    redirect("/subscribe");
+  }
+
   let storedTimeZone: string | null = null;
   let showOnboardingTour = false;
   if (session?.user?.id) {
@@ -51,9 +67,13 @@ export default async function DashboardLayout({
         <SidebarInset className="min-w-0">
           <SidebarInsetHeader />
           <div className="flex flex-1 flex-col gap-4 px-4 pt-0 pb-2 min-w-0">
-            <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
-              {children}
-            </div>
+            {/* Resumable first-import banner: shows while a history backfill
+                checkpoint or an untagged backlog exists, and drives both. */}
+            <ImportProgressProvider>
+              <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
+                {children}
+              </div>
+            </ImportProgressProvider>
           </div>
         </SidebarInset>
         <AskAiWidget />

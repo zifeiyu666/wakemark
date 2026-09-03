@@ -9,20 +9,20 @@ type ProblemItem = {
 
 const ProblemStat = ({ item }: { item: ProblemItem }) => {
   return (
-    <article className="flex flex-col gap-8 py-12 md:py-16 md:px-10 md:first:pl-0 md:last:pr-0">
+    <article className="flex min-h-[228px] flex-col justify-between gap-6 px-6 py-8 sm:px-8 md:min-h-[260px] md:px-7 md:py-8 lg:px-10">
       <div>
-        <p className="font-serif text-5xl md:text-6xl font-bold tracking-tight text-foreground">
+        <p className="text-3xl font-semibold tracking-[-0.065em] text-foreground sm:text-4xl lg:text-5xl">
           {item.stat}
         </p>
-        <p className="mt-4 text-xs md:text-sm font-medium uppercase tracking-widest text-muted-foreground">
+        <p className="mt-3 font-mono text-[10px] font-medium uppercase tracking-[0.13em] text-foreground/70">
           {item.statLabel}
         </p>
       </div>
-      <div className="space-y-3">
-        <h3 className="font-serif text-xl md:text-2xl font-bold tracking-tight text-foreground">
+      <div className="max-w-sm space-y-2">
+        <h3 className="text-base font-semibold tracking-[-0.035em] text-foreground sm:text-lg">
           {item.title}
         </h3>
-        <p className="text-sm leading-4.5 md:text-base md:leading-5.5 text-muted-foreground">
+        <p className="text-sm leading-5 text-muted-foreground sm:leading-[1.4]">
           {item.description}
         </p>
       </div>
@@ -41,17 +41,16 @@ export default function Problem() {
   }));
 
   return (
-    <section id="problem" className="w-full">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p className="pt-16 md:pt-24 pb-6 text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          {t("label")}
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border border-y border-border">
+    <section
+      id="problem"
+      className="problem-section relative w-full overflow-hidden md:before:pointer-events-none md:before:absolute md:before:inset-x-0 md:before:top-[128px] md:before:z-10 md:before:border-t md:before:border-border"
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-3 md:divide-x md:divide-y-0">
           {items.map((item) => (
             <ProblemStat key={item.title} item={item} />
           ))}
         </div>
-        <div className="pb-16 md:pb-24" />
       </div>
     </section>
   );

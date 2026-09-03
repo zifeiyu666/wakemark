@@ -39,7 +39,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@fal-ai/client": "^1.9.1",
-    "@fontsource/science-gothic": "^5.2.1",
     "@hookform/resolvers": "^5.0.1",
     "@marsidev/react-turnstile": "^1.1.0",
     "@microsoft/clarity": "^1.0.2",

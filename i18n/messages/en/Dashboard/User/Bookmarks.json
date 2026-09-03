@@ -16,6 +16,7 @@
     "select": "Select",
     "sync": "Sync",
     "syncing": "Syncing…",
+    "syncCooldown": "Sync ({remaining})",
     "searchPlaceholder": "Search…",
     "loadMore": "Load more"
   },
@@ -28,7 +29,8 @@
   "empty": {
     "title": "No bookmarks yet",
     "description": "Hit Sync to pull your latest X bookmarks.",
-    "noResults": "No bookmarks match your filters."
+    "noResults": "No bookmarks match your search",
+    "noResultsDescription": "Try different keywords or remove some filters."
   },
   "card": {
     "unread": "Unread",
@@ -56,7 +58,12 @@
     "usageCapped": "X API usage cap reached. Sync will resume after the quota resets.",
     "authError": "X authorization expired. Please reconnect your X account.",
     "refreshFailed": "X token refresh failed. Please try again in a moment.",
+    "syncBusy": "A sync is already running in another tab or in the background. Please try again shortly.",
     "caughtUp": "You're all caught up. {added} new bookmarks."
+  },
+  "importBanner": {
+    "pulling": "Importing your bookmark history… {count} imported",
+    "organizing": "AI is tagging & summarizing your bookmarks… {remaining} left"
   },
   "errors": {
     "loadFailed": "Failed to load bookmarks.",

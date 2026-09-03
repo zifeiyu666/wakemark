@@ -1,7 +1,8 @@
 import CTA from "@/components/home/CTA";
+import Changelog from "@/components/home/Changelog";
 import FAQ from "@/components/home/FAQ";
 import Features from "@/components/home/Features";
-import Hero from "@/components/home/Hero";
+import Showcase from "@/components/home/Showcase";
 import PricingLock from "@/components/home/PricingLock";
 import Problem from "@/components/home/Problem";
 import TextRevealSection from "@/components/home/TextRevealSection";
@@ -15,19 +16,23 @@ export default async function HomeComponent() {
     <div className="w-full">
       <BG1 />
 
-      {messages.Landing.Hero && <Hero />}
+      <Showcase />
 
-      {messages.Landing.Problem && <Problem />}
+      <main className="home-grid-frame">
+        {messages.Landing.Problem && <Problem />}
 
-      {messages.Landing.Features && <Features />}
+        {messages.Landing.Features && <Features />}
 
-      {messages.Landing.TextReveal && <TextRevealSection />}
+        {messages.Landing.TextReveal && <TextRevealSection />}
 
-      {messages.Landing.PricingLock && <PricingLock />}
+        {messages.Landing.PricingLock && <PricingLock />}
 
-      {messages.Landing.FAQ && <FAQ />}
+        {messages.Roadmap && <Changelog />}
 
-      {messages.Landing.CTA && <CTA />}
+        {messages.Landing.FAQ && <FAQ />}
+
+        {messages.Landing.CTA && <CTA />}
+      </main>
     </div>
   );
 }

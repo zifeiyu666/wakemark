@@ -50,7 +50,7 @@ export default function SettingsCard({
   const formId = useId();
 
   return (
-    <Card className={cn("gap-0 overflow-hidden py-0", className)}>
+    <Card className={cn("gap-0 overflow-hidden py-0 shadow-none", className)}>
       <CardHeader className="pt-6">
         <CardTitle className="text-lg">{title}</CardTitle>
         {description ? <CardDescription>{description}</CardDescription> : null}

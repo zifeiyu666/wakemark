@@ -1,11 +1,7 @@
 import "server-only";
 
 import { db } from "@/lib/db";
-import {
-  bookmarkListItems,
-  bookmarkLists,
-  bookmarks,
-} from "@/lib/db/schema";
+import { bookmarkListItems, bookmarkLists, bookmarks } from "@/lib/db/schema";
 import {
   and,
   asc,
@@ -59,7 +55,7 @@ export type BookmarkRow = {
 
 export function buildBookmarkWhere(
   userId: string,
-  params: BookmarkFilters
+  params: BookmarkFilters,
 ): SQL {
   const conditions: SQL[] = [eq(bookmarks.userId, userId)];
 
@@ -75,25 +71,29 @@ export function buildBookmarkWhere(
     ];
     for (const category of params.categories) {
       categoryConditions.push(
-        sql`${bookmarks.subTags} @> ${JSON.stringify([category])}::jsonb`
+        sql`${bookmarks.subTags} @> ${JSON.stringify([category])}::jsonb`,
       );
     }
     conditions.push(or(...categoryConditions) as SQL);
   }
 
-  if (params.search) {
+  const search = params.search?.trim();
+  if (search) {
     conditions.push(
       or(
-        ilike(bookmarks.text, `%${params.search}%`),
-        ilike(bookmarks.authorUsername, `%${params.search}%`),
-        ilike(bookmarks.authorName, `%${params.search}%`)
-      ) as SQL
+        ilike(bookmarks.text, `%${search}%`),
+        ilike(bookmarks.authorUsername, `%${search}%`),
+        ilike(bookmarks.authorName, `%${search}%`),
+        ilike(bookmarks.summary, `%${search}%`),
+        ilike(bookmarks.primaryCategory, `%${search}%`),
+        ilike(sql<string>`${bookmarks.subTags}::text`, `%${search}%`),
+      ) as SQL,
     );
   }
 
   if (params.listId) {
     conditions.push(
-      sql`exists (select 1 from bookmark_list_items bli where bli.bookmark_id = ${bookmarks.id} and bli.list_id = ${params.listId})`
+      sql`exists (select 1 from bookmark_list_items bli where bli.bookmark_id = ${bookmarks.id} and bli.list_id = ${params.listId})`,
     );
   }
 
@@ -148,7 +148,7 @@ function toBookmarkRow(row: {
 
 export async function queryBookmarks(
   userId: string,
-  params: BookmarkFilters
+  params: BookmarkFilters,
 ): Promise<{ bookmarks: BookmarkRow[]; totalCount: number }> {
   const where = buildBookmarkWhere(userId, params);
 
@@ -165,7 +165,7 @@ export async function queryBookmarks(
         // tweet id is a snowflake so it doubles as tweet publish order.
         params.sort === "oldest"
           ? asc(bookmarks.tweetId)
-          : desc(bookmarks.tweetId)
+          : desc(bookmarks.tweetId),
       )
       .offset(params.pageIndex * params.pageSize)
       .limit(params.pageSize),
@@ -180,7 +180,7 @@ export async function queryBookmarks(
 
 export async function getBookmarkById(
   userId: string,
-  id: string
+  id: string,
 ): Promise<BookmarkRow | null> {
   const [row] = await db
     .select(bookmarkColumns)
@@ -192,7 +192,7 @@ export async function getBookmarkById(
 
 export async function getBookmarkByTweetId(
   userId: string,
-  tweetId: string
+  tweetId: string,
 ): Promise<BookmarkRow | null> {
   const [row] = await db
     .select(bookmarkColumns)
@@ -205,7 +205,7 @@ export async function getBookmarkByTweetId(
 export async function setBookmarksRead(
   userId: string,
   ids: string[],
-  isRead: boolean
+  isRead: boolean,
 ): Promise<void> {
   await db
     .update(bookmarks)
@@ -223,7 +223,7 @@ export type BookmarkListWithCount = {
 };
 
 export async function listListsWithCounts(
-  userId: string
+  userId: string,
 ): Promise<BookmarkListWithCount[]> {
   const rows = await db
     .select({

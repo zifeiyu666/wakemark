@@ -233,8 +233,6 @@ export default function Settings({ user }: { user: User }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
-
       <SettingsCard
         title={t("form.emailLabel")}
         description={t("form.emailDescription")}

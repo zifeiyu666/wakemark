@@ -3,10 +3,13 @@ import "server-only";
 import { db } from "@/lib/db";
 import { bookmarks, xConnections } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
+import { releaseLock, tryAcquireLock } from "@/lib/upstash/lock";
+import { REDIS_KEYS_CONFIGS } from "@/lib/upstash/redis-keys";
 import { fetchBookmarksPageForUser, XApiError } from "@/lib/x/client";
 import {
   getValidAccessToken,
   getXConnectionByUserId,
+  type XConnection,
   XReconnectRequiredError,
 } from "@/lib/x/connection";
 import { and, count, eq, inArray } from "drizzle-orm";
@@ -47,6 +50,21 @@ export class SyncRefreshError extends Error {
   }
 }
 
+// Another pass (other tab, cron tick, signup fast-sync) already holds the
+// distributed lock for this connection; retry later instead of doubling X
+// API spend and racing the token rotation.
+export class SyncBusyError extends Error {
+  constructor() {
+    super("A sync for this connection is already in progress.");
+    this.name = "SyncBusyError";
+  }
+}
+
+// Cross-instance mutex window: a manual "latest" pass pulls up to 20 pages
+// (~2-3s each: X fetch + 400ms pause + insert), so 120s covers the worst
+// case while a killed serverless instance frees the lock quickly.
+const SYNC_LOCK_TTL_SECONDS = 120;
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
@@ -71,6 +89,26 @@ export async function syncBookmarksForUser(
   const conn = await getXConnectionByUserId(userId);
   if (!conn) throw new XNotConnectedError();
 
+  // Distributed mutex: manual Sync clicks (any tab), cron drains and the
+  // signup fast-sync all funnel through here; only one of them may pull the
+  // X API for this connection at a time. The TTL self-heals when a
+  // serverless instance dies mid-pass.
+  const lockKey = REDIS_KEYS_CONFIGS.sync.lock(conn.id);
+  const lockToken = await tryAcquireLock(lockKey, SYNC_LOCK_TTL_SECONDS);
+  if (!lockToken) throw new SyncBusyError();
+
+  try {
+    return await runSyncPass(userId, conn, opts);
+  } finally {
+    await releaseLock(lockKey, lockToken);
+  }
+}
+
+async function runSyncPass(
+  userId: string,
+  conn: XConnection,
+  opts: { maxPages?: number; mode?: SyncMode }
+): Promise<SyncResult> {
   let accessToken: string;
   try {
     accessToken = await getValidAccessToken(conn);

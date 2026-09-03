@@ -20,7 +20,11 @@ import { Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 
-export default function MobileMenu() {
+export default function MobileMenu({
+  showThemeToggle = false,
+}: {
+  showThemeToggle?: boolean;
+}) {
   const t = useTranslations("Home");
   const tHeader = useTranslations("Header");
 
@@ -107,7 +111,7 @@ export default function MobileMenu() {
         <DropdownMenuSeparator />
         <div className="flex items-center justify-between px-2 py-1.5">
           <LocaleSwitcher variant="group" />
-          <ThemeToggle />
+          {showThemeToggle && <ThemeToggle />}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

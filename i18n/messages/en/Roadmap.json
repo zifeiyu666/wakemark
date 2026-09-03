@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "title": "Roadmap & Changelog",
+    "description": "What's shipping now, what's next, and everything WakeMark has shipped — from X bookmark sync and AI auto-tagging to email digests and the MCP server."
+  },
+  "hero": {
+    "eyebrow": "ROADMAP",
+    "title": "Shipped, shipping, and what's next",
+    "description": "WakeMark turns your X bookmark graveyard into a living library. Here's what we've shipped so far — and where we're heading."
+  },
+  "home": {
+    "eyebrow": "Changelog",
+    "title": "Better as you grow.",
+    "subtitle": "New features every week to keep pace with you.",
+    "viewAll": "View all"
+  },
+  "upcoming": {
+    "title": "On the roadmap",
+    "description": "What we're building next, in rough order of arrival.",
+    "items": [
+      {
+        "status": "in-development",
+        "title": "Semantic search",
+        "description": "Search by meaning, not keywords — \"that thread about pricing pages\" will just work, even if you never saved it with those words."
+      },
+      {
+        "status": "in-development",
+        "title": "Smart collections",
+        "description": "Lists that fill themselves: pick a topic and WakeMark keeps adding matching bookmarks as they sync."
+      },
+      {
+        "status": "planned",
+        "title": "Highlights & notes",
+        "description": "Annotate any bookmark, then filter and digest your notes alongside the original tweets."
+      },
+      {
+        "status": "planned",
+        "title": "Digest scheduling presets",
+        "description": "One-tap schedules — weekday mornings, Friday recap, monthly deep-clean — with timezone-aware delivery."
+      },
+      {
+        "status": "exploring",
+        "title": "WakeMark for mobile",
+        "description": "A reading-first mobile experience for digests and lists, so catch-up doesn't need a desk."
+      }
+    ]
+  },
+  "statuses": {
+    "in-development": "In development",
+    "planned": "Planned",
+    "exploring": "Exploring"
+  },
+  "shipped": {
+    "title": "Shipped",
+    "description": "Everything that's already live, newest first."
+  },
+  "releases": [
+    {
+      "date": "AUG 26, 2026",
+      "title": "MCP Server",
+      "description": "Connect Claude, Cursor, Codex or ChatGPT with a single API key — agents can search, read and organize your bookmarks right where you already work."
+    },
+    {
+      "date": "AUG 12, 2026",
+      "title": "Chat AI",
+      "description": "Ask a question, get an instant answer pulled from your own saved tweets, with links back to the original posts."
+    },
+    {
+      "date": "JUL 28, 2026",
+      "title": "Shareable lists",
+      "description": "Turn any tag or topic into a themed list and share it with a public link — your curated feed, without the follower count."
+    },
+    {
+      "date": "JUL 10, 2026",
+      "title": "Email Digest",
+      "description": "A clean, topic-grouped briefing of your recent bookmarks, delivered daily or weekly on your schedule."
+    },
+    {
+      "date": "JUN 20, 2026",
+      "title": "Search & filters",
+      "description": "Full-text search across every bookmark you've saved, with tag filters and sorting by date or engagement."
+    },
+    {
+      "date": "JUN 03, 2026",
+      "title": "Sync & AI auto-tagging",
+      "description": "WakeMark launches: connect X once and every bookmark syncs automatically, tagged by topic before you even open the app."
+    }
+  ]
+}

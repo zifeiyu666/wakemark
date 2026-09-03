@@ -1,4 +1,4 @@
-import { ArrowRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 interface FeatureBadgeProps {
   label?: string;
@@ -18,7 +18,7 @@ export default function FeatureBadge({
   className = "",
 }: FeatureBadgeProps) {
   const content = (
-    <div className="rounded-full border px-1 py-1 pr-1 sm:px-2 sm:pr-2 text-center text-sm font-medium hover:bg-muted hover:border-primary/20 group items-center gap-x-1 sm:gap-x-2 flex transition-all duration-300 ease-in-out">
+    <div className="eyebrow-beam rounded-full border px-1 py-1 pr-1 sm:px-2 sm:pr-2 text-center text-sm font-medium hover:bg-muted hover:border-primary/20 group items-center gap-x-1 sm:gap-x-2 flex transition-all duration-300 ease-in-out">
       {label && (
         <div className="text-white bg-primary rounded-2xl border px-1 py-0.5 sm:px-1.5 text-[10px] sm:text-xs font-semibold tracking-tight whitespace-nowrap">
           {label}
@@ -29,9 +29,9 @@ export default function FeatureBadge({
 
       {href && (
         <div className="pr-1 sm:pr-3 transition-transform duration-300 group-hover:translate-x-1">
-          <ArrowRight
-            name="ArrowRight"
-            className="h-4 w-4 text-gray-400 dark:text-gray-500"
+          <ChevronRight
+            strokeWidth={1.5}
+            className="h-4 w-4 text-foreground/70"
           />
         </div>
       )}

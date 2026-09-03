@@ -5,10 +5,10 @@ export default async function TextRevealSection() {
   const t = await getTranslations("Landing.TextReveal");
 
   return (
-    <section className="w-full bg-white dark:bg-black">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <TextReveal>{t("text")}</TextReveal>
-      </div>
+    <section className="relative w-full">
+      <TextReveal backgroundClassName="text-reveal-dots">
+        {t("text")}
+      </TextReveal>
     </section>
   );
 }
