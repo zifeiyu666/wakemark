@@ -32,15 +32,17 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Subscription gate: every dashboard route, including admin routes,
-  // requires a valid subscription (trial included).
-  if (!(await hasActiveSubscription(session.user.id))) {
+  const isAdmin = session.user.role === "admin";
+
+  // Administrators manage the service without needing a customer
+  // subscription. Regular users must have an active or trialing plan.
+  if (!isAdmin && !(await hasActiveSubscription(session.user.id))) {
     redirect("/subscribe");
   }
 
   let storedTimeZone: string | null = null;
   let showOnboardingTour = false;
-  if (session?.user?.id) {
+  if (session.user.id && !isAdmin) {
     const [pref] = await db
       .select({
         timeZone: userPreferences.timeZone,
@@ -69,16 +71,22 @@ export default async function DashboardLayout({
           <div className="flex flex-1 flex-col gap-4 px-4 pt-0 pb-2 min-w-0">
             {/* Resumable first-import banner: shows while a history backfill
                 checkpoint or an untagged backlog exists, and drives both. */}
-            <ImportProgressProvider>
+            {isAdmin ? (
               <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
                 {children}
               </div>
-            </ImportProgressProvider>
+            ) : (
+              <ImportProgressProvider>
+                <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
+                  {children}
+                </div>
+              </ImportProgressProvider>
+            )}
           </div>
         </SidebarInset>
-        <AskAiWidget />
-        {showOnboardingTour && <OnboardingTour />}
-        <EmailPromptDialog email={session?.user.email} />
+        {!isAdmin && <AskAiWidget />}
+        {!isAdmin && showOnboardingTour && <OnboardingTour />}
+        {!isAdmin && <EmailPromptDialog email={session.user.email} />}
       </SidebarProvider>
     </AuthGuard>
   );

@@ -7,7 +7,7 @@ export default function CTA() {
   return (
     <section
       id="cta"
-      className="relative left-1/2 w-screen max-w-none -translate-x-1/2"
+      className="relative -mx-[25px] w-[calc(100%+50px)] max-w-none overflow-x-clip"
     >
       <div className="cta-grid relative isolate flex min-h-[430px] items-center justify-center overflow-hidden px-6 py-20 text-center sm:px-10 md:min-h-[510px]">
         <div aria-hidden className="cta-grid-meteors">

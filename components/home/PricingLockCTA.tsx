@@ -21,7 +21,7 @@ export default function PricingLockCTA({ plan, label }: PricingLockCTAProps) {
       size="lg"
       disabled={isLoading}
       onClick={() => handleCheckout()}
-      className="h-12 w-full rounded-lg bg-neutral-900 text-white hover:bg-neutral-800"
+      className="h-12 w-full bg-neutral-900 text-white hover:bg-neutral-800"
     >
       {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
       {label}

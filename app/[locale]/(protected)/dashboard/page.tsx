@@ -1,6 +1,11 @@
+import { getSession } from "@/lib/auth/server";
 import { redirect } from "next/navigation";
 
-export default function DashboardPage() {
-  // The default dashboard landing is the bookmarks board.
-  redirect("/dashboard/bookmarks");
+export default async function DashboardPage() {
+  const session = await getSession();
+
+  // Admins start in the management area; regular users start with bookmarks.
+  redirect(
+    session?.user?.role === "admin" ? "/dashboard/overview" : "/dashboard/bookmarks"
+  );
 }

@@ -166,6 +166,7 @@ export default function Showcase() {
         {/* Left top — Email Digest */}
         <motion.div
           aria-hidden
+          initial={false}
           animate={{
             opacity: engaged ? 1 : 0,
             x: engaged ? 0 : -72,
@@ -190,6 +191,7 @@ export default function Showcase() {
         {/* Right — Sync + Auto Tag */}
         <motion.div
           aria-hidden
+          initial={false}
           animate={{
             opacity: engaged ? 1 : 0,
             x: engaged ? 0 : 72,
@@ -215,6 +217,7 @@ export default function Showcase() {
         <div className="absolute inset-x-0 top-0 flex justify-center px-4">
           <motion.div
             ref={centerRef}
+            initial={false}
             animate={{
               /* Engaged: bottom-anchored with a 110px bottom padding so the
                * whole window stays visible; disengaged: peek near the fold. */
@@ -241,6 +244,7 @@ export default function Showcase() {
         {/* Left bottom — Chat AI, forced dark (in front of the center window) */}
         <motion.div
           aria-hidden
+          initial={false}
           animate={{
             opacity: engaged ? 1 : 0,
             x: engaged ? 0 : -72,

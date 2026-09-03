@@ -5,7 +5,10 @@ import { DEFAULT_LOCALE } from "@/i18n/routing";
 import { getSession } from "@/lib/auth/server";
 import { pricingPlans as pricingPlansSchema } from "@/lib/db/schema";
 import { constructMetadata } from "@/lib/metadata";
-import { isYearlyInterval } from "@/lib/payments/provider-utils";
+import {
+  isRecurringPaymentType,
+  isYearlyInterval,
+} from "@/lib/payments/provider-utils";
 import { hasActiveSubscription } from "@/lib/payments/subscription";
 import { PricingPlanLangJsonb } from "@/types/pricing";
 import { Check, Medal, ShieldCheck } from "lucide-react";
@@ -57,10 +60,25 @@ export default async function SubscribePage() {
   let plan: PricingPlan | null = null;
   const result = await getPublicPricingPlans();
   if (result.success) {
-    const ladder = (result.data || []).filter(
-      (p) => p.groupSlug === LADDER_GROUP_SLUG
+    const activePlans = result.data || [];
+    const ladder = activePlans.filter(
+      (p) =>
+        p.groupSlug === LADDER_GROUP_SLUG &&
+        isRecurringPaymentType(p.paymentType)
     );
-    plan = ladder.find((p) => p.isHighlighted) ?? ladder[0] ?? null;
+    const subscriptionPlans = activePlans.filter((p) =>
+      isRecurringPaymentType(p.paymentType)
+    );
+
+    // Keep the dedicated ladder as the source of truth when configured, but
+    // fall back to any active subscription so this page cannot silently lose
+    // its checkout CTA when plans are grouped as annual/monthly.
+    plan =
+      ladder.find((p) => p.isHighlighted) ??
+      ladder[0] ??
+      subscriptionPlans.find((p) => p.isHighlighted) ??
+      subscriptionPlans[0] ??
+      null;
   }
 
   const localized = plan

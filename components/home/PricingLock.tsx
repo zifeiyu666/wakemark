@@ -92,7 +92,6 @@ export default async function PricingLock() {
   const t = await getTranslations("Landing.PricingLock");
   const locale = await getLocale();
   const chart = t.raw("chart") as ChartCopy;
-  const included = t.raw("included") as string[];
 
   let ladderPlans: PricingPlan[] = [];
   const result = await getPublicPricingPlans();
@@ -128,15 +127,16 @@ export default async function PricingLock() {
             {t("description")}
           </p>
         </header>
+        <div
+          aria-hidden="true"
+          className="w-full border-t border-neutral-200"
+        />
         <PricingLockInteractive
           tiers={tiers.map((tier, index) => ({
             ...tier,
             plan: ladderPlans[index],
           }))}
           chart={chart}
-          included={included}
-          includedLabel={t("includedLabel")}
-          trial={t("trial")}
         />
       </div>
     </section>

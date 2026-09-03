@@ -80,29 +80,31 @@ export function DashboardSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <BookmarksSidebarMenu />
-              <ListsSidebarMenu />
-              <SidebarMenuItem data-onboarding-target="digests">
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/dashboard/digests")}
-                >
-                  <I18nLink
-                    href="/dashboard/digests"
-                    title={tDigests("title")}
-                    prefetch={false}
+        {!isAdmin && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <BookmarksSidebarMenu />
+                <ListsSidebarMenu />
+                <SidebarMenuItem data-onboarding-target="digests">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive("/dashboard/digests")}
                   >
-                    <MailOpen className="h-4 w-4" />
-                    {!isCollapsed && <span>{tDigests("title")}</span>}
-                  </I18nLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                    <I18nLink
+                      href="/dashboard/digests"
+                      title={tDigests("title")}
+                      prefetch={false}
+                    >
+                      <MailOpen className="h-4 w-4" />
+                      {!isCollapsed && <span>{tDigests("title")}</span>}
+                    </I18nLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {isAdmin && (
           <>
@@ -134,7 +136,7 @@ export function DashboardSidebar() {
 
       <SidebarFooter>
         <SidebarMenu>
-          {userMenus.map((menu) => (
+          {(isAdmin ? [] : userMenus).map((menu) => (
             <SidebarMenuItem key={menu.href}>
               <SidebarMenuButton asChild isActive={isActive(menu.href)}>
                 <I18nLink

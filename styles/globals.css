@@ -909,11 +909,45 @@
   background: conic-gradient(
     from var(--beam-angle),
     transparent 0deg,
-    transparent 240deg,
-    rgb(45 212 191 / 0) 252deg,
-    rgb(45 212 191) 300deg,
-    rgb(99 102 241) 340deg,
-    transparent 352deg
+    transparent 286deg,
+    rgb(45 212 191 / 0) 294deg,
+    rgb(45 212 191) 306deg,
+    rgb(99 102 241) 320deg,
+    transparent 332deg
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: border-beam 4s linear infinite;
+  pointer-events: none;
+}
+
+/* The selected pricing tier uses the same moving border accent as the hero
+   eyebrow, with square corners to match the precision pricing grid. */
+.pricing-current-beam {
+  position: relative;
+}
+
+.pricing-current-beam::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 2;
+  padding: 1px;
+  border-radius: 0;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 286deg,
+    rgb(45 212 191 / 0) 294deg,
+    rgb(45 212 191) 306deg,
+    rgb(99 102 241) 320deg,
+    transparent 332deg
   );
   -webkit-mask:
     linear-gradient(#fff 0 0) content-box,
@@ -928,7 +962,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .eyebrow-beam::after {
+  .eyebrow-beam::after,
+  .pricing-current-beam::after {
     animation: none;
   }
 }

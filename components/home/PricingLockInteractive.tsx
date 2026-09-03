@@ -4,8 +4,7 @@ import PricingLockCTA from "@/components/home/PricingLockCTA";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Check, ChevronRight, Medal } from "lucide-react";
-import { useState } from "react";
+import { ChevronRight, Medal } from "lucide-react";
 
 export type InteractiveTier = {
   id: string;
@@ -35,9 +34,6 @@ type ChartCopy = {
 type Props = {
   tiers: InteractiveTier[];
   chart: ChartCopy;
-  included: string[];
-  includedLabel: string;
-  trial: string;
 };
 
 const PLOT = { left: 72, right: 928, top: 72, bottom: 246 };
@@ -45,7 +41,7 @@ const PLOT = { left: 72, right: 928, top: 72, bottom: 246 };
 const DiscountBadge = ({ tier }: { tier: InteractiveTier }) => (
   <Badge
     className={cn(
-      "rounded-md border px-2 py-0.5 text-xs font-semibold",
+      "rounded-none border px-2 py-0.5 text-xs font-semibold",
       tier.discountTone === "tint"
         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
         : "border-neutral-200 bg-neutral-50 text-neutral-400"
@@ -58,11 +54,9 @@ const DiscountBadge = ({ tier }: { tier: InteractiveTier }) => (
 const PricingCard = ({
   tier,
   selected,
-  onSelect,
 }: {
   tier: InteractiveTier;
   selected: boolean;
-  onSelect: () => void;
 }) => {
   const plan = tier.plan as Parameters<typeof PricingLockCTA>[0]["plan"] | undefined;
   const isAvailable = tier.status === "active";
@@ -70,18 +64,11 @@ const PricingCard = ({
   return (
     <div
       className={cn(
-        "relative flex min-h-[306px] cursor-pointer flex-col justify-between border-r border-neutral-100 px-5 py-7 transition-all duration-300 last:border-r-0 md:px-7",
+        "relative flex min-h-[306px] cursor-pointer flex-col justify-between border-b border-neutral-100 px-5 py-7 transition-all duration-300 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0 md:px-7",
         selected
-          ? "z-10 -my-3 rounded-xl border border-neutral-200 bg-white py-10 opacity-100 ring-1 ring-neutral-900/10 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_6px_20px_rgba(0,0,0,0.05)]"
+          ? "pricing-current-beam z-10 border border-neutral-200 bg-white py-10 opacity-100"
           : "opacity-65 hover:opacity-100"
       )}
-      onClick={onSelect}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") onSelect();
-      }}
-      role="button"
-      tabIndex={0}
-      aria-pressed={selected}
     >
       <div>
         <div className="flex items-center justify-between gap-3">
@@ -120,7 +107,7 @@ const PricingCard = ({
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-neutral-100">
               <div
-                className="h-full rounded-full bg-neutral-900 transition-[width] duration-500"
+                className="h-full bg-neutral-900 transition-[width] duration-500"
                 style={{ width: `${tier.progress ?? 0}%` }}
               />
             </div>
@@ -129,7 +116,7 @@ const PricingCard = ({
             ) : (
               <Button
                 size="lg"
-                className="h-12 w-full rounded-lg bg-neutral-900 text-white hover:bg-neutral-800"
+                className="h-12 w-full bg-neutral-900 text-white hover:bg-neutral-800"
               >
                 {tier.cta ?? "Get started"}
               </Button>
@@ -150,12 +137,10 @@ const PriceChart = ({
   tiers,
   chart,
   selectedIndex,
-  onSelect,
 }: {
   tiers: InteractiveTier[];
   chart: ChartCopy;
   selectedIndex: number;
-  onSelect: (index: number) => void;
 }) => {
   const prices = tiers.map((tier) => tier.amount);
   if (prices.length < 2) return null;
@@ -184,12 +169,13 @@ const PriceChart = ({
           Guaranteed grandfathered rate
         </span>
       </div>
-      <svg
-        viewBox="0 0 1000 330"
-        className="h-auto w-full overflow-visible"
-        role="img"
-        aria-label={chart.title}
-      >
+      <div className="mx-auto w-full max-w-5xl">
+        <svg
+          viewBox="0 0 1000 330"
+          className="h-auto w-full overflow-visible"
+          role="img"
+          aria-label={chart.title}
+        >
         <defs>
           <linearGradient id="pricing-lock-area-light" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#17181b" stopOpacity="0.1" />
@@ -223,13 +209,6 @@ const PriceChart = ({
           return (
             <g
               key={tier.id}
-              className="cursor-pointer"
-              onClick={() => onSelect(index)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") onSelect(index);
-              }}
-              role="button"
-              tabIndex={0}
             >
               {isSelected && <circle cx={x} cy={y} r="12" fill="#17181b" fillOpacity="0.08" />}
               <circle cx={x} cy={y} r={isSelected ? 6 : 5} fill={isSelected ? "#17181b" : "white"} stroke="#17181b" strokeWidth="2" />
@@ -241,13 +220,14 @@ const PriceChart = ({
         })}
 
         <g transform={`translate(${Math.min(Math.max(selectedX - 105, 8), 784)},${Math.max(selectedY - 57, 8)})`}>
-          <rect width="210" height="34" rx="9" fill="white" stroke="#e4e4e7" />
+          <rect width="210" height="34" fill="white" stroke="#e4e4e7" />
           <circle cx="16" cy="17" r="4" fill="#10b981" />
           <text x="28" y="21" fontSize="12" fontWeight="600" fill="#17181b">
             {`Your price (${tiers[selectedIndex].price}/yr locked)`}
           </text>
         </g>
-      </svg>
+        </svg>
+      </div>
       <p className="mt-1 text-center text-xs text-neutral-400">{chart.footnote}</p>
     </div>
   );
@@ -256,21 +236,17 @@ const PriceChart = ({
 export default function PricingLockInteractive({
   tiers,
   chart,
-  included,
-  includedLabel,
-  trial,
 }: Props) {
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const selectedIndex = 0;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-200/80 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02),0_10px_32px_rgba(0,0,0,0.04)]">
+    <div className="bg-white">
       <div className="grid grid-cols-1 md:grid-cols-4">
         {tiers.map((tier, index) => (
           <PricingCard
             key={tier.id}
             tier={tier}
             selected={selectedIndex === index}
-            onSelect={() => setSelectedIndex(index)}
           />
         ))}
       </div>
@@ -278,22 +254,7 @@ export default function PricingLockInteractive({
         tiers={tiers}
         chart={chart}
         selectedIndex={selectedIndex}
-        onSelect={setSelectedIndex}
       />
-      <div className="border-t border-neutral-100 px-5 py-7 md:px-8">
-        <p className="mb-5 text-center text-xs font-semibold uppercase tracking-[0.16em] text-neutral-400">
-          {includedLabel}
-        </p>
-        <ul className="mx-auto grid max-w-5xl grid-cols-1 gap-x-10 gap-y-3 md:grid-cols-2">
-          {included.map((item) => (
-            <li key={item} className="flex items-center gap-3 text-sm text-neutral-600 md:text-base">
-              <Check className="size-4 shrink-0 text-neutral-400" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-7 text-center text-sm text-neutral-400">{trial}</p>
-      </div>
     </div>
   );
 }
