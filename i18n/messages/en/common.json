@@ -319,6 +319,7 @@
   },
   "Footer": {
     "Copyright": "Copyright © {year} {name} All rights reserved.",
+    "ContactUs": "Contact us",
     "About": "About",
     "PrivacyPolicy": "Privacy Policy",
     "TermsOfService": "Terms of Service",
@@ -382,37 +383,12 @@
           "title": "Support",
           "links": [
             {
-              "name": "Docs",
-              "href": "https://wakemark.app/docs",
-              "target": "_blank"
-            },
-            {
               "name": "MCP",
               "href": "/docs/mcp"
             },
             {
               "name": "Roadmap",
               "href": "/roadmap"
-            }
-          ]
-        },
-        {
-          "title": "Languages",
-          "links": [
-            {
-              "href": "/en",
-              "name": "English",
-              "useA": true
-            },
-            {
-              "href": "/zh",
-              "name": "中文",
-              "useA": true
-            },
-            {
-              "href": "/ja",
-              "name": "日本語",
-              "useA": true
             }
           ]
         }

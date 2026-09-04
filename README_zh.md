@@ -5,7 +5,7 @@ WakeMark 会自动为你保存的推文打标签、按列表整理书签，并�
 - 🚀 官网 👉：https://wakemark.app
 
 > 如遇到任何问题，请联系我们：
-> - 邮箱：support@mail.wakemark.app
+> - 邮箱：support@wakemark.app
 
 ## ✨ 主要特性
 

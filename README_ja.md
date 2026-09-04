@@ -5,7 +5,7 @@ WakeMark は保存したツイートを自動でタグ付けし、ブックマ�
 - 🚀 ウェブサイト 👉: https://wakemark.app
 
 > 何か問題が発生した場合は、サポートまでご連絡ください：  
-> - メール：support@mail.wakemark.app
+> - メール：support@wakemark.app
 
 ## ✨ 主な特徴
 

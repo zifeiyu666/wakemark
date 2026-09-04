@@ -4,7 +4,7 @@ import { TwitterX } from "@/components/social-icons/icons";
 import { siteConfig } from "@/config/site";
 import { Link as I18nLink } from "@/i18n/routing";
 import { FooterLink } from "@/types/common";
-import { GithubIcon, InstagramIcon, MailIcon, Youtube } from "lucide-react";
+import { GithubIcon, InstagramIcon, Youtube } from "lucide-react";
 import { getMessages, getTranslations } from "next-intl/server";
 import Image from "next/image";
 import Link from "next/link";
@@ -46,6 +46,18 @@ export default async function Footer() {
                 </div>
 
                 <p className="text-sm p4-4 md:pr-12">{t("tagLine")}</p>
+
+                {siteConfig.socialLinks?.email && (
+                  <p className="text-sm">
+                    <span className="text-gray-400">{tFooter("ContactUs")}: </span>
+                    <Link
+                      href={`mailto:${siteConfig.socialLinks.email}`}
+                      className="text-gray-200 hover:text-white transition-colors"
+                    >
+                      {siteConfig.socialLinks.email}
+                    </Link>
+                  </p>
+                )}
 
                 <div className="flex items-center gap-2">
                   {siteConfig.socialLinks?.github && (
@@ -124,19 +136,6 @@ export default async function Footer() {
                       className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground"
                     >
                       <SiDiscord className="w-4 h-4" aria-hidden="true" />
-                    </Link>
-                  )}
-                  {siteConfig.socialLinks?.email && (
-                    <Link
-                      href={`mailto:${siteConfig.socialLinks.email}`}
-                      prefetch={false}
-                      target="_blank"
-                      rel="noreferrer nofollow noopener"
-                      aria-label="Email"
-                      title="Email"
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground"
-                    >
-                      <MailIcon className="w-4 h-4" />
                     </Link>
                   )}
                 </div>

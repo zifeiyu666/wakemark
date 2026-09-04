@@ -5,7 +5,7 @@ WakeMark automatically tags your saved tweets, organizes bookmarks into lists, a
 - 🚀 Website 👉: https://wakemark.app
 
 > If you encounter any issues, please contact us for support:
-> - Email: support@mail.wakemark.app
+> - Email: support@wakemark.app
 
 ## ✨ Key Features
 
