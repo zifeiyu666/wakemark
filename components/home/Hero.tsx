@@ -1,7 +1,31 @@
 import FeatureBadge from "@/components/shared/FeatureBadge";
+import { TruthSocial } from "@/components/social-icons/icons";
 import { Button } from "@/components/ui/button";
 import { Link as I18nLink } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
+import {
+  SiBluesky,
+  SiInstagram,
+  SiLinkedin,
+  SiReddit,
+  SiSubstack,
+  SiThreads,
+  SiTiktok,
+  SiX,
+} from "react-icons/si";
+
+function PlatformLogo({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <span
+      title={label}
+      aria-label={label}
+      className="flex cursor-default items-center justify-center gap-2 text-muted-foreground/50 transition-colors duration-300 hover:text-foreground"
+    >
+      {children}
+    </span>
+  );
+}
 
 export default function Hero() {
   const t = useTranslations("Landing.Hero");
@@ -34,9 +58,58 @@ export default function Hero() {
             >
               <I18nLink href="/login">{t("cta")}</I18nLink>
             </Button>
-            <p className="text-center text-sm text-muted-foreground md:max-w-none md:whitespace-nowrap">
+            {/* <p className="text-center text-sm text-muted-foreground md:max-w-none md:whitespace-nowrap">
               {t("ctaNote")}
+            </p> */}
+          </div>
+
+          {/* Upcoming platforms: X is live (centered + highlighted), the rest
+              are grayed out and brighten on hover. */}
+          <div className="flex w-full flex-col items-center gap-6 px-4 pb-6">
+            <p className="text-xs font-medium uppercase tracking-[0.25em] text-muted-foreground/70">
+              {t("platformsNote")}
             </p>
+            <div className="grid w-full max-w-7xl grid-cols-3 items-center gap-y-6 lg:grid-cols-9 lg:gap-y-0">
+              <PlatformLogo label="Bluesky">
+                <SiBluesky className="h-6 w-6" />
+              </PlatformLogo>
+              <PlatformLogo label="TikTok">
+                <SiTiktok className="h-6 w-6" />
+                <span className="hidden text-base font-semibold lg:inline">TikTok</span>
+              </PlatformLogo>
+              <PlatformLogo label="Threads">
+                <SiThreads className="h-6 w-6" />
+                <span className="hidden text-base font-medium lg:inline">Threads</span>
+              </PlatformLogo>
+              <PlatformLogo label="Reddit">
+                <SiReddit className="h-6 w-6" />
+                <span className="hidden text-base font-semibold lowercase lg:inline">reddit</span>
+              </PlatformLogo>
+
+              <span
+                title="X"
+                aria-label="X"
+                className="flex justify-center text-foreground dark:drop-shadow-[0_0_14px_rgba(255,255,255,0.45)]"
+              >
+                <SiX className="h-7 w-7" />
+              </span>
+
+              <PlatformLogo label="LinkedIn">
+                <SiLinkedin className="h-6 w-6" />
+                <span className="hidden text-base font-semibold lg:inline">LinkedIn</span>
+              </PlatformLogo>
+              <PlatformLogo label="Instagram">
+                <SiInstagram className="h-6 w-6" />
+                <span className="hidden text-base font-medium lg:inline">Instagram</span>
+              </PlatformLogo>
+              <PlatformLogo label="Truth Social">
+                <TruthSocial className="h-4 w-auto lg:h-5" />
+              </PlatformLogo>
+              <PlatformLogo label="Substack">
+                <SiSubstack className="h-6 w-6" />
+                <span className="hidden text-base font-semibold lg:inline">Substack</span>
+              </PlatformLogo>
+            </div>
           </div>
         </div>
       </div>

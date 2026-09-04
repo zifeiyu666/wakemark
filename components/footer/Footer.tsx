@@ -22,6 +22,12 @@ export default async function Footer() {
     if (pricingLink) {
       pricingLink.href = process.env.NEXT_PUBLIC_PRICING_PATH!;
     }
+    const contactLink = group.links.find((link) => link.id === "contact");
+    if (contactLink && siteConfig.socialLinks?.email) {
+      contactLink.href = `mailto:${siteConfig.socialLinks.email}`;
+      contactLink.target = "_blank";
+      contactLink.rel = "noreferrer nofollow noopener";
+    }
   });
 
   return (

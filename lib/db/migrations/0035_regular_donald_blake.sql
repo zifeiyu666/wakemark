@@ -1,0 +1,1 @@
+ALTER TABLE "user_preferences" ADD COLUMN "digest_language" varchar(16) DEFAULT 'en' NOT NULL;

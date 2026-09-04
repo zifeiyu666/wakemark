@@ -4,6 +4,11 @@ import { ActionResult, actionResponse } from "@/lib/action-response";
 import { getSession } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { digests, userPreferences } from "@/lib/db/schema";
+import {
+  isDigestLanguage,
+  normalizeDigestLanguage,
+  type DigestLanguage,
+} from "@/lib/digests/language";
 import type { DigestContent } from "@/lib/digests/types";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
@@ -27,6 +32,7 @@ export type DigestPreferences = {
   timeZone: string | null;
   digestHour: number;
   digestEnabled: boolean;
+  digestLanguage: DigestLanguage;
 };
 
 function isValidTimeZone(value: string): boolean {
@@ -85,6 +91,7 @@ export async function getDigestPreferences(): Promise<
     timeZone: row?.timeZone ?? null,
     digestHour: row?.digestHour ?? 9,
     digestEnabled: row?.digestEnabled ?? true,
+    digestLanguage: normalizeDigestLanguage(row?.digestLanguage),
   });
 }
 
@@ -113,6 +120,25 @@ export async function updateDigestPreferences(
       },
     });
   return actionResponse.success(parsed.data);
+}
+
+export async function updateDigestLanguage(
+  language: string
+): Promise<ActionResult<{ digestLanguage: DigestLanguage }>> {
+  const session = await getSession();
+  if (!session?.user?.id) return actionResponse.unauthorized();
+  if (!isDigestLanguage(language)) {
+    return actionResponse.badRequest("Invalid digest language.");
+  }
+  const userId = session.user.id;
+  await db
+    .insert(userPreferences)
+    .values({ userId, digestLanguage: language })
+    .onConflictDoUpdate({
+      target: userPreferences.userId,
+      set: { digestLanguage: language },
+    });
+  return actionResponse.success({ digestLanguage: language });
 }
 
 export async function getDigests(): Promise<ActionResult<DigestListItem[]>> {

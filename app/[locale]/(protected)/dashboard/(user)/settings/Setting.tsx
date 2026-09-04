@@ -1,10 +1,26 @@
 "use client";
 
+import {
+  getDigestPreferences,
+  updateDigestLanguage,
+} from "@/actions/digests";
 import { updateUserSettingsAction } from "@/actions/users/settings";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { authClient } from "@/lib/auth/auth-client";
 import { user as userSchema } from "@/lib/db/schema";
+import {
+  DEFAULT_DIGEST_LANGUAGE,
+  DIGEST_LANGUAGES,
+  type DigestLanguage,
+} from "@/lib/digests/language";
 import { isSyntheticEmail, normalizeEmail, validateEmail } from "@/lib/email";
 import {
   AVATAR_ACCEPT_ATTRIBUTE,
@@ -18,6 +34,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import DigestSection from "./DigestSection";
 import SettingsCard from "./SettingsCard";
 
 type User = typeof userSchema.$inferSelect;
@@ -37,6 +54,13 @@ export default function Settings({ user }: { user: User }) {
   // link); synthetic X-login placeholders show as empty.
   const [emailValue, setEmailValue] = useState("");
   const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [digestLanguage, setDigestLanguage] = useState<DigestLanguage>(
+    DEFAULT_DIGEST_LANGUAGE
+  );
+  const [savedDigestLanguage, setSavedDigestLanguage] =
+    useState<DigestLanguage>(DEFAULT_DIGEST_LANGUAGE);
+  const [languageLoaded, setLanguageLoaded] = useState(false);
+  const [isLanguageSaving, setIsLanguageSaving] = useState(false);
 
   const t = useTranslations("Settings");
   const locale = useLocale();
@@ -45,6 +69,19 @@ export default function Settings({ user }: { user: User }) {
     setFullName(user?.name || "");
     setEmailValue(isSyntheticEmail(user?.email) ? "" : user?.email || "");
   }, [user]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getDigestPreferences().then((result) => {
+      if (cancelled || !result.success || !result.data) return;
+      setDigestLanguage(result.data.digestLanguage);
+      setSavedDigestLanguage(result.data.digestLanguage);
+      setLanguageLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleEmailSave = async () => {
     const normalized = normalizeEmail(emailValue);
@@ -75,6 +112,26 @@ export default function Settings({ user }: { user: User }) {
       router.refresh();
     } finally {
       setIsEmailLoading(false);
+    }
+  };
+
+  const handleLanguageSave = async () => {
+    if (digestLanguage === savedDigestLanguage) return;
+    setIsLanguageSaving(true);
+    try {
+      const result = await updateDigestLanguage(digestLanguage);
+      if (!result.success) {
+        toast.error(t("toast.updateErrorTitle"), {
+          description: result.error || t("toast.updateErrorDescription"),
+        });
+        return;
+      }
+      setSavedDigestLanguage(digestLanguage);
+      toast.success(t("toast.languageSavedTitle"), {
+        description: t("toast.languageSavedDescription"),
+      });
+    } finally {
+      setIsLanguageSaving(false);
     }
   };
 
@@ -259,6 +316,46 @@ export default function Settings({ user }: { user: User }) {
           aria-label={t("form.emailLabel")}
         />
       </SettingsCard>
+
+      <SettingsCard
+        title={t("form.languageLabel")}
+        description={t("form.languageDescription")}
+        footerHint={t("form.languageHint")}
+        submitLabel={t("form.saveButton")}
+        submitting={isLanguageSaving}
+        submitDisabled={
+          !languageLoaded || digestLanguage === savedDigestLanguage
+        }
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleLanguageSave();
+        }}
+      >
+        <Select
+          value={digestLanguage}
+          onValueChange={(value) =>
+            setDigestLanguage(value as DigestLanguage)
+          }
+          disabled={!languageLoaded || isLanguageSaving}
+        >
+          <SelectTrigger
+            id="settings-digest-language"
+            className="max-w-sm"
+            aria-label={t("form.languageLabel")}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {DIGEST_LANGUAGES.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SettingsCard>
+
+      <DigestSection />
 
       <SettingsCard
         title={t("form.fullNameLabel")}

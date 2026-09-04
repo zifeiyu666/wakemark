@@ -76,7 +76,7 @@ export default function ChatAiDemo() {
   const exiting = phase === "exit";
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border bg-card shadow-sm">
+    <div className="w-full overflow-hidden bg-card">
       {/* Header: panel title + new chat / close affordances */}
       <div className="flex items-center justify-between border-b px-4 py-3 sm:px-5">
         <span className="font-serif text-base font-semibold">

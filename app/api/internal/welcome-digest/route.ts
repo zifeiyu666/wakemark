@@ -5,6 +5,7 @@ import { generateWeeklyDigestForUser } from "@/lib/digests/generate-core";
 import { todayWeekKey } from "@/lib/digests/local-time";
 import { isSyntheticEmail } from "@/lib/email";
 import { getErrorMessage } from "@/lib/error-utils";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -47,6 +48,9 @@ export async function GET(request: NextRequest) {
   }
   if (account.digestEnabled === false) {
     return NextResponse.json({ skipped: "digest-disabled" });
+  }
+  if (!(await hasBookmarkServiceAccess(userId))) {
+    return NextResponse.json({ skipped: "not-subscribed" });
   }
   // X-login placeholders cannot receive mail; skip the whole pipeline, same
   // as the signup welcome email does.

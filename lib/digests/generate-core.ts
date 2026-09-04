@@ -8,9 +8,22 @@ import {
 import { acquireAiSlot, with429Backoff } from "@/lib/bookmarks/ai-guard";
 import { extractJson, repairTruncatedJson } from "@/lib/ai/json";
 import { db } from "@/lib/db";
-import { bookmarks, digests, user as userSchema } from "@/lib/db/schema";
+import {
+  bookmarks,
+  digests,
+  user as userSchema,
+  userPreferences,
+} from "@/lib/db/schema";
+import {
+  DEFAULT_DIGEST_LANGUAGE,
+  digestEmailCopy,
+  digestLanguageEnglishName,
+  type DigestLanguage,
+  normalizeDigestLanguage,
+} from "@/lib/digests/language";
 import type { DigestContent, DigestHighlightItem } from "@/lib/digests/types";
 import { getErrorMessage } from "@/lib/error-utils";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { WeeklyDigestEmail } from "@/emails/weekly-digest";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
@@ -37,15 +50,19 @@ const DigestAiSchema = z.object({
     .max(3),
 });
 
-const DIGEST_SYSTEM_PROMPT = [
-  "You edit the weekly bookmark digest for WakeMark.",
-  "Write in English, concise and practical, second person.",
-  "Reply with ONLY a JSON object, no markdown, in this shape:",
-  '{"overview": string (2-4 sentences on the week\'s themes and interests),',
-  '"highlightTweetIds": string[] (the curated highlight tweetIds, see prompt),',
-  '"insights": [{"tweetId": string, "insight": string (one editorial comment, max 25 words)}]}',
-  "Include at most 3 insights, only for the most actionable highlights; [] is fine.",
-].join(" ");
+function digestSystemPrompt(language: DigestLanguage): string {
+  const languageName = digestLanguageEnglishName(language);
+  return [
+    "You edit the weekly bookmark digest for WakeMark.",
+    `Write overview and insights in ${languageName}, concise and practical, second person.`,
+    "JSON keys stay in English. Do not translate tweetIds.",
+    "Reply with ONLY a JSON object, no markdown, in this shape:",
+    '{"overview": string (2-4 sentences on the week\'s themes and interests),',
+    '"highlightTweetIds": string[] (the curated highlight tweetIds, see prompt),',
+    '"insights": [{"tweetId": string, "insight": string (one editorial comment, max 25 words)}]}',
+    "Include at most 3 insights, only for the most actionable highlights; [] is fine.",
+  ].join(" ");
+}
 
 function likesOf(row: typeof bookmarks.$inferSelect): number {
   const metrics = row.metrics as { likes?: number } | null;
@@ -162,7 +179,8 @@ function buildDigestPrompt(
 async function generateOverview(
   weekKey: string,
   groups: Array<{ category: string; items: DigestHighlightItem[] }>,
-  quota: number
+  quota: number,
+  language: DigestLanguage
 ): Promise<{
   overview: string | null;
   insights: Map<string, string>;
@@ -191,7 +209,7 @@ async function generateOverview(
         acquireAiSlot().then(() =>
           generateText({
             model: openrouter.chat(modelId),
-            system: DIGEST_SYSTEM_PROMPT,
+            system: digestSystemPrompt(language),
             prompt: buildDigestPrompt(weekKey, groups, quota),
             temperature: 0.4,
             maxOutputTokens: 1500,
@@ -234,6 +252,97 @@ async function generateOverview(
   return empty;
 }
 
+const LocalizedSummariesSchema = z.object({
+  summaries: z.array(
+    z.object({
+      tweetId: z.coerce.string(),
+      summary: z.string().min(1),
+    })
+  ),
+});
+
+// Rewrites highlight summaries into the user's digest language. Bookmark
+// rows stay untouched; Also bookmarked keeps the original tweet text.
+async function localizeHighlightSummaries(
+  items: DigestHighlightItem[],
+  language: DigestLanguage
+): Promise<Map<string, string>> {
+  const localized = new Map<string, string>();
+  if (language === DEFAULT_DIGEST_LANGUAGE || items.length === 0) {
+    return localized;
+  }
+  if (!process.env.OPENROUTER_API_KEY) {
+    console.warn(`${LOG} OPENROUTER_API_KEY missing, keeping source summaries`);
+    return localized;
+  }
+
+  const languageName = digestLanguageEnglishName(language);
+  const prompt = [
+    `Rewrite each highlight summary in ${languageName}.`,
+    "Keep the meaning, one practical line each, no hashtags, no tweetIds in the prose.",
+    "Reply with ONLY JSON:",
+    '{"summaries":[{"tweetId":string,"summary":string}]}',
+    "Include every tweetId listed below.",
+    "",
+    ...items.map(
+      (item) => `[tweetId: ${item.tweetId}] ${item.summary || "(no summary)"}`
+    ),
+  ].join("\n");
+
+  const chatModelId = process.env.BOOKMARK_AI_MODEL || DEFAULT_BOOKMARK_MODEL;
+  const candidates = [
+    chatModelId,
+    ...FALLBACK_CHAIN.filter((m) => m !== chatModelId),
+  ];
+  const openrouter = createOpenRouter({
+    apiKey: process.env.OPENROUTER_API_KEY,
+  });
+  for (const modelId of candidates) {
+    try {
+      const { text } = await with429Backoff(() =>
+        acquireAiSlot().then(() =>
+          generateText({
+            model: openrouter.chat(modelId),
+            system: `You translate editorial bookmark summaries into ${languageName}. JSON keys stay in English.`,
+            prompt,
+            temperature: 0.2,
+            maxOutputTokens: 1500,
+            maxRetries: 1,
+          })
+        )
+      );
+      let raw: unknown;
+      try {
+        raw = JSON.parse(extractJson(text));
+      } catch (parseError) {
+        const repaired = repairTruncatedJson(extractJson(text));
+        if (!repaired) throw parseError;
+        raw = JSON.parse(repaired);
+      }
+      const parsed = LocalizedSummariesSchema.safeParse(raw);
+      if (!parsed.success) {
+        console.warn(
+          `${LOG} ${modelId}: localized summaries failed schema: ${text.slice(0, 200)}`
+        );
+        continue;
+      }
+      for (const entry of parsed.data.summaries) {
+        const summary = entry.summary.trim();
+        if (summary) localized.set(entry.tweetId, summary);
+      }
+      console.log(
+        `${LOG} localized ${localized.size}/${items.length} highlight summaries via ${modelId} -> ${language}`
+      );
+      return localized;
+    } catch (error) {
+      console.warn(
+        `${LOG} localize summaries on ${modelId} failed: ${getErrorMessage(error)}`
+      );
+    }
+  }
+  return localized;
+}
+
 export type DigestGenerationResult = {
   digestId: string;
   emailed: boolean;
@@ -250,6 +359,19 @@ export async function generateWeeklyDigestForUser(
   userId: string,
   weekKey: string
 ): Promise<DigestGenerationResult> {
+  if (!(await hasBookmarkServiceAccess(userId))) {
+    console.log(`${LOG} user ${userId}: skipped, no active subscription`);
+    return null;
+  }
+
+  const [prefs] = await db
+    .select({ digestLanguage: userPreferences.digestLanguage })
+    .from(userPreferences)
+    .where(eq(userPreferences.userId, userId))
+    .limit(1);
+  const language = normalizeDigestLanguage(prefs?.digestLanguage);
+  const copy = digestEmailCopy(language);
+
   const periodEnd = new Date();
   const periodStart = new Date(periodEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
 
@@ -280,7 +402,7 @@ export async function generateWeeklyDigestForUser(
   // fallback keeps the digest shipping when the model is unavailable.
   const ai =
     candidates.length > 0
-      ? await generateOverview(weekKey, groupRows(candidates), quota)
+      ? await generateOverview(weekKey, groupRows(candidates), quota, language)
       : {
           overview: null,
           insights: new Map<string, string>(),
@@ -309,17 +431,32 @@ export async function generateWeeklyDigestForUser(
 
   // Group highlights by primary category; biggest topics first.
   const groups = groupRows(highlightRows);
+  const highlightItems = groups.flatMap((group) => group.items);
+  const localizedSummaries = await localizeHighlightSummaries(
+    highlightItems,
+    language
+  );
+  for (const group of groups) {
+    for (const item of group.items) {
+      const rewritten = localizedSummaries.get(item.tweetId);
+      if (rewritten) item.summary = rewritten;
+    }
+  }
 
   const content: DigestContent = {
     highlightGroups: groups,
     alsoBookmarked: alsoRows.map((r) => ({
       tweetId: r.tweetId,
       authorUsername: r.authorUsername,
-      text: (r.text || r.summary || "").slice(0, ALSO_TEXT_MAX),
+      text: (r.text || "").slice(0, ALSO_TEXT_MAX),
     })),
   };
 
-  const fallbackOverview = `Your week on X at a glance — ${highlightRows.length} highlights across ${groups.length} ${groups.length === 1 ? "topic" : "topics"}, plus ${alsoRows.length} more bookmarks worth a scroll.`;
+  const fallbackOverview = copy.fallbackOverview({
+    highlightCount: highlightRows.length,
+    topicCount: groups.length,
+    alsoCount: alsoRows.length,
+  });
   const overview = ai.overview ?? fallbackOverview;
   for (const group of content.highlightGroups) {
     for (const item of group.items) {
@@ -376,13 +513,14 @@ export async function generateWeeklyDigestForUser(
     const unsubscribeToken = Buffer.from(account.email).toString("base64");
     await sendEmail({
       email: account.email,
-      subject: `Your WakeMark weekly digest — ${weekKey}`,
+      subject: copy.subject(weekKey),
       react: React.createElement(WeeklyDigestEmail, {
         weekKey,
         overview,
         highlightCount: highlightRows.length,
         bookmarkCount: rows.length,
         content,
+        language,
         unsubscribeLink: `${process.env.NEXT_PUBLIC_SITE_URL}/unsubscribe/newsletter?token=${unsubscribeToken}`,
       }),
     });

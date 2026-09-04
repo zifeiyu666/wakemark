@@ -19,5 +19,18 @@
     "successDescription": "Thanks for writing in — we read every submission.",
     "errorTitle": "Submission failed",
     "errorDescription": "Please try again later."
+  },
+  "inbox": {
+    "title": "Feedback inbox",
+    "description": "User submissions from the dashboard.",
+    "empty": "No feedback yet.",
+    "unknownUser": "Unknown user",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {pageCount} ({totalCount})",
+    "columns": {
+      "createdAt": "Submitted",
+      "from": "From"
+    }
   }
 }

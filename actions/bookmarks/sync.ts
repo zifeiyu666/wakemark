@@ -3,6 +3,7 @@
 import { ActionResult, actionResponse } from "@/lib/action-response";
 import { getSession } from "@/lib/auth/server";
 import {
+  SubscriptionRequiredError,
   SyncBusyError,
   SyncRefreshError,
   syncBookmarksForUser,
@@ -37,6 +38,12 @@ export async function syncBookmarks(): Promise<ActionResult<SyncResult>> {
     }
     if (error instanceof XNotConnectedError) {
       return actionResponse.error("X account not connected.", "not-connected");
+    }
+    if (error instanceof SubscriptionRequiredError) {
+      return actionResponse.error(
+        "An active subscription is required to sync bookmarks.",
+        "not-subscribed"
+      );
     }
     if (error instanceof XReconnectRequiredError) {
       return actionResponse.error(
@@ -78,6 +85,12 @@ export async function advanceImport(): Promise<ActionResult<SyncResult>> {
     }
     if (error instanceof XNotConnectedError) {
       return actionResponse.error("X account not connected.", "not-connected");
+    }
+    if (error instanceof SubscriptionRequiredError) {
+      return actionResponse.error(
+        "An active subscription is required to import bookmarks.",
+        "not-subscribed"
+      );
     }
     if (error instanceof XReconnectRequiredError) {
       return actionResponse.error(

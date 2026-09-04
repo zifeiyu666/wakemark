@@ -169,7 +169,7 @@ export function ListsSidebarMenu() {
       <SidebarMenuItem>
         <div className="relative">
           <CollapsibleTrigger asChild>
-            <SidebarMenuButton isActive={pathname.startsWith("/dashboard/lists")}>
+            <SidebarMenuButton>
               <ListTree className="h-4 w-4" />
               <span>{t("sidebar.group")}</span>
               <ChevronDown className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />

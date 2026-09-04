@@ -812,6 +812,11 @@ export const userPreferences = pgTable('user_preferences', {
   timeZone: text('time_zone'),
   digestHour: integer('digest_hour').notNull().default(9),
   digestEnabled: boolean('digest_enabled').notNull().default(true),
+  // Language for weekly digest email prose (highlights, overview, insights).
+  // Bookmark rows stay in their source language; Also bookmarked is raw tweet text.
+  digestLanguage: varchar('digest_language', { length: 16 })
+    .notNull()
+    .default('en'),
   // Set once the new-user onboarding tour is finished or dismissed; the tour
   // only auto-opens while this stays NULL.
   onboardingCompletedAt: timestamp('onboarding_completed_at', {

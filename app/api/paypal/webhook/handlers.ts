@@ -1,4 +1,8 @@
 import { savePayPalPayerId, syncPayPalSubscriptionData } from "@/actions/paypal";
+import {
+  scheduleBookmarkCatchUpIfAccessRestored,
+  snapshotBookmarkServiceAccess,
+} from "@/lib/bookmarks/catch-up";
 import { db } from "@/lib/db";
 import {
   orders as ordersSchema,
@@ -325,6 +329,8 @@ export async function handlePayPalSubscriptionActivated(
   const decoded = decodePayPalCustomId(subscription.custom_id);
 
   try {
+    const userId = decoded?.userId ?? (await resolveSubscriptionUserId(subscription.id, subscription.custom_id));
+    const hadAccess = await snapshotBookmarkServiceAccess(userId);
     // Sync the subscription data into the subscriptions table
     await syncPayPalSubscriptionData(subscription.id, {
       ...decoded,
@@ -334,6 +340,8 @@ export async function handlePayPalSubscriptionActivated(
     console.log(
       `[PayPal Webhook] Subscription ${subscription.id} synced successfully.`
     );
+
+    await scheduleBookmarkCatchUpIfAccessRestored(userId, hadAccess);
 
     // Save the payer ID
     if (subscription.subscriber?.payer_id && decoded?.userId) {
@@ -613,7 +621,9 @@ export async function handlePayPalSaleCompleted(
     //    BILLING.SUBSCRIPTION.UPDATED, so we must pull once to advance
     //    currentPeriodEnd / currentPeriodStart.
     try {
+      const hadAccess = await snapshotBookmarkServiceAccess(subscription.userId);
       await syncPayPalSubscriptionData(subscriptionProviderId);
+      await scheduleBookmarkCatchUpIfAccessRestored(subscription.userId, hadAccess);
     } catch (syncError) {
       console.error(
         `[PayPal Webhook] Failed to refresh subscription ${subscriptionProviderId} after sale ${sale.id}:`,

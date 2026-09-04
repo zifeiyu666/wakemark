@@ -52,7 +52,7 @@ export default async function StripeErrorPage({
             </I18nLink>
           </Button>
           <Button asChild variant="outline" className="px-4 py-2">
-            <I18nLink href="/dashboard" title={t("goToDashboard")}>
+            <I18nLink href="/dashboard/bookmarks" title={t("goToDashboard")}>
               {t("goToDashboard")}
             </I18nLink>
           </Button>

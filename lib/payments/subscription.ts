@@ -66,3 +66,14 @@ export async function getActiveSubscription(
 export async function hasActiveSubscription(userId: string): Promise<boolean> {
   return (await getActiveSubscription(userId)) !== null;
 }
+
+/**
+ * Background bookmark sync, AI tagging, and digest email may run without a
+ * session. Product access follows the same gate as the dashboard menus: an
+ * active or trialing subscription. Admin role only unlocks the ops dashboard.
+ */
+export async function hasBookmarkServiceAccess(
+  userId: string
+): Promise<boolean> {
+  return hasActiveSubscription(userId);
+}

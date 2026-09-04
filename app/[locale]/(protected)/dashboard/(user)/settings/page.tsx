@@ -14,7 +14,6 @@ import { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import Settings from "./Setting";
-import DigestSection from "./DigestSection";
 import SubscriptionSection, {
   SubscriptionPlanDisplay,
 } from "./SubscriptionSection";
@@ -110,7 +109,6 @@ export default async function SettingsPage() {
         plan={plan}
       />
       <Settings user={user} />
-      <DigestSection />
     </div>
   );
 }

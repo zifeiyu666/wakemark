@@ -4,6 +4,10 @@
 
 import { syncPayPalSubscriptionData } from "@/actions/paypal";
 import { apiResponse } from "@/lib/api-response";
+import {
+  scheduleBookmarkCatchUpIfAccessRestored,
+  snapshotBookmarkServiceAccess,
+} from "@/lib/bookmarks/catch-up";
 import { db } from "@/lib/db";
 import { subscriptions as subscriptionsSchema } from "@/lib/db/schema";
 import { getPayPalSubscription } from "@/lib/paypal";
@@ -44,7 +48,9 @@ export async function verifyPayPalPayment(
 
     // Sync the subscription data (fallback if the webhook hasn't processed yet)
     try {
+      const hadAccess = await snapshotBookmarkServiceAccess(userId);
       await syncPayPalSubscriptionData(subscriptionId);
+      await scheduleBookmarkCatchUpIfAccessRestored(userId, hadAccess);
     } catch (syncError) {
       console.error(
         `[Verify API] Error during PayPal subscription sync for ${subscriptionId}:`,

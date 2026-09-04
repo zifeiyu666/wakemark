@@ -106,75 +106,71 @@ export default function DigestSection() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <SettingsCard
-        title={t("digest.title")}
-        description={t("digest.description")}
-        footerHint={t("digest.footerHint")}
-        submitLabel={t("digest.saveButton")}
-        submitting={saving}
-        submitDisabled={!loaded}
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSave();
-        }}
-      >
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-1">
-            <Label>{t("digest.enabledLabel")}</Label>
-            <p className="text-xs text-muted-foreground">
-              {t("digest.enabledHint")}
-            </p>
-          </div>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
+    <SettingsCard
+      title={t("digest.title")}
+      description={t("digest.description")}
+      footerHint={t("digest.footerHint")}
+      submitLabel={t("digest.saveButton")}
+      submitting={saving}
+      submitDisabled={!loaded}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSave();
+      }}
+    >
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-1">
+          <Label>{t("digest.enabledLabel")}</Label>
+          <p className="text-xs text-muted-foreground">
+            {t("digest.enabledHint")}
+          </p>
+        </div>
+        <Switch checked={enabled} onCheckedChange={setEnabled} />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>{t("digest.timeZoneLabel")}</Label>
+          <Select value={timeZone} onValueChange={setTimeZone} disabled={!loaded}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {timeZoneOptions.map((zone) => (
+                <SelectItem key={zone} value={zone}>
+                  {zone === browserTimeZone
+                    ? t("digest.timeZoneAuto", { zone })
+                    : zone}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {t("digest.timeZoneHint")}
+          </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label>{t("digest.timeZoneLabel")}</Label>
-            <Select value={timeZone} onValueChange={setTimeZone} disabled={!loaded}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {timeZoneOptions.map((zone) => (
-                  <SelectItem key={zone} value={zone}>
-                    {zone === browserTimeZone
-                      ? t("digest.timeZoneAuto", { zone })
-                      : zone}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {t("digest.timeZoneHint")}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("digest.hourLabel")}</Label>
-            <Select
-              value={String(hour)}
-              onValueChange={(value) => setHour(Number(value))}
-              disabled={!loaded}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {HOUR_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={String(option)}>
-                    {t("digest.hourOption", { hour: option })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              {t("digest.hourHint")}
-            </p>
-          </div>
+        <div className="space-y-2">
+          <Label>{t("digest.hourLabel")}</Label>
+          <Select
+            value={String(hour)}
+            onValueChange={(value) => setHour(Number(value))}
+            disabled={!loaded}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {HOUR_OPTIONS.map((option) => (
+                <SelectItem key={option} value={String(option)}>
+                  {t("digest.hourOption", { hour: option })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t("digest.hourHint")}</p>
         </div>
-      </SettingsCard>
-    </div>
+      </div>
+    </SettingsCard>
   );
 }

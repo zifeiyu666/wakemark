@@ -1,6 +1,6 @@
 import "server-only";
 
-import { syncBookmarksForUser } from "@/lib/bookmarks/sync-core";
+import { syncBookmarksForUser, SubscriptionRequiredError } from "@/lib/bookmarks/sync-core";
 import { db } from "@/lib/db";
 import { xConnections } from "@/lib/db/schema";
 import { fetchXMe } from "@/lib/x/client";
@@ -108,10 +108,16 @@ export async function upsertXConnectionFromAccount(
         }
       }
     } catch (syncError) {
-      console.warn(
-        "X initial fast sync skipped:",
-        syncError instanceof Error ? syncError.message : String(syncError)
-      );
+      if (syncError instanceof SubscriptionRequiredError) {
+        console.warn(
+          "X initial fast sync skipped: no active subscription yet"
+        );
+      } else {
+        console.warn(
+          "X initial fast sync skipped:",
+          syncError instanceof Error ? syncError.message : String(syncError)
+        );
+      }
     }
   }
 }

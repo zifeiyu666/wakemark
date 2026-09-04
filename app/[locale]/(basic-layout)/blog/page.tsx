@@ -73,7 +73,7 @@ export default async function Page({ params }: { params: Params }) {
     localPosts.length === 0 && initialServerPosts.length === 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-6 py-8 sm:px-10 lg:px-16 xl:px-24">
       <h1 className="text-4xl font-bold mb-8 text-center">{t("title")}</h1>
 
       {noPostsFound ? (

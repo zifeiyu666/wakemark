@@ -1,5 +1,9 @@
 import { syncCreemSubscriptionData } from '@/actions/creem';
 import {
+  scheduleBookmarkCatchUpIfAccessRestored,
+  snapshotBookmarkServiceAccess,
+} from '@/lib/bookmarks/catch-up';
+import {
   CreemCheckoutCompletedEvent,
   CreemRefundCreatedEvent,
   CreemSubscriptionActiveEvent,
@@ -221,25 +225,22 @@ export async function handleCreemSubscriptionUpdated(
   const customerId = subscription?.customer?.id;
 
   try {
+    const userId =
+      (subscription.metadata?.userId as string | undefined) ??
+      (await lookupUserIdByCreemSubscription(subscriptionId));
+    const hadAccess = await snapshotBookmarkServiceAccess(userId);
     await syncCreemSubscriptionData(subscriptionId, subscription?.metadata);
     if (isDeleted) {
-      // --- [custom] Revoke the user's benefits---
-      let userId = subscription.metadata?.userId as string;
-      if (!userId) {
-        try {
-          const storeSubscription = await db
-            .select({ userId: subscriptionsSchema.userId })
-            .from(subscriptionsSchema)
-            .where(eq(subscriptionsSchema.subscriptionId, subscriptionId))
-            .limit(1);
-          userId = storeSubscription[0]?.userId;
-        } catch (err) {
-          console.error(`Error retrieving user for subscription ${subscription.id}:`, err);
-        }
+      if (userId) {
+        revokeRemainingSubscriptionCreditsOnEnd(
+          'creem',
+          subscriptionId,
+          userId,
+          subscription.metadata
+        );
       }
-
-      revokeRemainingSubscriptionCreditsOnEnd('creem', subscriptionId, userId, subscription.metadata);
-      // --- End: [custom] Revoke the user's benefits ---
+    } else {
+      await scheduleBookmarkCatchUpIfAccessRestored(userId, hadAccess);
     }
   } catch (error) {
     console.error(
@@ -247,6 +248,25 @@ export async function handleCreemSubscriptionUpdated(
       error
     );
     throw error;
+  }
+}
+
+async function lookupUserIdByCreemSubscription(
+  subscriptionId: string
+): Promise<string | undefined> {
+  try {
+    const [row] = await db
+      .select({ userId: subscriptionsSchema.userId })
+      .from(subscriptionsSchema)
+      .where(eq(subscriptionsSchema.subscriptionId, subscriptionId))
+      .limit(1);
+    return row?.userId;
+  } catch (err) {
+    console.error(
+      `Error retrieving user for Creem subscription ${subscriptionId}:`,
+      err
+    );
+    return undefined;
   }
 }
 

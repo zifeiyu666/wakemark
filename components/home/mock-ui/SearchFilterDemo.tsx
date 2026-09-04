@@ -96,7 +96,7 @@ export default function SearchFilterDemo() {
   const exiting = phase === "exit";
 
   return (
-      <div className="w-full overflow-hidden rounded-xl bg-card">
+      <div className="w-full overflow-hidden bg-card">
         {/* Search bar + sort + filter chips */}
         <div className="border-b bg-muted/40 px-4 py-4 sm:px-5">
           <div className="flex items-center gap-3">

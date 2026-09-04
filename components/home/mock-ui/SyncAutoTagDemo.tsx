@@ -172,7 +172,7 @@ export default function SyncAutoTagDemo() {
   });
 
   return (
-      <div className="w-full overflow-hidden rounded-xl bg-card">
+      <div className="w-full overflow-hidden bg-card">
         {/* Header: collection name + ever-spinning sync indicator */}
         <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">

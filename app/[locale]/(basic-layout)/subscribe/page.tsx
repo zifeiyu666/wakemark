@@ -44,7 +44,7 @@ export default async function SubscribePage() {
   // Already-subscribed users have nothing to do here.
   const session = await getSession();
   if (session?.user && (await hasActiveSubscription(session.user.id))) {
-    redirect("/dashboard");
+    redirect("/dashboard/bookmarks");
   }
 
   const t = await getTranslations("Pricing.Subscribe");

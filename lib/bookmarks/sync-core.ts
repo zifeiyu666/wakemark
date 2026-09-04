@@ -3,6 +3,7 @@ import "server-only";
 import { db } from "@/lib/db";
 import { bookmarks, xConnections } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { releaseLock, tryAcquireLock } from "@/lib/upstash/lock";
 import { REDIS_KEYS_CONFIGS } from "@/lib/upstash/redis-keys";
 import { fetchBookmarksPageForUser, XApiError } from "@/lib/x/client";
@@ -60,6 +61,13 @@ export class SyncBusyError extends Error {
   }
 }
 
+export class SubscriptionRequiredError extends Error {
+  constructor() {
+    super("An active subscription is required to sync bookmarks.");
+    this.name = "SubscriptionRequiredError";
+  }
+}
+
 // Cross-instance mutex window: a manual "latest" pass pulls up to 20 pages
 // (~2-3s each: X fetch + 400ms pause + insert), so 120s covers the worst
 // case while a killed serverless instance frees the lock quickly.
@@ -86,6 +94,10 @@ export async function syncBookmarksForUser(
   userId: string,
   opts: { maxPages?: number; mode?: SyncMode } = {}
 ): Promise<SyncResult> {
+  if (!(await hasBookmarkServiceAccess(userId))) {
+    throw new SubscriptionRequiredError();
+  }
+
   const conn = await getXConnectionByUserId(userId);
   if (!conn) throw new XNotConnectedError();
 

@@ -35,9 +35,11 @@ https://<your-domain>/api/cron/bookmarks?job=drain
 Add an `Upstash-Forward` header whose forwarded key is `Authorization` and
 whose value is `<CRON_SECRET>` (the secret itself, without `Bearer `). Set
 `Upstash-Method` to `POST` and choose a schedule such as `0 */3 * * *`.
-Active users drive their own first-time history import and AI tagging from
+Active **subscribed** users (and admins) drive their own first-time history import and AI tagging from
 the dashboard (resumable progress banner); this schedule is the fallback that
-continues backlogs and pending AI work for users who stay away. You may
+continues backlogs and pending AI work for users who stay away. Unsubscribed
+accounts are skipped until they resubscribe, at which point a latest-mode
+catch-up runs immediately. You may
 create a second daily schedule for `?job=daily` (for example `0 8 * * *`,
 UTC). Keep `CRON_SECRET` configured in Vercel and QStash; never commit its
 value.
@@ -51,10 +53,11 @@ database checkpoints make each drain invocation resumable and idempotent.
 
 ## Weekly digests (Upstash QStash)
 
-Every connected user receives an emailed weekly digest on **their own local
+Every **subscribed** connected user receives an emailed weekly digest on **their own local
 Friday**, at or after their preferred hour (default 9:00, configurable in
 Settings together with the time zone; the browser time zone is also captured
-implicitly on dashboard visits). Create one hourly QStash schedule that sends
+implicitly on dashboard visits). Missed Fridays while unsubscribed are not
+backfilled. Create one hourly QStash schedule that sends
 a `POST` request to:
 
 ```text

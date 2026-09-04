@@ -33,16 +33,18 @@ export default async function DashboardLayout({
   }
 
   const isAdmin = session.user.role === "admin";
+  const hasProductAccess = await hasActiveSubscription(session.user.id);
 
-  // Administrators manage the service without needing a customer
-  // subscription. Regular users must have an active or trialing plan.
-  if (!isAdmin && !(await hasActiveSubscription(session.user.id))) {
+  // Administrators can open the dashboard to manage the service without a
+  // customer plan. Regular users need an active or trialing subscription.
+  // Product menus (bookmarks, lists, digests) follow hasProductAccess, not role.
+  if (!isAdmin && !hasProductAccess) {
     redirect("/subscribe");
   }
 
   let storedTimeZone: string | null = null;
   let showOnboardingTour = false;
-  if (session.user.id && !isAdmin) {
+  if (session.user.id && hasProductAccess) {
     const [pref] = await db
       .select({
         timeZone: userPreferences.timeZone,
@@ -54,39 +56,42 @@ export default async function DashboardLayout({
     storedTimeZone = pref?.timeZone ?? null;
     // The welcome tour targets newly registered users only: accounts created
     // before the feature shipped keep their existing experience, and it never
-    // re-opens once completed or dismissed.
-    const isNewAccount =
-      (session.user.createdAt?.getTime() ?? 0) >=
-      ONBOARDING_TOUR_LAUNCH_AT.getTime();
-    showOnboardingTour = isNewAccount && !pref?.onboardingCompletedAt;
+    // re-opens once completed or dismissed. Admins skip it even after
+    // subscribing, since they already know the ops dashboard.
+    if (!isAdmin) {
+      const isNewAccount =
+        (session.user.createdAt?.getTime() ?? 0) >=
+        ONBOARDING_TOUR_LAUNCH_AT.getTime();
+      showOnboardingTour = isNewAccount && !pref?.onboardingCompletedAt;
+    }
   }
 
   return (
     <AuthGuard>
       <TimezoneReporter storedTimeZone={storedTimeZone} />
       <SidebarProvider>
-        <DashboardSidebar />
+        <DashboardSidebar hasProductAccess={hasProductAccess} />
         <SidebarInset className="min-w-0">
           <SidebarInsetHeader />
           <div className="flex flex-1 flex-col gap-4 px-4 pt-0 pb-2 min-w-0">
             {/* Resumable first-import banner: shows while a history backfill
                 checkpoint or an untagged backlog exists, and drives both. */}
-            {isAdmin ? (
-              <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
-                {children}
-              </div>
-            ) : (
+            {hasProductAccess ? (
               <ImportProgressProvider>
                 <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
                   {children}
                 </div>
               </ImportProgressProvider>
+            ) : (
+              <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
+                {children}
+              </div>
             )}
           </div>
         </SidebarInset>
-        {!isAdmin && <AskAiWidget />}
-        {!isAdmin && showOnboardingTour && <OnboardingTour />}
-        {!isAdmin && <EmailPromptDialog email={session.user.email} />}
+        {hasProductAccess && <AskAiWidget />}
+        {hasProductAccess && showOnboardingTour && <OnboardingTour />}
+        {hasProductAccess && <EmailPromptDialog email={session.user.email} />}
       </SidebarProvider>
     </AuthGuard>
   );

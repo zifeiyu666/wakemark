@@ -3,6 +3,7 @@ import { fridayWeekKey, getLocalParts } from "@/lib/digests/local-time";
 import { db } from "@/lib/db";
 import { digests, userPreferences, xConnections } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,11 +11,11 @@ export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 // Scheduled externally by Upstash QStash (see README): one tick per hour
-// (`0 * * * *`). Each tick checks every connected user's LOCAL clock — when
-// it is Friday and past their preferred hour in their own timezone, and no
-// digest exists for that local week (week_key), the weekly digest is
-// generated and emailed. IANA time zones + Intl handle DST; no per-user
-// schedules are needed.
+// (`0 * * * *`). Each tick checks every subscribed connected user's LOCAL
+// clock — when it is Friday and past their preferred hour in their own
+// timezone, and no digest exists for that local week (week_key), the weekly
+// digest is generated and emailed. Unsubscribed users are skipped. IANA
+// time zones + Intl handle DST; no per-user schedules are needed.
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const auth = request.headers.get("authorization");
@@ -66,6 +67,12 @@ export async function GET(request: NextRequest) {
     try {
       if (row.digestEnabled === false) {
         entry.reason = "disabled";
+        skipped += 1;
+        results.push(entry);
+        continue;
+      }
+      if (!(await hasBookmarkServiceAccess(row.userId))) {
+        entry.reason = "not-subscribed";
         skipped += 1;
         results.push(entry);
         continue;

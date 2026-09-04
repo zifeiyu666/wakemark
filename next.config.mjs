@@ -9,18 +9,18 @@ const nextConfig = {
   redirects: async () => [
     {
       source: "/dashboard",
-      destination: "/dashboard/settings",
-      permanent: true,
+      destination: "/dashboard/bookmarks",
+      permanent: false,
     },
     {
       source: "/zh/dashboard",
-      destination: "/zh/dashboard/settings",
-      permanent: true,
+      destination: "/zh/dashboard/bookmarks",
+      permanent: false,
     },
     {
       source: "/ja/dashboard",
-      destination: "/ja/dashboard/settings",
-      permanent: true,
+      destination: "/ja/dashboard/bookmarks",
+      permanent: false,
     },
   ],
   images: {

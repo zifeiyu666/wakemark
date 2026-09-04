@@ -7,6 +7,9 @@
     "emailDescription": "This is the email address associated with your account. Sign-in links and digest emails are sent here.",
     "emailPlaceholder": "name@example.com",
     "emailHint": "Changing your email sends a verification link to the new address.",
+    "languageLabel": "Digest language",
+    "languageDescription": "Highlights, overview, and insights in weekly digest emails are written in this language. Tweets under Also bookmarked stay in their original wording.",
+    "languageHint": "Applies to the next weekly digest email.",
     "fullNameLabel": "Full Name",
     "fullNameDescription": "This is your display name within WakeMark. For example, your real name or a nickname.",
     "fullNamePlaceholder": "Enter your full name",
@@ -35,7 +38,9 @@
     "errorUpdateUserProfile": "Failed to update user profile.",
     "emailInvalid": "Please enter a valid email address.",
     "emailSentTitle": "Verification email sent",
-    "emailSentDescription": "Check your inbox and click the link to verify your new email."
+    "emailSentDescription": "Check your inbox and click the link to verify your new email.",
+    "languageSavedTitle": "Digest language saved",
+    "languageSavedDescription": "The next weekly digest email will use this language for highlights."
   },
   "digest": {
     "title": "Weekly digest",

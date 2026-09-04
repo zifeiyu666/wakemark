@@ -131,48 +131,57 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
               "bottom-7 right-7 sm:bottom-10 sm:right-10 md:bottom-14 md:right-14"
             }`}
           >
-            <ScaleBox
-              scale={feature.demoScale ?? 1}
-              transformOrigin={feature.demoTransformOrigin}
-            >
-              <div className="w-full overflow-hidden rounded-xl border border-border/80 bg-background shadow-[0_22px_55px_-28px_rgb(0_0_0/0.5)] transition-shadow hover:shadow-[0_26px_70px_-30px_rgb(0_0_0/0.58)]">
-                {feature.mockUi ? (
-                  feature.mockUi
-                ) : feature.images && feature.images.length > 1 ? (
-                  <div className="w-full max-w-full">
-                    <Carousel>
-                      <CarouselContent>
-                        {feature.images.map((image) => (
-                          <CarouselItem key={image}>
-                            <ImagePreview>
-                              <Image
-                                src={image || "/placeholder.svg"}
-                                alt={feature.title}
-                                width={1280}
-                                height={630}
-                                className="rounded-none"
-                              />
-                            </ImagePreview>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      <CarouselPrevious />
-                      <CarouselNext />
-                    </Carousel>
-                  </div>
-                ) : (
-                  <ImagePreview>
-                    <Image
-                      src={feature.images?.[0] || "/placeholder.svg"}
-                      alt={feature.title}
-                      width={1280}
-                      height={630}
-                      className="rounded-none"
-                    />
-                  </ImagePreview>
-                )}
-              </div>
-            </ScaleBox>
+            {(() => {
+              const demo = (
+                <div className="w-full overflow-hidden border border-border bg-background">
+                  {feature.mockUi ? (
+                    feature.mockUi
+                  ) : feature.images && feature.images.length > 1 ? (
+                    <div className="w-full max-w-full">
+                      <Carousel>
+                        <CarouselContent>
+                          {feature.images.map((image) => (
+                            <CarouselItem key={image}>
+                              <ImagePreview>
+                                <Image
+                                  src={image || "/placeholder.svg"}
+                                  alt={feature.title}
+                                  width={1280}
+                                  height={630}
+                                  className="rounded-none"
+                                />
+                              </ImagePreview>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious />
+                        <CarouselNext />
+                      </Carousel>
+                    </div>
+                  ) : (
+                    <ImagePreview>
+                      <Image
+                        src={feature.images?.[0] || "/placeholder.svg"}
+                        alt={feature.title}
+                        width={1280}
+                        height={630}
+                        className="rounded-none"
+                      />
+                    </ImagePreview>
+                  )}
+                </div>
+              );
+              const scale = feature.demoScale ?? 1;
+              if (scale === 1) return demo;
+              return (
+                <ScaleBox
+                  scale={scale}
+                  transformOrigin={feature.demoTransformOrigin}
+                >
+                  {demo}
+                </ScaleBox>
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -237,7 +246,6 @@ export default function Features() {
       description:
         "WakeMark ships a remote MCP server. Connect Claude Desktop, Claude Code, Cursor, Codex, ChatGPT or VS Code with a single API key — agents can search, read and organize your bookmarks right where you already work.",
       mockUi: <McpBeamDemo />,
-      demoScale: 0.86,
     },
     ...t.raw("items"),
   ];

@@ -31,7 +31,11 @@ type Menu = {
   icon: string;
 };
 
-export function DashboardSidebar() {
+export function DashboardSidebar({
+  hasProductAccess,
+}: {
+  hasProductAccess: boolean;
+}) {
   const { data: session } = authClient.useSession();
   const user = session?.user as any | undefined;
   const pathname = usePathname();
@@ -46,10 +50,15 @@ export function DashboardSidebar() {
     "/dashboard/my-orders",
     "/dashboard/credit-history",
   ];
+  // MCP is a product surface; Settings stays visible so billing can be managed
+  // before a plan is active (admins can open dashboard without a subscription).
+  const unsubscribedHiddenHrefs = hasProductAccess ? [] : ["/dashboard/mcp"];
 
   const allUserMenus: Menu[] = t.raw("UserMenus");
   const userMenus = allUserMenus.filter(
-    (menu) => !hiddenUserMenuHrefs.includes(menu.href)
+    (menu) =>
+      !hiddenUserMenuHrefs.includes(menu.href) &&
+      !unsubscribedHiddenHrefs.includes(menu.href)
   );
   const adminMenus: Menu[] = t.raw("AdminMenus");
 
@@ -80,7 +89,7 @@ export function DashboardSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        {!isAdmin && (
+        {hasProductAccess && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -108,7 +117,7 @@ export function DashboardSidebar() {
 
         {isAdmin && (
           <>
-            <SidebarSeparator />
+            {hasProductAccess && <SidebarSeparator />}
             <SidebarGroup>
               <SidebarGroupLabel>Admin Menus</SidebarGroupLabel>
               <SidebarGroupContent>
@@ -136,7 +145,7 @@ export function DashboardSidebar() {
 
       <SidebarFooter>
         <SidebarMenu>
-          {(isAdmin ? [] : userMenus).map((menu) => (
+          {userMenus.map((menu) => (
             <SidebarMenuItem key={menu.href}>
               <SidebarMenuButton asChild isActive={isActive(menu.href)}>
                 <I18nLink

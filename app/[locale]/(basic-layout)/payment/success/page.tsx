@@ -317,7 +317,7 @@ function SuccessContent() {
             </I18nLink>
           </Button>
           <Button className="flex-1" asChild variant="outline" size="lg">
-            <I18nLink href="/dashboard" title="Go to Dashboard" prefetch={true}>
+            <I18nLink href="/dashboard/bookmarks" title="Go to Dashboard" prefetch={true}>
               <span>Dashboard</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </I18nLink>
@@ -383,7 +383,7 @@ function SuccessContent() {
           className="flex flex-col sm:flex-row gap-3 w-full"
         >
           <Button variant="outline" className="flex-1" asChild>
-            <I18nLink href="/dashboard" title="Go to Dashboard" prefetch={true}>
+            <I18nLink href="/dashboard/bookmarks" title="Go to Dashboard" prefetch={true}>
               Go to Dashboard <ArrowRight className="w-4 h-4 ml-1" />
             </I18nLink>
           </Button>

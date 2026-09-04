@@ -24,14 +24,19 @@
     },
     "UserMenus": [
       {
-        "name": "Settings",
-        "href": "/dashboard/settings",
-        "icon": "Settings"
-      },
-      {
         "name": "MCP",
         "href": "/dashboard/mcp",
         "icon": "Cable"
+      },
+      {
+        "name": "Submit Feedback",
+        "href": "/dashboard/feedback",
+        "icon": "MessageSquarePlus"
+      },
+      {
+        "name": "Settings",
+        "href": "/dashboard/settings",
+        "icon": "Settings"
       },
       {
         "name": "My Orders",
@@ -61,6 +66,11 @@
         "icon": "ShoppingCart"
       },
       {
+        "name": "Feedback",
+        "href": "/dashboard/feedbacks",
+        "icon": "MessageSquare"
+      },
+      {
         "name": "Prices",
         "href": "/dashboard/prices",
         "icon": "DollarSign"
@@ -79,11 +89,6 @@
         "name": "R2 Files",
         "href": "/dashboard/r2-resources",
         "icon": "FileBox"
-      },
-      {
-        "name": "Submit Feedback",
-        "href": "/dashboard/feedback",
-        "icon": "MessageSquarePlus"
       }
     ]
   },
@@ -376,6 +381,10 @@
             {
               "href": "/glossary",
               "name": "Glossary"
+            },
+            {
+              "name": "MCP",
+              "href": "/docs/mcp"
             }
           ]
         },
@@ -383,12 +392,28 @@
           "title": "Support",
           "links": [
             {
-              "name": "MCP",
-              "href": "/docs/mcp"
-            },
-            {
               "name": "Roadmap",
               "href": "/roadmap"
+            },
+            {
+              "id": "contact",
+              "name": "Contact us",
+              "href": "mailto:support@wakemark.app",
+              "target": "_blank",
+              "rel": "noreferrer nofollow noopener"
+            }
+          ]
+        },
+        {
+          "title": "Resources",
+          "links": [
+            {
+              "name": "Dewey Alternative",
+              "href": "/alternatives/dewey-alternative"
+            },
+            {
+              "name": "Readwise Alternative",
+              "href": "/alternatives/readwise-alternative"
             }
           ]
         }

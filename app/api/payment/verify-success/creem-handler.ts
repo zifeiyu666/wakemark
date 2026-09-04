@@ -4,6 +4,10 @@
 
 import { syncCreemSubscriptionData } from '@/actions/creem';
 import { apiResponse } from '@/lib/api-response';
+import {
+  scheduleBookmarkCatchUpIfAccessRestored,
+  snapshotBookmarkServiceAccess,
+} from '@/lib/bookmarks/catch-up';
 import { retrieveCreemCheckoutSession } from '@/lib/creem/client';
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -33,9 +37,11 @@ async function handleCreemSubscription(
 
   // Sync subscription data (fallback if webhook hasn't processed yet)
   try {
+    const hadAccess = await snapshotBookmarkServiceAccess(userId);
     await syncCreemSubscriptionData(subscriptionId, {
       ...session.metadata,
     });
+    await scheduleBookmarkCatchUpIfAccessRestored(userId, hadAccess);
   } catch (syncError) {
     console.error(
       `[Verify API] Error during Creem subscription sync for session ${checkoutId}:`,

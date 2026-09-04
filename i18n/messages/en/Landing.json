@@ -2,13 +2,14 @@
   "Hero": {
     "badge": {
       "label": "NEW",
-      "text": "Smart Bookmarks Sync & AI Weekly Drop",
+      "text": "Free for seven days. No charge today, cancel anytime.",
       "href": "/#pricing"
     },
     "title": "Wake up your X bookmarks.",
     "description": "Your saved tweets: auto-tagged, queryable via chat and MCP, and summarized in a digest that arrives on your schedule.",
     "cta": "Organize my bookmarks",
-    "ctaNote": "Free for seven days. No charge today, cancel anytime."
+    "ctaNote": "Free for seven days. No charge today, cancel anytime.",
+    "platformsNote": "X today · More platforms coming soon"
   },
   "Problem": {
     "label": "The Problem",

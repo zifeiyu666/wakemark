@@ -17,7 +17,7 @@ export async function AuthGuard({
 
   // dashboard/(admin)/*
   if (role && role === "admin" && session.user.role !== role) {
-    redirect("/dashboard");
+    redirect("/dashboard/bookmarks");
   }
 
   return <>{children}</>;

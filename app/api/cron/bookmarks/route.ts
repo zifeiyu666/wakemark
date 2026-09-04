@@ -1,5 +1,6 @@
 import { processPendingForUser } from "@/lib/bookmarks/process-core";
 import {
+  SubscriptionRequiredError,
   SyncBusyError,
   SyncRefreshError,
   syncBookmarksForUser,
@@ -8,6 +9,7 @@ import {
 import { db } from "@/lib/db";
 import { xConnections } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { XReconnectRequiredError } from "@/lib/x/connection";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -50,6 +52,11 @@ export async function GET(request: NextRequest) {
     if (Date.now() >= deadline) break;
     const entry: Record<string, unknown> = { userId: conn.userId };
     try {
+      if (!(await hasBookmarkServiceAccess(conn.userId))) {
+        entry.reason = "not-subscribed";
+        results.push(entry);
+        continue;
+      }
       // drain: continue unfinished first imports (checkpoint present) and
       // never-synced accounts; daily: everyone gets a fresh pass. Skip users
       // whose manual Sync is currently in flight (fresh 'syncing' status) so
@@ -84,6 +91,7 @@ export async function GET(request: NextRequest) {
         error instanceof XNotConnectedError ||
         error instanceof XReconnectRequiredError ||
         error instanceof SyncRefreshError ||
+        error instanceof SubscriptionRequiredError ||
         // Foreground Sync holds the distributed lock: skip and revisit on a
         // later tick without alarming the logs.
         error instanceof SyncBusyError;

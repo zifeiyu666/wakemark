@@ -164,7 +164,7 @@ export default async function BlogPage({ params }: { params: Params }) {
       : "";
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <div className="container mx-auto px-6 py-12 sm:px-10 lg:px-16 xl:px-24">
       <ViewCounter
         slug={slug}
         postType="blog"

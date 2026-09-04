@@ -7,6 +7,7 @@ import {
 import { db } from "@/lib/db";
 import { bookmarks, type BookmarkStatus } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { acquireAiSlot, with429Backoff } from "@/lib/bookmarks/ai-guard";
 import { extractJson, repairTruncatedJson } from "@/lib/ai/json";
 import {
@@ -502,6 +503,9 @@ export async function processPendingForUser(
   userId: string,
   opts: ProcessOptions = {}
 ): Promise<{ processed: number; remaining: number }> {
+  if (!(await hasBookmarkServiceAccess(userId))) {
+    return { processed: 0, remaining: 0 };
+  }
   if (!process.env.OPENROUTER_API_KEY) {
     throw new Error(
       "OpenRouter is not configured (OPENROUTER_API_KEY missing)."

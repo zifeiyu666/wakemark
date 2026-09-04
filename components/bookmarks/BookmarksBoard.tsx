@@ -48,8 +48,9 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { DashboardHeaderPortals } from "@/components/header/DashboardHeaderPortals";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import useSWR from "swr";
@@ -65,6 +66,20 @@ const MAX_SYNC_ROUNDS = 60;
 export type BookmarksView = "all" | "unread" | "read";
 
 type Banner = { kind: "info" | "warn" | "error"; text: string };
+
+function BookmarkMasonry({ children }: { children: ReactNode }) {
+  return (
+    <div className="columns-1 gap-x-4 md:columns-2 xl:columns-3">
+      {children}
+    </div>
+  );
+}
+
+function BookmarkMasonryItem({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-4 inline-block w-full break-inside-avoid">{children}</div>
+  );
+}
 
 export function BookmarksBoard({
   view,
@@ -399,43 +414,51 @@ export function BookmarksBoard({
 
   const initialLoading = connected && !listData && isValidating;
 
+  const heading = isListMode
+    ? listMeta?.name
+    : view === "all"
+      ? t("titles.all")
+      : view === "unread"
+        ? t("titles.unread")
+        : t("titles.read");
+
   return (
     <div className="space-y-4">
-      {/* title */}
-      <div data-onboarding-target="sync" className="flex items-baseline gap-2">
-        <h1 className="text-2xl font-semibold">
-          {isListMode
-            ? listMeta?.name
-            : view === "all"
-              ? t("titles.all")
-              : view === "unread"
-                ? t("titles.unread")
-                : t("titles.read")}
-        </h1>
-        {(connected || isListMode) && (
-          <span className="text-sm text-muted-foreground">{totalCount}</span>
-        )}
-        {isListMode && listMeta && (
-          <span className="text-sm text-muted-foreground">
-            ·{" "}
-            {listMeta.isPublic
-              ? tLists("board.public")
-              : tLists("board.private")}
-          </span>
-        )}
-        {connected && !isListMode && stats?.username && (
-          <span className="ml-auto text-xs text-muted-foreground">
-            {t("connectedAs", { username: stats.username })}
-            <button
-              type="button"
-              className="ml-2 underline underline-offset-2 transition-opacity hover:opacity-70"
-              onClick={handleDisconnect}
-            >
-              {t("errors.disconnect")}
-            </button>
-          </span>
-        )}
-      </div>
+      <DashboardHeaderPortals
+        start={
+          <div
+            data-onboarding-target="sync"
+            className="flex min-w-0 items-center gap-2"
+          >
+            <h1 className="truncate text-lg font-semibold">{heading}</h1>
+            {(connected || isListMode) && (
+              <span className="text-sm text-muted-foreground">{totalCount}</span>
+            )}
+            {isListMode && listMeta && (
+              <span className="hidden text-sm text-muted-foreground sm:inline">
+                ·{" "}
+                {listMeta.isPublic
+                  ? tLists("board.public")
+                  : tLists("board.private")}
+              </span>
+            )}
+          </div>
+        }
+        end={
+          connected && !isListMode && stats?.username ? (
+            <span className="mr-2 whitespace-nowrap text-xs text-muted-foreground">
+              {t("connectedAs", { username: stats.username })}
+              <button
+                type="button"
+                className="ml-2 underline underline-offset-2 transition-opacity hover:opacity-70"
+                onClick={handleDisconnect}
+              >
+                {t("errors.disconnect")}
+              </button>
+            </span>
+          ) : null
+        }
+      />
 
       {!connected && !isListMode ? (
         <ConnectXCard />
@@ -450,7 +473,7 @@ export function BookmarksBoard({
               value={sort}
               onValueChange={(value) => setSort(value as "newest" | "oldest")}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger size="sm" className="h-8 w-[140px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -465,29 +488,33 @@ export function BookmarksBoard({
 
             <Button
               variant={selectionMode ? "secondary" : "outline"}
-              size="icon"
+              size="icon-sm"
               aria-label={t("toolbar.select")}
               onClick={() => {
                 setSelectionMode((v) => !v);
                 setSelected([]);
               }}
             >
-              <SquareCheckBig className="h-4 w-4" />
+              <SquareCheckBig className="h-3.5 w-3.5" />
             </Button>
 
             <div className="ml-auto flex items-center gap-2">
               {isListMode && listMeta?.isPublic && (
-                <Button variant="outline" onClick={copyPublicUrl}>
-                  <Copy className="h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={copyPublicUrl}>
+                  <Copy className="h-3.5 w-3.5" />
                   {tLists("board.copyPublicUrl")}
                 </Button>
               )}
               {isListMode && listMeta && (
-                <Button variant="outline" onClick={toggleListVisibility}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleListVisibility}
+                >
                   {listMeta.isPublic ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className="h-3.5 w-3.5" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5" />
                   )}
                   {listMeta.isPublic
                     ? tLists("board.makePrivate")
@@ -497,12 +524,14 @@ export function BookmarksBoard({
               {!isListMode && (
                 <Button
                   variant="outline"
+                  size="sm"
+                  className="font-normal"
                   onClick={runSync}
                   disabled={syncPhase !== "idle" || isSyncCoolingDown}
                 >
                   <RefreshCw
                     className={cn(
-                      "h-4 w-4",
+                      "h-3.5 w-3.5",
                       syncPhase !== "idle" && "animate-spin",
                     )}
                   />
@@ -514,12 +543,12 @@ export function BookmarksBoard({
                 </Button>
               )}
               <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("toolbar.searchPlaceholder")}
-                  className="h-10 w-64 pl-9"
+                  className="h-8 w-56 pl-8 text-sm focus-visible:ring-0"
                 />
               </div>
             </div>
@@ -544,24 +573,20 @@ export function BookmarksBoard({
                     )
                   }
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                    "inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-medium text-white transition-opacity",
+                    CATEGORY_COLORS[category as BookmarkCategory].chip,
                     active
-                      ? "border-foreground bg-secondary text-foreground"
-                      : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground",
+                      ? "ring-2 ring-foreground ring-offset-1 ring-offset-background"
+                      : "opacity-80 hover:opacity-100",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "h-2 w-2 rounded-full",
-                      CATEGORY_COLORS[category as BookmarkCategory].dot,
-                    )}
-                  />
                   {category}
                 </button>
               );
             })}
             {customTags.map((tag) => {
               const active = categories.includes(tag);
+              const colorClass = tagColorChipClass(tagColorMap[tag]);
               return (
                 <button
                   key={tag}
@@ -572,19 +597,15 @@ export function BookmarksBoard({
                     )
                   }
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                    "inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-medium transition-opacity",
+                    colorClass
+                      ? cn(colorClass, "text-white")
+                      : "bg-secondary text-secondary-foreground",
                     active
-                      ? "border-foreground bg-secondary text-foreground"
-                      : "border-border text-muted-foreground hover:bg-secondary hover:text-foreground",
+                      ? "ring-2 ring-foreground ring-offset-1 ring-offset-background"
+                      : "opacity-80 hover:opacity-100",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "h-2 w-2 rounded-full",
-                      tagColorChipClass(tagColorMap[tag]) ??
-                        "bg-muted-foreground/60",
-                    )}
-                  />
                   {tag}
                 </button>
               );
@@ -646,11 +667,13 @@ export function BookmarksBoard({
 
           {/* content */}
           {initialLoading ? (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <BookmarkMasonry>
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-64 w-full" />
+                <BookmarkMasonryItem key={i}>
+                  <Skeleton className="h-64 w-full" />
+                </BookmarkMasonryItem>
               ))}
-            </div>
+            </BookmarkMasonry>
           ) : items.length === 0 ? (
             normalizedSearch || categories.length > 0 ? (
               <div className="mx-auto flex min-h-80 max-w-2xl flex-col items-center justify-center px-6 py-16 text-center">
@@ -674,24 +697,25 @@ export function BookmarksBoard({
             )
           ) : (
             <>
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <BookmarkMasonry>
                 {items.map((bookmark) => (
-                  <BookmarkCard
-                    key={bookmark.id}
-                    bookmark={bookmark}
-                    selectionMode={selectionMode}
-                    selected={selected.includes(bookmark.id)}
-                    onToggleSelected={toggleSelected}
-                    tagColors={tagColorMap}
-                    onChanged={() => {
-                      mutateList();
-                      refreshStats();
-                      refreshTags();
-                      refreshLists();
-                    }}
-                  />
+                  <BookmarkMasonryItem key={bookmark.id}>
+                    <BookmarkCard
+                      bookmark={bookmark}
+                      selectionMode={selectionMode}
+                      selected={selected.includes(bookmark.id)}
+                      onToggleSelected={toggleSelected}
+                      tagColors={tagColorMap}
+                      onChanged={() => {
+                        mutateList();
+                        refreshStats();
+                        refreshTags();
+                        refreshLists();
+                      }}
+                    />
+                  </BookmarkMasonryItem>
                 ))}
-              </div>
+              </BookmarkMasonry>
               {items.length < totalCount && (
                 <div className="flex justify-center">
                   <Button

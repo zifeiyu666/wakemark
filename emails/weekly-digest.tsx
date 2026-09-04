@@ -1,5 +1,11 @@
 import { categoryHex } from "@/config/bookmark-categories";
 import { siteConfig } from "@/config/site";
+import {
+  DEFAULT_DIGEST_LANGUAGE,
+  digestEmailCopy,
+  formatDigestWeekKey,
+  type DigestLanguage,
+} from "@/lib/digests/language";
 import type { DigestContent } from "@/lib/digests/types";
 import * as React from "react";
 
@@ -10,30 +16,8 @@ interface WeeklyDigestEmailProps {
   highlightCount: number;
   bookmarkCount: number;
   content: DigestContent;
+  language?: DigestLanguage;
   unsubscribeLink?: string;
-}
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-// weekKey is a plain YYYY-MM-DD string; format it without Date parsing so
-// the label never shifts across server timezones.
-function formatWeekKey(weekKey: string): string {
-  const [y, m, d] = weekKey.split("-").map((n) => Number(n));
-  if (!y || !m || !d) return weekKey;
-  return `Friday, ${MONTHS[m - 1]} ${d}, ${y}`;
 }
 
 const SERIF = "Georgia, 'Times New Roman', serif";
@@ -243,9 +227,11 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
   highlightCount,
   bookmarkCount,
   content,
+  language = DEFAULT_DIGEST_LANGUAGE,
   unsubscribeLink,
 }) => {
   let itemIndex = 0;
+  const copy = digestEmailCopy(language);
 
   return (
     <div style={styles.body}>
@@ -254,7 +240,7 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
         <div style={styles.ruleLabelRow}>
           <div style={styles.ruleLine} />
           <span style={{ ...styles.ruleLabel, color: "#6b675f" }}>
-            {formatWeekKey(weekKey)}
+            {formatDigestWeekKey(weekKey, language)}
           </span>
           <div style={styles.ruleLine} />
         </div>
@@ -263,12 +249,12 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
         <div style={styles.statsRow}>
           <div style={styles.statCell}>
             <p style={styles.statNumber}>{highlightCount}</p>
-            <span style={styles.statLabel}>Highlights</span>
+            <span style={styles.statLabel}>{copy.highlightsStat}</span>
           </div>
           <div style={styles.statDivider} />
           <div style={styles.statCell}>
             <p style={styles.statNumber}>{bookmarkCount}</p>
-            <span style={styles.statLabel}>Bookmarks</span>
+            <span style={styles.statLabel}>{copy.bookmarksStat}</span>
           </div>
         </div>
 
@@ -278,7 +264,7 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
         {/* Highlights */}
         {content.highlightGroups.length > 0 && (
           <>
-            <SectionRule label="Your highlights" />
+            <SectionRule label={copy.yourHighlights} />
             {content.highlightGroups.map((group) => (
               <div key={group.category}>
                 <div style={styles.groupHeader}>
@@ -292,7 +278,9 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
                   <div style={styles.ruleLineLight} />
                   <span style={styles.groupCount}>
                     {group.items.length}{" "}
-                    {group.items.length === 1 ? "highlight" : "highlights"}
+                    {group.items.length === 1
+                      ? copy.highlightOne
+                      : copy.highlightMany}
                   </span>
                 </div>
                 {group.items.map((item) => {
@@ -326,7 +314,7 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
                         </div>
                         <p style={styles.summary}>{item.summary}</p>
                         <a href={tweetUrl} style={styles.readLink}>
-                          Read on X ↗
+                          {copy.readOnX}
                         </a>
                         {item.insight ? (
                           <p style={styles.insight}>{item.insight}</p>
@@ -344,7 +332,7 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
         {content.alsoBookmarked.length > 0 && (
           <>
             <div style={{ marginTop: "44px" }}>
-              <SectionRule label="Also bookmarked" />
+              <SectionRule label={copy.alsoBookmarked} />
             </div>
             <div>
               {content.alsoBookmarked.map((row) => (
@@ -362,15 +350,14 @@ export const WeeklyDigestEmail: React.FC<WeeklyDigestEmailProps> = ({
         {/* Footer */}
         <div style={styles.footer}>
           <p style={styles.footerText}>
-            © {new Date().getFullYear()} {siteConfig.name} — your bookmarks,
-            summarized on your schedule.
+            © {new Date().getFullYear()} {siteConfig.name} — {copy.footer}
           </p>
           {unsubscribeLink && (
             <p style={styles.unsubscribe}>
               <a href={unsubscribeLink} style={styles.link}>
-                Unsubscribe
+                {copy.unsubscribe}
               </a>{" "}
-              from weekly digests
+              {copy.fromWeeklyDigests}
             </p>
           )}
         </div>

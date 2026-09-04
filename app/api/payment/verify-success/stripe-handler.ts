@@ -4,6 +4,10 @@
 
 import { syncSubscriptionData } from '@/actions/stripe';
 import { apiResponse } from '@/lib/api-response';
+import {
+  scheduleBookmarkCatchUpIfAccessRestored,
+  snapshotBookmarkServiceAccess,
+} from '@/lib/bookmarks/catch-up';
 import { stripe } from '@/lib/stripe';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
@@ -42,11 +46,13 @@ async function handleStripeSubscription(
 
   // Sync subscription data (fallback if webhook hasn't processed yet)
   try {
+    const hadAccess = await snapshotBookmarkServiceAccess(userId);
     await syncSubscriptionData(
       subscriptionId,
       customerId,
       session.metadata || undefined
     );
+    await scheduleBookmarkCatchUpIfAccessRestored(userId, hadAccess);
   } catch (syncError) {
     console.error(
       `[Verify API] Error during Stripe subscription sync for session ${sessionId}:`,

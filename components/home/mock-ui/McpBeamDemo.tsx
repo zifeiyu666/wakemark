@@ -64,17 +64,17 @@ const Node = forwardRef<
     children: ReactNode;
   }
 >(({ label, className, circleClassName, children }, ref) => (
-  <div className={cn("flex flex-col items-center gap-2", className)}>
+  <div className={cn("flex flex-col items-center gap-1.5", className)}>
     <div
       ref={ref}
       className={cn(
-        "relative z-10 flex h-11 w-11 items-center justify-center rounded-full border bg-card shadow-sm sm:h-14 sm:w-14",
+        "relative z-10 flex h-9 w-9 items-center justify-center rounded-full border bg-card shadow-sm sm:h-11 sm:w-11",
         circleClassName
       )}
     >
       {children}
     </div>
-    <span className="text-[10px] whitespace-nowrap text-muted-foreground sm:text-xs">
+    <span className="text-[10px] whitespace-nowrap text-muted-foreground">
       {label}
     </span>
   </div>
@@ -104,9 +104,9 @@ export default function McpBeamDemo() {
   ];
 
   return (
-    <div className="w-full overflow-hidden rounded-xl bg-card">
+    <div className="w-full overflow-hidden bg-card">
       {/* Header: mirrors the other mock-ui demos */}
-      <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-3 sm:px-5">
+      <div className="flex items-center justify-between border-b bg-muted/40 px-3 py-2.5 sm:px-4">
         <div className="flex items-center gap-2">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-foreground/50 motion-reduce:animate-none" />
           <span className="text-xs font-semibold tracking-[0.18em] text-muted-foreground">
@@ -116,7 +116,7 @@ export default function McpBeamDemo() {
         <span className="text-xs text-muted-foreground">Streamable HTTP</span>
       </div>
 
-      <div ref={containerRef} className="relative px-4 py-8 sm:px-8 sm:py-10">
+      <div ref={containerRef} className="relative px-3 py-5 sm:px-5 sm:py-6">
         {beams.map(({ toRef, delay }) => (
           <AnimatedBeam
             key={delay}
@@ -130,28 +130,28 @@ export default function McpBeamDemo() {
           />
         ))}
 
-        <div className="grid h-[300px] grid-cols-3 grid-rows-3 place-items-center sm:h-[360px]">
+        <div className="grid h-[220px] grid-cols-3 grid-rows-3 place-items-center sm:h-[260px]">
           {/* Left column: Claude family + Cursor */}
           <Node
             ref={claudeDesktopRef}
             label="Claude Desktop"
             className="col-start-1 row-start-1"
           >
-            <AnthropicIcon className="h-4.5 w-4.5 text-foreground sm:h-6 sm:w-6" />
+            <AnthropicIcon className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
           </Node>
           <Node
             ref={claudeCodeRef}
             label="Claude Code"
             className="col-start-1 row-start-2"
           >
-            <AnthropicIcon className="h-4.5 w-4.5 text-foreground sm:h-6 sm:w-6" />
+            <AnthropicIcon className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
           </Node>
           <Node
             ref={cursorRef}
             label="Cursor"
             className="col-start-1 row-start-3"
           >
-            <CursorIcon className="h-4.5 w-4.5 text-foreground sm:h-6 sm:w-6" />
+            <CursorIcon className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
           </Node>
 
           {/* Hub: the WakeMark MCP server */}
@@ -159,9 +159,9 @@ export default function McpBeamDemo() {
             ref={mcpRef}
             label="WakeMark MCP"
             className="col-start-2 row-start-2"
-            circleClassName="h-14 w-14 shadow-md sm:h-[4.5rem] sm:w-[4.5rem]"
+            circleClassName="h-11 w-11 shadow-md sm:h-14 sm:w-14"
           >
-            <WakeMarkIcon className="h-6 w-6 text-foreground sm:h-8 sm:w-8" />
+            <WakeMarkIcon className="h-5 w-5 text-foreground sm:h-6 sm:w-6" />
           </Node>
 
           {/* Right column: OpenAI family + VS Code */}
@@ -170,7 +170,7 @@ export default function McpBeamDemo() {
             label="Codex"
             className="col-start-3 row-start-1"
           >
-            <OpenAiIcon className="h-4.5 w-4.5 text-foreground sm:h-6 sm:w-6" />
+            <OpenAiIcon className="h-4 w-4 text-foreground sm:h-5 sm:w-5" />
           </Node>
           <Node
             ref={chatgptRef}
@@ -178,7 +178,7 @@ export default function McpBeamDemo() {
             className="col-start-3 row-start-2"
           >
             <OpenAiIcon
-              className="h-4.5 w-4.5 sm:h-6 sm:w-6"
+              className="h-4 w-4 sm:h-5 sm:w-5"
               style={{ color: "#74AA9C" }}
             />
           </Node>
@@ -188,7 +188,7 @@ export default function McpBeamDemo() {
             className="col-start-3 row-start-3"
           >
             <VsCodeIcon
-              className="h-4.5 w-4.5 sm:h-6 sm:w-6"
+              className="h-4 w-4 sm:h-5 sm:w-5"
               style={{ color: "#007ACC" }}
             />
           </Node>

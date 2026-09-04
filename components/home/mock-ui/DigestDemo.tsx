@@ -70,7 +70,7 @@ export default function DigestDemo() {
   const show = (n: number) => step >= n;
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-card">
+    <div className="w-full overflow-hidden bg-white dark:bg-card">
       <div
         className={cn(
           "flex h-[400px] flex-col gap-4 px-6 py-5",

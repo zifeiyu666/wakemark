@@ -5,6 +5,10 @@ import {
   sendInvoicePaymentFailedEmail,
   syncSubscriptionData,
 } from '@/actions/stripe';
+import {
+  scheduleBookmarkCatchUpIfAccessRestored,
+  snapshotBookmarkServiceAccess,
+} from '@/lib/bookmarks/catch-up';
 import { db } from '@/lib/db';
 import {
   orders as ordersSchema,
@@ -29,6 +33,22 @@ import {
 import { stripe } from '@/lib/stripe';
 import { and, eq, InferInsertModel } from 'drizzle-orm';
 import Stripe from 'stripe';
+
+async function lookupUserIdByStripeCustomer(
+  customerId: string
+): Promise<string | undefined> {
+  try {
+    const [row] = await db
+      .select({ id: userSchema.id })
+      .from(userSchema)
+      .where(eq(userSchema.stripeCustomerId, customerId))
+      .limit(1);
+    return row?.id;
+  } catch (err) {
+    console.error(`Error looking up Stripe customer ${customerId}:`, err);
+    return undefined;
+  }
+}
 
 /**
  * Handles the `checkout.session.completed` event from Stripe.
@@ -276,25 +296,23 @@ export async function handleSubscriptionUpdate(subscription: Stripe.Subscription
   }
 
   try {
+    const userId =
+      (subscription.metadata?.userId as string | undefined) ??
+      (await lookupUserIdByStripeCustomer(customerId));
+    const hadAccess = await snapshotBookmarkServiceAccess(userId);
     await syncSubscriptionData(subscription.id, customerId, subscription.metadata);
 
     if (isDeleted) {
-      // --- [custom] Revoke the user's benefits---
-      let userId = subscription.metadata?.userId as string;
-      if (!userId) {
-        try {
-          const userData = await db
-            .select({ id: userSchema.id })
-            .from(userSchema)
-            .where(eq(userSchema.stripeCustomerId, customerId))
-            .limit(1);
-          userId = userData[0]?.id;
-        } catch (err) {
-          console.error(`Error retrieving customer ${customerId} for subscription ${subscription.id}:`, err);
-        }
+      if (userId) {
+        revokeRemainingSubscriptionCreditsOnEnd(
+          'stripe',
+          subscription.id,
+          userId,
+          subscription.metadata
+        );
       }
-      revokeRemainingSubscriptionCreditsOnEnd('stripe', subscription.id, userId, subscription.metadata);
-      // --- End: [custom] Revoke the user's benefits ---
+    } else {
+      await scheduleBookmarkCatchUpIfAccessRestored(userId, hadAccess);
     }
   } catch (error) {
     console.error(`Error syncing subscription ${subscription.id} during update event:`, error);

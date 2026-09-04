@@ -1,7 +1,9 @@
 'use server';
 
+import { sendEmail } from '@/actions/resend';
+import { FeedbackAdminEmail } from '@/emails/feedback-admin';
 import { actionResponse, ActionResult } from '@/lib/action-response';
-import { getSession, isAdmin } from '@/lib/auth/server';
+import { getSession } from '@/lib/auth/server';
 import { db } from '@/lib/db';
 import { feedbacks } from '@/lib/db/schema';
 import { sendDiscordNotification } from '@/lib/discord/notifications';
@@ -23,8 +25,9 @@ export type SubmitFeedbackInput = z.infer<typeof submitFeedbackSchema>;
 export const submitFeedback = async (
   input: SubmitFeedbackInput
 ): Promise<ActionResult<{ id: string }>> => {
-  if (!(await isAdmin())) {
-    return actionResponse.forbidden('Admin privileges required.');
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return actionResponse.unauthorized();
   }
 
   const parsed = submitFeedbackSchema.safeParse(input);
@@ -35,40 +38,26 @@ export const submitFeedback = async (
   }
 
   try {
-    const session = await getSession();
     const [created] = await db
       .insert(feedbacks)
       .values({
-        userId: session?.user?.id,
+        userId: session.user.id,
         category: parsed.data.category,
         title: parsed.data.title,
         message: parsed.data.message,
       })
       .returning({ id: feedbacks.id });
 
-    // Best-effort notification, never blocks the submission flow.
-    if (process.env.DISCORD_WEBHOOK_URL) {
-      await sendDiscordNotification({
-        webhookUrl: process.env.DISCORD_WEBHOOK_URL,
-        payload: {
-          embeds: [
-            {
-              title: `New feedback (${parsed.data.category})`,
-              description: parsed.data.message,
-              fields: [
-                { name: 'Title', value: parsed.data.title },
-                {
-                  name: 'From',
-                  value: session?.user?.email ?? 'unknown',
-                  inline: true,
-                },
-              ],
-              timestamp: new Date().toISOString(),
-              footer: { text: 'Dashboard Feedback' },
-            },
-          ],
-        },
+    try {
+      await notifyFeedbackSubmitted({
+        category: parsed.data.category,
+        title: parsed.data.title,
+        message: parsed.data.message,
+        fromEmail: session.user.email ?? 'unknown',
+        fromName: session.user.name,
       });
+    } catch (error) {
+      console.error('Failed to notify feedback submission:', error);
     }
 
     return actionResponse.success({ id: created.id });
@@ -76,3 +65,72 @@ export const submitFeedback = async (
     return actionResponse.error(getErrorMessage(error));
   }
 };
+
+async function notifyFeedbackSubmitted({
+  category,
+  title,
+  message,
+  fromEmail,
+  fromName,
+}: {
+  category: SubmitFeedbackInput['category'];
+  title: string;
+  message: string;
+  fromEmail: string;
+  fromName?: string | null;
+}) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://wakemark.app';
+  const inboxUrl = `${siteUrl}/dashboard/feedbacks`;
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM_ADDRESS;
+
+  const tasks: Promise<unknown>[] = [];
+
+  if (process.env.DISCORD_WEBHOOK_URL) {
+    tasks.push(
+      sendDiscordNotification({
+        webhookUrl: process.env.DISCORD_WEBHOOK_URL,
+        payload: {
+          embeds: [
+            {
+              title: `New feedback (${category})`,
+              description: message,
+              fields: [
+                { name: 'Title', value: title },
+                { name: 'From', value: fromEmail, inline: true },
+              ],
+              timestamp: new Date().toISOString(),
+              footer: { text: 'Dashboard Feedback' },
+            },
+          ],
+        },
+      })
+    );
+  }
+
+  if (adminEmail) {
+    tasks.push(
+      sendEmail({
+        email: adminEmail,
+        subject: `[WakeMark] New feedback (${category}): ${title}`,
+        react: FeedbackAdminEmail,
+        reactProps: {
+          category,
+          title,
+          message,
+          fromEmail,
+          fromName,
+          inboxUrl,
+        },
+        hasUnsubscribeLink: false,
+      }).catch((error) => {
+        console.error('Failed to send feedback admin email:', error);
+      })
+    );
+  } else {
+    console.warn(
+      'ADMIN_EMAIL and EMAIL_FROM_ADDRESS are not set, skipping feedback email.'
+    );
+  }
+
+  await Promise.allSettled(tasks);
+}
