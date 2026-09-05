@@ -97,7 +97,7 @@ export async function getDigestPreferences(): Promise<
 
 export async function updateDigestPreferences(
   input: z.input<typeof PreferencesSchema>
-): Promise<ActionResult<DigestPreferences>> {
+): Promise<ActionResult<z.infer<typeof PreferencesSchema>>> {
   const session = await getSession();
   if (!session?.user?.id) return actionResponse.unauthorized();
   const parsed = PreferencesSchema.safeParse(input);
