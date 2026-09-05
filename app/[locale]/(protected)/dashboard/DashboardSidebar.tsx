@@ -69,7 +69,7 @@ export function DashboardSidebar({
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar variant="floating" collapsible="icon">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <I18nLink
           href="/"
@@ -82,7 +82,7 @@ export function DashboardSidebar({
             alt="Logo"
             width={24}
             height={24}
-            className="rounded-md"
+            className="rounded-none"
           />
           {!isCollapsed && <h1 className="font-semibold">{tHome("title")}</h1>}
         </I18nLink>

@@ -87,7 +87,7 @@ export function BookmarksSidebarMenu() {
                     <item.icon className="h-4 w-4" />
                     <span>{item.label}</span>
                     {item.badge > 0 && (
-                      <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-foreground px-1.5 text-xs font-medium text-background">
+                      <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-none bg-foreground px-1.5 text-xs font-medium text-background">
                         {item.badge}
                       </span>
                     )}

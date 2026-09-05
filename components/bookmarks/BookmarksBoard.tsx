@@ -473,10 +473,10 @@ export function BookmarksBoard({
               value={sort}
               onValueChange={(value) => setSort(value as "newest" | "oldest")}
             >
-              <SelectTrigger size="sm" className="h-8 w-[140px]">
+              <SelectTrigger size="sm" className="h-8 w-[140px] rounded-none shadow-none">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-none shadow-none">
                 <SelectItem value="newest">
                   {t("toolbar.newestFirst")}
                 </SelectItem>
@@ -489,6 +489,7 @@ export function BookmarksBoard({
             <Button
               variant={selectionMode ? "secondary" : "outline"}
               size="icon-sm"
+              className="rounded-none shadow-none"
               aria-label={t("toolbar.select")}
               onClick={() => {
                 setSelectionMode((v) => !v);
@@ -500,7 +501,7 @@ export function BookmarksBoard({
 
             <div className="ml-auto flex items-center gap-2">
               {isListMode && listMeta?.isPublic && (
-                <Button variant="outline" size="sm" onClick={copyPublicUrl}>
+                <Button variant="outline" size="sm" className="rounded-none shadow-none" onClick={copyPublicUrl}>
                   <Copy className="h-3.5 w-3.5" />
                   {tLists("board.copyPublicUrl")}
                 </Button>
@@ -509,6 +510,7 @@ export function BookmarksBoard({
                 <Button
                   variant="outline"
                   size="sm"
+                  className="rounded-none shadow-none"
                   onClick={toggleListVisibility}
                 >
                   {listMeta.isPublic ? (
@@ -525,7 +527,7 @@ export function BookmarksBoard({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="font-normal"
+                  className="rounded-none font-normal shadow-none"
                   onClick={runSync}
                   disabled={syncPhase !== "idle" || isSyncCoolingDown}
                 >
@@ -548,7 +550,7 @@ export function BookmarksBoard({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("toolbar.searchPlaceholder")}
-                  className="h-8 w-56 pl-8 text-sm focus-visible:ring-0"
+                  className="h-8 w-56 rounded-none pl-8 text-sm shadow-none focus-visible:ring-0"
                 />
               </div>
             </div>
@@ -573,7 +575,7 @@ export function BookmarksBoard({
                     )
                   }
                   className={cn(
-                    "inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-medium text-white transition-opacity",
+                    "inline-flex items-center rounded-none px-2 py-0.5 text-xs font-medium text-white transition-opacity",
                     CATEGORY_COLORS[category as BookmarkCategory].chip,
                     active
                       ? "ring-2 ring-foreground ring-offset-1 ring-offset-background"
@@ -597,7 +599,7 @@ export function BookmarksBoard({
                     )
                   }
                   className={cn(
-                    "inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-medium transition-opacity",
+                    "inline-flex items-center rounded-none px-2 py-0.5 text-xs font-medium transition-opacity",
                     colorClass
                       ? cn(colorClass, "text-white")
                       : "bg-secondary text-secondary-foreground",
@@ -614,13 +616,13 @@ export function BookmarksBoard({
 
           {/* sync / bulk banner */}
           {syncPhase === "syncing" && (
-            <div className="flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 rounded-none border border-border bg-secondary px-3 py-2 text-sm">
               <RefreshCw className="h-4 w-4 animate-spin" />
               {t("syncBanner.syncing", { added: syncAdded })}
             </div>
           )}
           {syncPhase === "processing" && (
-            <div className="flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 rounded-none border border-border bg-secondary px-3 py-2 text-sm">
               <RefreshCw className="h-4 w-4 animate-spin" />
               {t("syncBanner.processing", { remaining: syncRemaining })}
             </div>
@@ -628,7 +630,7 @@ export function BookmarksBoard({
           {syncPhase === "idle" && banner && (
             <div
               className={cn(
-                "rounded-md border px-3 py-2 text-sm",
+                "rounded-none border px-3 py-2 text-sm",
                 banner.kind === "error"
                   ? "border-destructive/40 bg-destructive/10 text-destructive"
                   : banner.kind === "warn"
@@ -640,7 +642,7 @@ export function BookmarksBoard({
             </div>
           )}
           {selectionMode && selected.length > 0 && (
-            <div className="flex items-center gap-2 rounded-md border border-border bg-secondary px-3 py-2 text-sm">
+            <div className="flex items-center gap-2 rounded-none border border-border bg-secondary px-3 py-2 text-sm">
               <span>{t("bulk.selected", { count: selected.length })}</span>
               <Button
                 size="sm"
@@ -688,7 +690,7 @@ export function BookmarksBoard({
                 </p>
               </div>
             ) : (
-              <div className="rounded-lg border border-border bg-background px-6 py-16 text-center">
+              <div className="rounded-none border border-border bg-background px-6 py-16 text-center">
                 <h2 className="text-lg font-semibold">{t("empty.title")}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {t("empty.description")}

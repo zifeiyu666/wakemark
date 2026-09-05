@@ -91,16 +91,15 @@ export default function McpBeamDemo() {
   const chatgptRef = useRef<HTMLDivElement>(null);
   const vscodeRef = useRef<HTMLDivElement>(null);
 
-  /* curvature 0 keeps the control point at hub height, so beams leave the
-     hub horizontally and sweep up/down into the outer nodes — the classic
-     connector look. */
+  /* Gradient travels along X. Left spokes need reverse so the pulse leaves
+     the hub instead of arriving from the edge. All six fire together. */
   const beams = [
-    { toRef: claudeDesktopRef, delay: 0 },
-    { toRef: claudeCodeRef, delay: 0.5 },
-    { toRef: cursorRef, delay: 1 },
-    { toRef: codexRef, delay: 1.5 },
-    { toRef: chatgptRef, delay: 2 },
-    { toRef: vscodeRef, delay: 2.5 },
+    { id: "claude-desktop", toRef: claudeDesktopRef, reverse: true },
+    { id: "claude-code", toRef: claudeCodeRef, reverse: true },
+    { id: "cursor", toRef: cursorRef, reverse: true },
+    { id: "codex", toRef: codexRef, reverse: false },
+    { id: "chatgpt", toRef: chatgptRef, reverse: false },
+    { id: "vscode", toRef: vscodeRef, reverse: false },
   ];
 
   return (
@@ -117,14 +116,15 @@ export default function McpBeamDemo() {
       </div>
 
       <div ref={containerRef} className="relative px-3 py-5 sm:px-5 sm:py-6">
-        {beams.map(({ toRef, delay }) => (
+        {beams.map(({ id, toRef, reverse }) => (
           <AnimatedBeam
-            key={delay}
+            key={id}
             containerRef={containerRef}
             fromRef={mcpRef}
             toRef={toRef}
+            reverse={reverse}
             duration={3.5}
-            delay={delay}
+            delay={0}
             gradientStartColor="#4b7be5"
             gradientStopColor="#a05cf7"
           />

@@ -1,16 +1,16 @@
 "use client";
 
-import { Send, X } from "lucide-react";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { Send, X } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * Mock UI Animation — "Chat AI" demo.
  *
  * A fully programmatic product demo of the ask-your-bookmarks chat panel:
- * the question is typed into the input, sent as a user bubble, a loading
- * bubble with pulsing dots shows, then the answer plus a source citation
- * chip appear — holding, fading out, and looping forever.
+ * three linked questions are typed, sent, answered with a source citation,
+ * then the thread holds, fades out, and loops forever.
  *
  * Entrance/exit reuse the shared CSS keyframes (`sf-item-in` /
  * `sf-list-out` / `sf-caret` in globals.css), so everything runs on
@@ -18,66 +18,180 @@ import { cn } from "@/lib/utils";
  * the card layout never shifts.
  */
 
-const QUESTION = "What did @karpathy say about tokenization?";
-const ANSWER =
-  "He explained how BPE tokenizers fragment rare words, causing downstream errors in LLMs.";
-const SOURCE_HANDLE = "@karpathy";
-const SOURCE_SNIPPET = "Tokenization is at the heart...";
+type SourceSpec = {
+  handle: string;
+  initials: string;
+  avatarClass: string;
+  avatarSrc?: string;
+  snippet: string;
+};
+
+type Turn = {
+  question: string;
+  answer: string;
+  source: SourceSpec;
+};
+
+const TURNS: Turn[] = [
+  {
+    question: "What did Karpathy say about tokenization?",
+    answer:
+      "BPE smashes rare words into fragments, so the model never sees the whole token — that's why spelling and weird identifiers fall apart.",
+    source: {
+      handle: "@karpathy",
+      initials: "AK",
+      avatarClass: "from-sky-400 to-blue-700",
+      avatarSrc: "/images/x-avatar/karpathy.jpg",
+      snippet:
+        "Tokenization is the unsung bottleneck. Rare words get smashed into junk pieces.",
+    },
+  },
+  {
+    question: "Did he mention a workaround?",
+    answer:
+      "Byte-level alphabets, and don't split identifiers in code. A smaller vocab just pushes the cost into longer sequences.",
+    source: {
+      handle: "@karpathy",
+      initials: "AK",
+      avatarClass: "from-sky-400 to-blue-700",
+      avatarSrc: "/images/x-avatar/karpathy.jpg",
+      snippet:
+        "A 256-byte alphabet is ugly — and it actually works.",
+    },
+  },
+  {
+    question: "Anything saved on how this hits RAG?",
+    answer:
+      "Yes — @swyx's thread: if you chunk on tokens, retrieval misses the phrase you actually bookmarked. Chunk on meaning.",
+    source: {
+      handle: "@swyx",
+      initials: "S",
+      avatarClass: "from-violet-400 to-indigo-700",
+      avatarSrc: "/images/x-avatar/swyx.jpg",
+      snippet:
+        "Chunk on meaning, not tokens, or your RAG will gaslight you.",
+    },
+  },
+];
 
 type Phase = "idle" | "typing" | "sent" | "loading" | "answer" | "exit";
 
+function SourceCard({
+  source,
+  animate,
+}: {
+  source: SourceSpec;
+  animate: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex w-[min(100%,20rem)] overflow-hidden rounded-xl border border-border bg-muted/40",
+        animate && "animate-sf-item-in motion-reduce:animate-none"
+      )}
+      style={animate ? { animationDelay: "140ms" } : undefined}
+    >
+      <span className="w-[3px] shrink-0 bg-gradient-to-b from-sky-400 to-violet-500" />
+      <div className="flex min-w-0 flex-1 items-start gap-2.5 px-2.5 py-2">
+        {source.avatarSrc ? (
+          <Image
+            src={source.avatarSrc}
+            alt={source.handle}
+            width={28}
+            height={28}
+            className="mt-0.5 h-7 w-7 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span
+            className={cn(
+              "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[9px] font-semibold tracking-wide text-white",
+              source.avatarClass
+            )}
+          >
+            {source.initials}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="truncate text-[11px] font-semibold leading-none">
+              {source.handle}
+            </span>
+            <span className="rounded-sm bg-foreground/10 px-1 py-px text-[8px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Source
+            </span>
+          </div>
+          <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-muted-foreground">
+            “{source.snippet}”
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ChatAiDemo() {
   const [phase, setPhase] = useState<Phase>("idle");
+  const [turnIndex, setTurnIndex] = useState(0);
   const [typed, setTyped] = useState(0);
+  const viewportRef = useRef<HTMLDivElement>(null);
+
+  const question = TURNS[turnIndex].question;
 
   useEffect(() => {
     if (phase === "idle") {
-      const t = setTimeout(() => setPhase("typing"), 900);
+      const t = setTimeout(() => setPhase("typing"), 800);
       return () => clearTimeout(t);
     }
     if (phase === "typing") {
-      if (typed < QUESTION.length) {
+      if (typed < question.length) {
         const t = setTimeout(
           () => setTyped((n) => n + 1),
-          45 + Math.random() * 40
+          38 + Math.random() * 32
         );
         return () => clearTimeout(t);
       }
-      const t = setTimeout(() => setPhase("sent"), 400);
+      const t = setTimeout(() => setPhase("sent"), 380);
       return () => clearTimeout(t);
     }
     if (phase === "sent") {
-      const t = setTimeout(() => setPhase("loading"), 600);
+      const t = setTimeout(() => setPhase("loading"), 480);
       return () => clearTimeout(t);
     }
     if (phase === "loading") {
-      const t = setTimeout(() => setPhase("answer"), 1500);
+      const t = setTimeout(() => setPhase("answer"), 1200);
       return () => clearTimeout(t);
     }
     if (phase === "answer") {
-      const t = setTimeout(() => setPhase("exit"), 4000);
+      const isLast = turnIndex === TURNS.length - 1;
+      const t = setTimeout(() => {
+        if (isLast) {
+          setPhase("exit");
+          return;
+        }
+        setTurnIndex((i) => i + 1);
+        setTyped(0);
+        setPhase("typing");
+      }, isLast ? 3400 : 2100);
       return () => clearTimeout(t);
     }
-    // exit: let the fade-out finish, then reset the loop
     const t = setTimeout(() => {
       setTyped(0);
+      setTurnIndex(0);
       setPhase("idle");
     }, 500);
     return () => clearTimeout(t);
-  }, [phase, typed]);
+  }, [phase, typed, turnIndex, question.length]);
 
-  const showQuestion =
-    phase === "sent" ||
-    phase === "loading" ||
-    phase === "answer" ||
-    phase === "exit";
-  const showLoading = phase === "loading";
-  const showAnswer = phase === "answer" || phase === "exit";
+  useLayoutEffect(() => {
+    const el = viewportRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [phase, turnIndex]);
+
   const exiting = phase === "exit";
 
   return (
     <div className="w-full overflow-hidden bg-card">
-      {/* Header: panel title + new chat / close affordances */}
       <div className="flex items-center justify-between border-b px-4 py-3 sm:px-5">
         <span className="font-serif text-base font-semibold">
           Ask your bookmarks
@@ -90,59 +204,85 @@ export default function ChatAiDemo() {
         </div>
       </div>
 
-      {/* Messages: fixed-height area so the card never shifts */}
-      <div className="flex h-[300px] flex-col gap-3 overflow-hidden px-4 py-4 sm:px-5">
+      <div
+        ref={viewportRef}
+        className="h-[300px] overflow-y-auto overflow-x-hidden px-4 py-4 [scrollbar-width:none] sm:px-5 [&::-webkit-scrollbar]:hidden"
+      >
         <div
           className={cn(
-            "flex flex-1 flex-col gap-3 overflow-hidden",
+            "flex flex-col gap-3",
             exiting && "animate-sf-list-out motion-reduce:animate-none"
           )}
         >
-          {showQuestion && (
-            <div className="ml-auto w-fit max-w-[85%] rounded-xl bg-foreground px-4 py-2.5 text-sm text-background animate-sf-item-in motion-reduce:animate-none">
-              {QUESTION}
-            </div>
-          )}
+          {TURNS.map((turn, i) => {
+            const isCurrent = i === turnIndex;
+            const completed = i < turnIndex;
+            const showQuestion =
+              completed ||
+              (isCurrent &&
+                (phase === "sent" ||
+                  phase === "loading" ||
+                  phase === "answer" ||
+                  phase === "exit"));
+            const showLoading = isCurrent && phase === "loading";
+            const showAnswer =
+              completed ||
+              (isCurrent && (phase === "answer" || phase === "exit"));
+            const animate = isCurrent && !completed && !exiting;
 
-          {showLoading && (
-            <div className="flex w-fit items-center gap-1.5 rounded-xl bg-muted px-4 py-3.5 animate-sf-item-in motion-reduce:animate-none">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground motion-reduce:animate-none"
-                  style={{ animationDelay: `${i * 200}ms` }}
-                />
-              ))}
-            </div>
-          )}
+            if (!showQuestion && !showLoading && !showAnswer) return null;
 
-          {showAnswer && (
-            <>
-              <div className="w-fit max-w-[85%] rounded-xl bg-muted px-4 py-3 text-sm text-foreground animate-sf-item-in motion-reduce:animate-none">
-                {ANSWER}
+            return (
+              <div key={turn.question} className="flex flex-col gap-2.5">
+                {showQuestion && (
+                  <div
+                    className={cn(
+                      "ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-foreground px-3.5 py-2 text-sm leading-snug text-background",
+                      animate && "animate-sf-item-in motion-reduce:animate-none"
+                    )}
+                  >
+                    {turn.question}
+                  </div>
+                )}
+
+                {showLoading && (
+                  <div className="flex w-fit items-center gap-1.5 rounded-2xl rounded-bl-sm bg-muted px-4 py-3 animate-sf-item-in motion-reduce:animate-none">
+                    {[0, 1, 2].map((dot) => (
+                      <span
+                        key={dot}
+                        className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground motion-reduce:animate-none"
+                        style={{ animationDelay: `${dot * 200}ms` }}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {showAnswer && (
+                  <>
+                    <div
+                      className={cn(
+                        "w-fit max-w-[88%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2.5 text-sm leading-relaxed text-foreground",
+                        animate &&
+                          "animate-sf-item-in motion-reduce:animate-none"
+                      )}
+                    >
+                      {turn.answer}
+                    </div>
+                    <SourceCard source={turn.source} animate={animate} />
+                  </>
+                )}
               </div>
-              <div
-                className="flex w-fit items-center gap-2 rounded-lg border bg-card px-3 py-2 animate-sf-item-in motion-reduce:animate-none"
-                style={{ animationDelay: "150ms" }}
-              >
-                <span className="h-6 w-6 shrink-0 rounded-full bg-muted" />
-                <span className="text-xs font-semibold">{SOURCE_HANDLE}</span>
-                <span className="max-w-[180px] truncate text-xs text-muted-foreground">
-                  {SOURCE_SNIPPET}
-                </span>
-              </div>
-            </>
-          )}
+            );
+          })}
         </div>
       </div>
 
-      {/* Footer: question input + send button */}
       <div className="flex items-center gap-2 border-t px-4 py-3 sm:px-5">
         <div className="flex h-10 min-w-0 flex-1 items-center rounded-md border bg-card px-3 text-sm">
           {phase === "typing" ? (
             <>
               <span className="truncate text-foreground/90">
-                {QUESTION.slice(0, typed)}
+                {question.slice(0, typed)}
               </span>
               <span
                 aria-hidden

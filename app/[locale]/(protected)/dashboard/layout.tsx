@@ -69,21 +69,21 @@ export default async function DashboardLayout({
   return (
     <AuthGuard>
       <TimezoneReporter storedTimeZone={storedTimeZone} />
-      <SidebarProvider>
+      <SidebarProvider className="dashboard-sharp">
         <DashboardSidebar hasProductAccess={hasProductAccess} />
         <SidebarInset className="min-w-0">
           <SidebarInsetHeader />
-          <div className="flex flex-1 flex-col gap-4 px-4 pt-0 pb-2 min-w-0">
+          <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pt-0 pb-2">
             {/* Resumable first-import banner: shows while a history backfill
                 checkpoint or an untagged backlog exists, and drives both. */}
             {hasProductAccess ? (
               <ImportProgressProvider>
-                <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
+                <div className="min-h-screen min-w-0 flex-1 md:min-h-min">
                   {children}
                 </div>
               </ImportProgressProvider>
             ) : (
-              <div className="min-h-screen flex-1 rounded-xl md:min-h-min min-w-0">
+              <div className="min-h-screen min-w-0 flex-1 md:min-h-min">
                 {children}
               </div>
             )}

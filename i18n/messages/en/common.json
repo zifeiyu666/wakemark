@@ -317,6 +317,10 @@
         "href": "/#pricing"
       },
       {
+        "name": "MCP",
+        "href": "/docs/mcp"
+      },
+      {
         "name": "Roadmap",
         "href": "/roadmap"
       }

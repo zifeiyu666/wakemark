@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpRight, Heart, MessageSquare, Repeat2 } from "lucide-react";
+import Image from "next/image";
 import { useLayoutEffect, useRef, useState } from "react";
 
 /**
@@ -24,8 +25,7 @@ type TagSpec = { label: string; color: string };
 
 type BookmarkSpec = {
   handle: string;
-  initials: string;
-  avatarClass: string;
+  avatarSrc: string;
   unread?: boolean;
   text: string;
   tags: TagSpec[];
@@ -37,10 +37,9 @@ type BookmarkSpec = {
 const BOOKMARKS: BookmarkSpec[] = [
   {
     handle: "@elonmusk",
-    initials: "E",
-    avatarClass: "from-rose-500 to-red-800",
+    avatarSrc: "/images/x-avatar/elonmusk.jpg",
     unread: true,
-    text: "Tokenization is at the heart of much weirdness of LLMs. Do not brush it off.",
+    text: "True AGI requires reasoning directly on continuous reality, not just token-prediction over discrete text. Compute efficiency and real-time grounding will separate the survivors from the hype.",
     tags: [
       { label: "AI", color: "#d24b8f" },
       { label: "Tech", color: "#4b7be5" },
@@ -50,24 +49,22 @@ const BOOKMARKS: BookmarkSpec[] = [
     replies: "156",
   },
   {
-    handle: "@shadcn",
-    initials: "S",
-    avatarClass: "from-violet-500 to-indigo-700",
-    text: "The missing piece for AI agents is a universal context protocol that lets them share state...",
+    handle: "@realDonaldTrump",
+    avatarSrc: "/images/x-avatar/trump.jpg",
+    text: "The Fake News says America is closed for business. WRONG. We are OPEN, jobs are ROARING BACK, and this Country is WINNING like never before. A golden age!",
     tags: [
-      { label: "AI", color: "#d24b8f" },
-      { label: "Dev", color: "#3ba272" },
+      { label: "Politics", color: "#dc2626" },
+      { label: "News", color: "#4b7be5" },
     ],
-    likes: "1.4k",
-    retweets: "392",
-    replies: "87",
+    likes: "48.2k",
+    retweets: "12.6k",
+    replies: "9.4k",
   },
   {
     handle: "@marclou",
-    initials: "M",
-    avatarClass: "from-amber-400 to-orange-600",
-    text: "Great thread on design systems that actually scale across teams without slowing anyone down.",
-    tags: [{ label: "Design", color: "#a05cf7" }],
+    avatarSrc: "/images/x-avatar/marclou.jpg",
+    text: "Building a SaaS isn't about writing pristine code for 6 months. It's launching in 72 hours, collecting $1k on Stripe, and iterating based on real user churn. Ship fast or stay stuck.",
+    tags: [{ label: "Saas", color: "#a05cf7" }],
     likes: "634",
     retweets: "128",
     replies: "42",
@@ -118,11 +115,13 @@ const BookmarkRow = ({
 }) => (
   <div className="border-b px-4 py-4 last:border-b-0 sm:px-5">
     <div className="flex items-center gap-2.5">
-      <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${bookmark.avatarClass} text-xs font-semibold text-white`}
-      >
-        {bookmark.initials}
-      </span>
+      <Image
+        src={bookmark.avatarSrc}
+        alt={bookmark.handle}
+        width={32}
+        height={32}
+        className="h-8 w-8 shrink-0 rounded-full object-cover"
+      />
       <span className="text-sm font-semibold">{bookmark.handle}</span>
       {bookmark.unread && (
         <span className="rounded-full bg-foreground px-2 py-0.5 text-[10px] font-medium text-background">

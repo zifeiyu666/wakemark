@@ -181,7 +181,7 @@ export default function Showcase() {
           )}
           style={{ zIndex: sideZIndex("left") }}
         >
-          <BrowserFrame compact url="app.wakemark.com/digests">
+          <BrowserFrame compact url="wakemark.app">
             <ScaleBox scale={0.5}>
               <DigestDemo />
             </ScaleBox>
@@ -206,7 +206,7 @@ export default function Showcase() {
           )}
           style={{ zIndex: sideZIndex("right") }}
         >
-          <BrowserFrame compact url="app.wakemark.com/bookmarks">
+          <BrowserFrame compact url="wakemark.app">
             <ScaleBox scale={0.5}>
               <SyncAutoTagDemo />
             </ScaleBox>
@@ -229,12 +229,12 @@ export default function Showcase() {
             transition={centerTransition}
             className="z-10 w-[min(1080px,92vw)] origin-top"
           >
-            <BrowserFrame url="app.wakemark.com">
+            <BrowserFrame url="wakemark.app">
               <Image
                 src="/dashboard_screenshot.avif"
                 alt="WakeMark dashboard preview"
-                width={2482}
-                height={1494}
+                width={2780}
+                height={1502}
                 className="block h-auto w-full"
               />
             </BrowserFrame>
@@ -259,7 +259,7 @@ export default function Showcase() {
           )}
           style={{ zIndex: sideZIndex("dark") }}
         >
-          <BrowserFrame compact dark url="app.wakemark.com/ask">
+          <BrowserFrame compact dark url="wakemark.app">
             <ScaleBox scale={0.5}>
               <ChatAiDemo />
             </ScaleBox>

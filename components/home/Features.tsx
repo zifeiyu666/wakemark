@@ -113,13 +113,13 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
       </div>
 
       <div className="flex flex-1 bg-muted/65 px-6 py-6 sm:px-10 sm:py-10 md:px-14 md:py-14">
-        <div className="relative min-h-[390px] w-full overflow-hidden md:min-h-[460px]">
+        <div className="relative min-h-[430px] w-full overflow-hidden md:min-h-[520px]">
           <Image
             src="/dashboard_screenshot.avif"
             alt=""
             fill
             sizes="(min-width: 80rem) 70rem, 100vw"
-            className="feature-backdrop-fade pointer-events-none object-cover object-left-top opacity-60 dark:opacity-30"
+            className="feature-backdrop-fade pointer-events-none object-cover object-left-top opacity-90 dark:opacity-30"
             aria-hidden
           />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,transparent_32%,hsl(var(--muted)/0.16)_58%,hsl(var(--muted)/0.96)_100%)] dark:bg-[linear-gradient(90deg,transparent_28%,hsl(var(--muted)/0.34)_58%,hsl(var(--muted)/0.98)_100%)]" />

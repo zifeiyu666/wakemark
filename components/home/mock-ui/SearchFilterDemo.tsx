@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { ArrowDown, Search } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 /**
@@ -23,8 +24,7 @@ type Phase = "idle" | "typing" | "results" | "exit";
 
 type ResultSpec = {
   handle: string;
-  initials: string;
-  avatarClass: string;
+  avatarSrc: string;
   time: string;
   text: string;
   highlighted?: boolean;
@@ -32,26 +32,23 @@ type ResultSpec = {
 
 const RESULTS: ResultSpec[] = [
   {
-    handle: "@elonmusk",
-    initials: "E",
-    avatarClass: "from-rose-500 to-red-800",
+    handle: "@karpathy",
+    avatarSrc: "/images/x-avatar/karpathy.jpg",
     time: "2d",
-    text: "Tokenization is at the heart of much weirdness of LLMs. Do not brush it off.",
+    text: "Tokenization is the unsung bottleneck. BPE smashes rare words into junk pieces, so the LLM never sees the whole token — that's why spelling and weird identifiers fall apart.",
     highlighted: true,
   },
   {
-    handle: "@claudeai",
-    initials: "C",
-    avatarClass: "from-orange-400 to-red-500",
+    handle: "@swyx",
+    avatarSrc: "/images/x-avatar/swyx.jpg",
     time: "5d",
-    text: "The missing piece for AI agents is a universal context protocol...",
+    text: "If you chunk on tokens, retrieval misses the phrase you actually bookmarked. Chunk on meaning, not tokens, or your RAG will gaslight you.",
   },
   {
-    handle: "@levelsio",
-    initials: "L",
-    avatarClass: "from-amber-400 to-orange-600",
+    handle: "@elonmusk",
+    avatarSrc: "/images/x-avatar/elonmusk.jpg",
     time: "1w",
-    text: "Auto-regressive LLMs with tokenization have fundamental limitations...",
+    text: "True AGI requires reasoning directly on continuous reality, not just token-prediction over discrete text. Compute efficiency and real-time grounding will separate the survivors from the hype.",
   },
 ];
 
@@ -163,11 +160,13 @@ export default function SearchFilterDemo() {
                   style={{ animationDelay: `${i * ROW_STAGGER}ms` }}
                 >
                   <div className="flex items-center gap-2.5">
-                    <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${result.avatarClass} text-[10px] font-semibold text-white`}
-                    >
-                      {result.initials}
-                    </span>
+                    <Image
+                      src={result.avatarSrc}
+                      alt={result.handle}
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 shrink-0 rounded-full object-cover"
+                    />
                     <span className="truncate text-sm font-semibold">
                       {result.handle}
                     </span>

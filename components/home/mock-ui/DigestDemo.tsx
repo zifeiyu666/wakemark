@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowUpRight, Sparkle } from "lucide-react";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
 /**
  * Mock UI Animation — "Email Digest" demo.
@@ -17,32 +18,37 @@ import { cn } from "@/lib/utils";
  */
 
 /** Total reveal steps; each step shows one more line of the digest. */
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 12;
 
 type DigestItem = {
   index: string;
   name: string;
   handle: string;
-  avatarClass: string;
-  avatarIcon?: boolean;
+  avatarSrc: string;
   text: string;
 };
 
 const ITEMS: DigestItem[] = [
   {
     index: "01",
-    name: "Claude",
-    handle: "@claudeai",
-    avatarClass: "bg-gradient-to-br from-orange-400 to-red-600",
-    avatarIcon: true,
-    text: "BPE tokenizers fragment rare words into subword tokens, causing downstream errors in LLMs that are hard to debug.",
+    name: "Karpathy",
+    handle: "@karpathy",
+    avatarSrc: "/images/x-avatar/karpathy.jpg",
+    text: "Tokenization is the unsung bottleneck. BPE smashes rare words into junk pieces, so the model never sees the whole token — that's why spelling and weird identifiers fall apart.",
   },
   {
     index: "02",
-    name: "AIx",
-    handle: "@indie_aix",
-    avatarClass: "bg-gradient-to-br from-amber-300 to-yellow-700",
-    text: "Context protocol could unify how agents share state across tool boundaries.",
+    name: "swyx",
+    handle: "@swyx",
+    avatarSrc: "/images/x-avatar/swyx.jpg",
+    text: "If you chunk on tokens, retrieval misses the phrase you actually bookmarked. Chunk on meaning, not tokens, or your RAG will gaslight you.",
+  },
+  {
+    index: "03",
+    name: "Marc",
+    handle: "@marclou",
+    avatarSrc: "/images/x-avatar/marclou.jpg",
+    text: "Stop dumping raw JSON into your prompt window. A lightweight MCP server on your bookmarks makes the agent 10x more deterministic — ship that, not another wrapper.",
   },
 ];
 
@@ -73,7 +79,7 @@ export default function DigestDemo() {
     <div className="w-full overflow-hidden bg-white dark:bg-card">
       <div
         className={cn(
-          "flex h-[400px] flex-col gap-4 px-6 py-5",
+          "flex h-[540px] flex-col gap-4 px-6 py-5",
           exiting && "animate-sf-list-out motion-reduce:animate-none"
         )}
       >
@@ -82,7 +88,7 @@ export default function DigestDemo() {
           <div className="flex items-center gap-4 animate-sf-item-in motion-reduce:animate-none">
             <span className="h-px flex-1 bg-foreground/60" />
             <span className="text-xs font-semibold tracking-[0.18em] text-muted-foreground">
-              MONDAY, MARCH 24, 2026
+              Friday, September 5, 2026
             </span>
             <span className="h-px flex-1 bg-foreground/60" />
           </div>
@@ -129,20 +135,13 @@ export default function DigestDemo() {
                 <div className="min-w-0 flex-1">
                   {show(base) && (
                     <div className="flex items-center gap-2 animate-sf-item-in motion-reduce:animate-none">
-                      <span
-                        className={cn(
-                          "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white",
-                          item.avatarClass
-                        )}
-                      >
-                        {item.avatarIcon ? (
-                          <Sparkle className="h-3.5 w-3.5" />
-                        ) : (
-                          <span className="text-[10px] font-semibold">
-                            {item.name.slice(0, 1)}
-                          </span>
-                        )}
-                      </span>
+                      <Image
+                        src={item.avatarSrc}
+                        alt={item.handle}
+                        width={28}
+                        height={28}
+                        className="h-7 w-7 shrink-0 rounded-full object-cover"
+                      />
                       <span className="truncate text-sm font-semibold">
                         {item.name}
                       </span>

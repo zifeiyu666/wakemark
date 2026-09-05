@@ -65,7 +65,7 @@ function TagChip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1 rounded-none px-2 py-0.5 text-xs font-medium",
         isCategory
           ? cn(CATEGORY_COLORS[label as BookmarkCategory].chip, "text-white")
           : colorClass
@@ -78,7 +78,7 @@ function TagChip({
         <button
           type="button"
           aria-label={`Remove ${label}`}
-          className="rounded-sm opacity-70 transition-opacity hover:opacity-100"
+          className="rounded-none opacity-70 transition-opacity hover:opacity-100"
           onClick={() => onRemove(label)}
         >
           <X className="h-3 w-3" />
@@ -260,7 +260,7 @@ export function BookmarkCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-lg border border-border bg-background p-4 transition-colors",
+        "flex flex-col gap-3 rounded-none border border-border bg-background p-4 shadow-none transition-colors",
         selected && "border-foreground"
       )}
     >
@@ -288,7 +288,7 @@ export function BookmarkCard({
           @{bookmark.authorUsername ?? "unknown"}
         </span>
         {!isRead && (
-          <span className="rounded-full bg-foreground px-2 py-0.5 text-xs font-medium text-background">
+          <span className="rounded-none bg-foreground px-2 py-0.5 text-xs font-medium text-background">
             {t("card.unread")}
           </span>
         )}
@@ -306,7 +306,7 @@ export function BookmarkCard({
 
       {/* media */}
       {videoMedia && (
-        <div className="relative aspect-video overflow-hidden rounded-md bg-secondary">
+        <div className="relative aspect-video overflow-hidden rounded-none bg-secondary">
           <a
             href={`https://x.com/i/status/${bookmark.tweetId}`}
             target="_blank"
@@ -332,7 +332,7 @@ export function BookmarkCard({
       {photoMedia.length > 0 && (
         <div
           className={cn(
-            "grid gap-1 overflow-hidden rounded-md",
+            "grid gap-1 overflow-hidden rounded-none",
             photoMedia.length > 1 ? "grid-cols-2" : "grid-cols-1"
           )}
         >
@@ -343,7 +343,7 @@ export function BookmarkCard({
               alt="bookmark media"
               width={600}
               height={314}
-              className="aspect-[1.91/1] w-full rounded-md object-cover"
+              className="aspect-[1.91/1] w-full rounded-none object-cover"
             />
           ))}
         </div>
@@ -384,20 +384,20 @@ export function BookmarkCard({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-sm border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-none border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <Tag className="h-3 w-3" />
               {t("card.addTag")}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-56 p-2">
+          <PopoverContent align="start" className="w-56 rounded-none p-2 shadow-none">
             <div className="flex flex-col gap-1">
               {BOOKMARK_CATEGORIES.filter((c) => !tags.includes(c)).map(
                 (category) => (
                   <button
                     key={category}
                     type="button"
-                    className="flex items-center gap-2 rounded-sm px-2 py-1 text-left text-xs hover:bg-secondary"
+                    className="flex items-center gap-2 rounded-none px-2 py-1 text-left text-xs hover:bg-secondary"
                     onClick={() => addTag(category)}
                   >
                     <span
@@ -429,7 +429,7 @@ export function BookmarkCard({
                     aria-label={c.id}
                     onClick={() => setTagColor(c.id)}
                     className={cn(
-                      "h-5 w-5 rounded-sm transition-transform hover:scale-110",
+                      "h-5 w-5 rounded-none transition-transform hover:scale-110",
                       c.chip,
                       tagColor === c.id &&
                         "ring-2 ring-foreground ring-offset-1 ring-offset-popover"
@@ -461,13 +461,13 @@ export function BookmarkCard({
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-sm border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex items-center gap-1 rounded-none border border-dashed border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
             >
               <ListPlus className="h-3 w-3" />
               {tLists("card.addToList")}
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-56 p-2">
+          <PopoverContent align="start" className="w-56 rounded-none p-2 shadow-none">
             <div className="flex flex-col gap-1">
               {listsForBookmark.length === 0 && (
                 <p className="px-1 pb-1 text-xs text-muted-foreground">
@@ -479,7 +479,7 @@ export function BookmarkCard({
                   key={list.id}
                   role="button"
                   tabIndex={0}
-                  className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1 text-left text-xs hover:bg-secondary"
+                  className="flex cursor-pointer items-center gap-2 rounded-none px-2 py-1 text-left text-xs hover:bg-secondary"
                   onClick={() => toggleList(list, !list.inList)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
