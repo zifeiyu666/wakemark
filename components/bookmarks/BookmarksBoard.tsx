@@ -437,10 +437,11 @@ export function BookmarksBoard({
     const name = bulkNewListName.trim();
     if (!name || selected.length === 0) return;
     const created = await createList(name);
-    if (!created.success || !created.data) {
+    if (!created.success) {
       toast.error(created.error);
       return;
     }
+    if (!created.data) return;
     await bulkAddToList(created.data.id, created.data.name);
   };
 
