@@ -11,7 +11,7 @@ import {
   xConnections,
 } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, inArray } from "drizzle-orm";
 import slugify from "slugify";
 import { z } from "zod";
 
@@ -285,6 +285,59 @@ export async function setBookmarkInList(
     return actionResponse.success();
   } catch (error) {
     console.error("Error updating bookmark list membership", error);
+    return actionResponse.error(getErrorMessage(error));
+  }
+}
+
+const BulkAddSchema = z.object({
+  bookmarkIds: z.array(z.string().uuid()).min(1).max(200),
+  listId: z.string().uuid(),
+});
+
+export async function addBookmarksToList(
+  bookmarkIds: string[],
+  listId: string
+): Promise<ActionResult<{ added: number }>> {
+  const session = await getSession();
+  const user = session?.user;
+  if (!user) return actionResponse.unauthorized();
+
+  try {
+    const parsed = BulkAddSchema.parse({ bookmarkIds, listId });
+    const [list] = await db
+      .select({ id: bookmarkLists.id })
+      .from(bookmarkLists)
+      .where(
+        and(eq(bookmarkLists.id, parsed.listId), eq(bookmarkLists.userId, user.id))
+      )
+      .limit(1);
+    if (!list) return actionResponse.notFound();
+
+    const owned = await db
+      .select({ id: bookmarks.id })
+      .from(bookmarks)
+      .where(
+        and(
+          eq(bookmarks.userId, user.id),
+          inArray(bookmarks.id, parsed.bookmarkIds)
+        )
+      );
+    if (owned.length === 0) return actionResponse.notFound();
+
+    const inserted = await db
+      .insert(bookmarkListItems)
+      .values(
+        owned.map((row) => ({
+          listId: parsed.listId,
+          bookmarkId: row.id,
+        }))
+      )
+      .onConflictDoNothing()
+      .returning({ bookmarkId: bookmarkListItems.bookmarkId });
+
+    return actionResponse.success({ added: inserted.length });
+  } catch (error) {
+    console.error("Error adding bookmarks to list", error);
     return actionResponse.error(getErrorMessage(error));
   }
 }

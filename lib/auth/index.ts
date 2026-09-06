@@ -1,6 +1,8 @@
 import { sendEmail } from "@/actions/resend";
 import { siteConfig } from "@/config/site";
 import EmailVerificationEmail from "@/emails/email-verification";
+import MagicLinkEmail from "@/emails/magic-link-email";
+import OTPCodeEmail from "@/emails/otp-code-email";
 import { UserWelcomeEmail } from "@/emails/user-welcome";
 import { db } from "@/lib/db";
 import { account, apikey, session, user, verification } from "@/lib/db/schema";
@@ -17,7 +19,14 @@ import { upsertXConnectionFromAccount } from "@/lib/x/connection-store";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
-import { admin, apiKey } from "better-auth/plugins";
+import {
+  admin,
+  apiKey,
+  captcha,
+  emailOTP,
+  lastLoginMethod,
+  magicLink,
+} from "better-auth/plugins";
 import { cookies } from "next/headers";
 
 export const auth = betterAuth({
@@ -40,6 +49,18 @@ export const auth = betterAuth({
     max: 100, // 100 requests per window (global default)
     customRules: {
       "/get-session": false,
+      "/sign-in/magic-link": {
+        window: 60,
+        max: 3,
+      },
+      "/email-otp/send-verification-otp": {
+        window: 60,
+        max: 3,
+      },
+      "/sign-in/email-otp": {
+        window: 60,
+        max: 5,
+      },
     },
     // Use Upstash Redis for rate limit storage (works with serverless)
     ...(redis && {
@@ -66,7 +87,7 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ['twitter'],
+      trustedProviders: ['twitter', 'google'],
     },
   },
   user: {
@@ -100,6 +121,10 @@ export const auth = betterAuth({
     },
   }),
   socialProviders: {
+    google: {
+      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
     twitter: {
       clientId: process.env.X_CLIENT_ID!,
       clientSecret: process.env.X_CLIENT_SECRET!,
@@ -231,6 +256,43 @@ export const auth = betterAuth({
   },
   trustedOrigins: process.env.NODE_ENV === 'development' ? [process.env.NEXT_PUBLIC_SITE_URL!, 'http://localhost:3000'] : [process.env.NEXT_PUBLIC_SITE_URL!],
   plugins: [
+    ...(process.env.TURNSTILE_SECRET_KEY
+      ? [
+          captcha({
+            provider: "cloudflare-turnstile",
+            secretKey: process.env.TURNSTILE_SECRET_KEY,
+          }),
+        ]
+      : []),
+    magicLink({
+      sendMagicLink: async ({ email, url }) => {
+        await sendEmail({
+          email,
+          subject: `Sign in to ${siteConfig.name}`,
+          react: MagicLinkEmail,
+          reactProps: {
+            url,
+          },
+        });
+      },
+      expiresIn: 60 * 5,
+    }),
+    emailOTP({
+      otpLength: 6,
+      expiresIn: 60 * 10,
+      sendVerificationOTP: async ({ email, otp, type }) => {
+        await sendEmail({
+          email,
+          subject: `Your ${siteConfig.name} verification code: ${otp}`,
+          react: OTPCodeEmail,
+          reactProps: {
+            otp,
+            type,
+          },
+        });
+      },
+    }),
+    lastLoginMethod(),
     admin(),
     // User-scoped API keys for the WakeMark MCP endpoint (/api/mcp). Agents
     // send "Authorization: Bearer wkm_..."; verifyApiKey resolves the owner.

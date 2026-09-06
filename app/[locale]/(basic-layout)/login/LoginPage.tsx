@@ -3,23 +3,30 @@
 import LoginForm from "@/components/auth/LoginForm";
 import { useRouter } from "@/i18n/routing";
 import { authClient } from "@/lib/auth/auth-client";
+import { sanitizeNextPath } from "@/lib/extension/safe-next";
 import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending } = authClient.useSession();
-
   const t = useTranslations("Login");
+  const next = sanitizeNextPath(searchParams.get("next"));
 
   useEffect(() => {
-    if (session?.user) {
-      router.replace("/dashboard/bookmarks");
+    if (!session?.user) return;
+    // Preserve query string (e.g. extension connect state) via full navigation.
+    if (next) {
+      window.location.assign(next);
+      return;
     }
-  }, [session?.user]);
+    router.replace("/dashboard/bookmarks");
+  }, [session?.user, next, router]);
 
-  if (session?.user) {
+  if (isPending || session?.user) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="w-4 h-4 animate-spin" />
@@ -42,5 +49,19 @@ export default function LoginPage() {
         </Suspense>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <Loader2 className="w-4 h-4 animate-spin" />
+        </div>
+      }
+    >
+      <LoginPageInner />
+    </Suspense>
   );
 }

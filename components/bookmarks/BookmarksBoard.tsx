@@ -9,6 +9,9 @@ import {
 import type { BookmarkRow } from "@/lib/bookmarks/query";
 import { disconnectX } from "@/actions/bookmarks/connection";
 import {
+  addBookmarksToList,
+  createList,
+  getLists,
   setListVisibility,
   type BookmarkListRow,
 } from "@/actions/bookmarks/lists";
@@ -20,6 +23,11 @@ import { ConnectXCard } from "@/components/bookmarks/ConnectXCard";
 import { useImportProgress } from "@/components/bookmarks/ImportProgressProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -47,6 +55,7 @@ import {
   Copy,
   Eye,
   EyeOff,
+  ListPlus,
 } from "lucide-react";
 import { DashboardHeaderPortals } from "@/components/header/DashboardHeaderPortals";
 import { useLocale, useTranslations } from "next-intl";
@@ -107,6 +116,8 @@ export function BookmarksBoard({
   const [page, setPage] = useState(0);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [bulkListOpen, setBulkListOpen] = useState(false);
+  const [bulkNewListName, setBulkNewListName] = useState("");
   const [syncPhase, setSyncPhase] = useState<"idle" | "syncing" | "processing">(
     "idle",
   );
@@ -218,6 +229,9 @@ export function BookmarksBoard({
     const timer = setTimeout(() => setBanner(null), 6000);
     return () => clearTimeout(timer);
   }, [banner]);
+
+  const { data: listsData } = useSWR("bookmark-lists", getLists);
+  const lists = listsData?.success ? (listsData.data ?? []) : [];
 
   const totalCount = listData?.success ? (listData.data?.totalCount ?? 0) : 0;
   const refreshStats = () => globalMutate(statsKey);
@@ -399,6 +413,35 @@ export function BookmarksBoard({
     setSelectionMode(false);
     mutateList();
     refreshStats();
+  };
+
+  const bulkAddToList = async (listId: string, name: string) => {
+    if (selected.length === 0) return;
+    const res = await addBookmarksToList(selected, listId);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+    const added = res.data?.added ?? 0;
+    toast.success(
+      added > 0
+        ? t("bulk.addedToList", { count: added, name })
+        : t("bulk.alreadyInList", { name })
+    );
+    setBulkListOpen(false);
+    setBulkNewListName("");
+    refreshLists();
+  };
+
+  const bulkCreateAndAddToList = async () => {
+    const name = bulkNewListName.trim();
+    if (!name || selected.length === 0) return;
+    const created = await createList(name);
+    if (!created.success || !created.data) {
+      toast.error(created.error);
+      return;
+    }
+    await bulkAddToList(created.data.id, created.data.name);
   };
 
   const handleDisconnect = async () => {
@@ -642,7 +685,7 @@ export function BookmarksBoard({
             </div>
           )}
           {selectionMode && selected.length > 0 && (
-            <div className="flex items-center gap-2 rounded-none border border-border bg-secondary px-3 py-2 text-sm">
+            <div className="flex flex-wrap items-center gap-2 rounded-none border border-border bg-secondary px-3 py-2 text-sm">
               <span>{t("bulk.selected", { count: selected.length })}</span>
               <Button
                 size="sm"
@@ -661,6 +704,58 @@ export function BookmarksBoard({
                 <BookmarkX className="h-4 w-4" />
                 {t("bulk.markUnread")}
               </Button>
+              <Popover open={bulkListOpen} onOpenChange={setBulkListOpen}>
+                <PopoverTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <ListPlus className="h-4 w-4" />
+                    {t("bulk.addToList")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="end"
+                  className="w-56 rounded-none p-2 shadow-none"
+                >
+                  <div className="flex flex-col gap-1">
+                    {lists.length === 0 && (
+                      <p className="px-1 pb-1 text-xs text-muted-foreground">
+                        {tLists("card.empty")}
+                      </p>
+                    )}
+                    {lists.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className="flex items-center gap-2 rounded-none px-2 py-1 text-left text-xs hover:bg-secondary"
+                        onClick={() => bulkAddToList(item.id, item.name)}
+                      >
+                        <span className="truncate">{item.name}</span>
+                        <span className="ml-auto text-muted-foreground">
+                          {item.count}
+                        </span>
+                      </button>
+                    ))}
+                    <div className="mt-1 border-t border-border pt-2">
+                      <Input
+                        value={bulkNewListName}
+                        placeholder={tLists("card.newListPlaceholder")}
+                        className="h-7 text-xs"
+                        onChange={(e) => setBulkNewListName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") bulkCreateAndAddToList();
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        className="mt-1.5 w-full"
+                        disabled={!bulkNewListName.trim()}
+                        onClick={bulkCreateAndAddToList}
+                      >
+                        {tLists("card.create")}
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button size="sm" variant="ghost" onClick={() => setSelected([])}>
                 {t("bulk.clear")}
               </Button>

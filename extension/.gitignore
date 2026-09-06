@@ -1,0 +1,6 @@
+.output
+node_modules
+.wxt
+*.log
+.DS_Store
+key.pem

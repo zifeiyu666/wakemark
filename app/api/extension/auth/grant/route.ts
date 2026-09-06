@@ -1,0 +1,107 @@
+import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/auth/server";
+import { apiResponse } from "@/lib/api-response";
+import { storeExtensionGrant } from "@/lib/extension/auth-store";
+import {
+  extensionOptionsResponse,
+  withExtensionCors,
+} from "@/lib/extension/cors";
+import { db } from "@/lib/db";
+import { apikey } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
+import { z } from "zod";
+
+export const runtime = "nodejs";
+
+const EXTENSION_PURPOSE = "chrome-extension";
+
+const bodySchema = z.object({
+  state: z.string().uuid(),
+});
+
+function parseMetadata(raw: string | null | undefined): Record<string, unknown> | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+export async function OPTIONS(req: Request) {
+  return extensionOptionsResponse(req);
+}
+
+export async function POST(req: Request) {
+  try {
+    const session = await getSession();
+    const user = session?.user;
+    if (!user) {
+      return withExtensionCors(
+        req,
+        apiResponse.unauthorized("Please sign in to connect the extension.")
+      );
+    }
+
+    const json = await req.json();
+    const { state } = bodySchema.parse(json);
+
+    // Revoke previous chrome-extension keys so only one active device key
+    // stacks up per user. Metadata is stored as JSON text by better-auth.
+    const existing = await db
+      .select({ id: apikey.id, metadata: apikey.metadata })
+      .from(apikey)
+      .where(eq(apikey.userId, user.id));
+
+    for (const row of existing) {
+      const meta = parseMetadata(row.metadata);
+      if (meta?.purpose === EXTENSION_PURPOSE) {
+        try {
+          await auth.api.deleteApiKey({
+            headers: await headers(),
+            body: { keyId: row.id },
+          });
+        } catch (error) {
+          console.warn("[extension:grant] failed to revoke prior key", error);
+        }
+      }
+    }
+
+    const created = await auth.api.createApiKey({
+      headers: await headers(),
+      body: {
+        name: "Chrome Extension",
+        expiresIn: null,
+        metadata: { purpose: EXTENSION_PURPOSE },
+      },
+    });
+
+    if (!created?.key || !created.id) {
+      return withExtensionCors(
+        req,
+        apiResponse.serverError("Failed to create extension API key.")
+      );
+    }
+
+    await storeExtensionGrant(state, {
+      apiKey: created.key,
+      userId: user.id,
+      keyId: created.id,
+    });
+
+    return withExtensionCors(
+      req,
+      apiResponse.success({ granted: true })
+    );
+  } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return withExtensionCors(req, apiResponse.badRequest("Invalid state."));
+    }
+    console.error("[extension:grant]", error);
+    return withExtensionCors(
+      req,
+      apiResponse.serverError("Failed to grant extension access.")
+    );
+  }
+}

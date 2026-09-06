@@ -6,15 +6,49 @@
   },
   "Login": {
     "title": "Let's organize your bookmarks",
-    "description": "Connect your X account and we'll pull in your bookmarks automatically. Read-only — we never post or message as you.",
+    "description": "Sign in with X, Google, or email. Connecting X lets us pull in your bookmarks automatically — read-only, we never post or message as you.",
     "Toast": {
+      "rateLimitTitle": "Too many requests",
+      "rateLimitDescription": "Please wait a moment before trying again.",
       "X": {
         "errorTitle": "Error",
         "errorDescription": "Failed to sign in with X. Please try again."
+      },
+      "Google": {
+        "errorTitle": "Error",
+        "errorDescription": "Failed to sign in with Google. Please try again."
+      },
+      "Email": {
+        "successTitle": "Magic link sent!",
+        "successDescription": "Please check your email for the login link.",
+        "errorTitle": "Error",
+        "errorDescription": "Failed to send magic link. Please try again."
+      },
+      "OTP": {
+        "errorTitle": "Error",
+        "sendSuccessTitle": "Code sent!",
+        "sendSuccessDescription": "Please check your email for the verification code.",
+        "sendErrorDescription": "Failed to send verification code. Please try again.",
+        "verifySuccessTitle": "Success!",
+        "verifySuccessDescription": "You have been signed in successfully.",
+        "verifyErrorDescription": "Invalid or expired verification code. Please try again."
+      },
+      "Turnstile": {
+        "errorTitle": "Verification failed",
+        "errorDescription": "Please try again or refresh the page."
       }
     },
     "signInMethods": {
-      "signInWithX": "Connect X account",
+      "or": "Or continue with email",
+      "signInWithX": "Continue with X",
+      "signInWithGoogle": "Continue with Google",
+      "emailLabel": "Email",
+      "otpMethod": "Verification Code",
+      "magicLinkMethod": "Magic Link",
+      "sendOTP": "Send Code",
+      "lastUsed": "Last used",
+      "switchToMagicLink": "Or sign in with a magic link",
+      "switchToOtp": "Or sign in with a verification code",
       "consent": "By signing in, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>."
     },
     "Button": {

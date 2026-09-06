@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth";
+import { verifyApiKeyFromRequest } from "@/lib/auth/api-key";
 import { createMcpServer } from "@/lib/mcp/server";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
@@ -8,43 +8,6 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 // between requests, which matches Vercel's serverless execution model.
 
 export const runtime = "nodejs";
-
-type VerifiedKey = {
-  userId: string;
-  id: string;
-  name?: string | null;
-};
-
-function extractApiKey(req: Request): string | null {
-  const authorization = req.headers.get("authorization");
-  if (authorization) {
-    const [scheme, value] = authorization.split(" ");
-    if (scheme.toLowerCase() === "bearer" && value) return value.trim();
-    // Some clients send the raw key as the Authorization header value.
-    if (authorization.trim()) return authorization.trim();
-  }
-  const xApiKey = req.headers.get("x-api-key");
-  return xApiKey?.trim() || null;
-}
-
-async function verifyApiKey(req: Request): Promise<VerifiedKey | null> {
-  const key = extractApiKey(req);
-  if (!key) return null;
-  try {
-    // verifyApiKey enforces expiry, enabled state and the per-key rate
-    // limit configured in lib/auth (120 req/min by default).
-    const result = await auth.api.verifyApiKey({ body: { key } });
-    if (!result.valid || !result.key?.userId) return null;
-    return {
-      userId: result.key.userId,
-      id: result.key.id,
-      name: result.key.name,
-    };
-  } catch (error) {
-    console.error("[mcp] api key verification failed", error);
-    return null;
-  }
-}
 
 function unauthorized(message: string): Response {
   return new Response(
@@ -77,7 +40,7 @@ function methodNotAllowed(): Response {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  const apiKey = await verifyApiKey(req);
+  const apiKey = await verifyApiKeyFromRequest(req);
   if (!apiKey) {
     return unauthorized(
       "Missing or invalid API key. Create one at Dashboard > MCP and send it as Authorization: Bearer wkm_..."

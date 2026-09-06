@@ -48,6 +48,9 @@
     "selected": "{count} selected",
     "markRead": "Mark read",
     "markUnread": "Mark unread",
+    "addToList": "Add to list",
+    "addedToList": "Added {count} to {name}",
+    "alreadyInList": "Already in {name}",
     "clear": "Clear"
   },
   "syncBanner": {

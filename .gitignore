@@ -133,4 +133,5 @@ dist
 
 .backup/
 
-docs/
+# Only ignore repo-root docs (routing maps, notes). Do not ignore app routes like /docs/mcp.
+/docs/
