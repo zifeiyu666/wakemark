@@ -10,7 +10,7 @@ import { authClient } from "@/lib/auth/auth-client";
 import { normalizeEmail } from "@/lib/email";
 import { sanitizeNextPath } from "@/lib/extension/safe-next";
 import { initializeTracking } from "@/lib/tracking/client";
-import { Turnstile } from "@marsidev/react-turnstile";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { Link as LinkIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -36,7 +36,7 @@ export default function LoginForm({ className = "" }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const [showTurnstile, setShowTurnstile] = useState(false);
-  const turnstileRef = useRef<{ reset?: () => void } | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
 
   const [otpCode, setOtpCode] = useState("");
   const [isOtpLoading, setIsOtpLoading] = useState(false);
@@ -361,7 +361,7 @@ export default function LoginForm({ className = "" }: LoginFormProps) {
             }}
             onExpire={() => {
               setCaptchaToken("");
-              turnstileRef.current?.reset?.();
+              turnstileRef.current?.reset();
             }}
             options={{
               size: "flexible",
