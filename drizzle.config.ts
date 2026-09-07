@@ -1,9 +1,10 @@
-import { loadEnvConfig } from '@next/env';
-import 'dotenv/config';
+import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
 
-const projectDir = process.cwd();
-loadEnvConfig(projectDir);
+// drizzle-kit preloads `.env`. Reload `.env.local` with override so local
+// Postgres wins over the Neon URL during `pnpm db:migrate`.
+config({ path: '.env', quiet: true });
+config({ path: '.env.local', override: true, quiet: true });
 
 export default defineConfig({
   out: './lib/db/migrations',

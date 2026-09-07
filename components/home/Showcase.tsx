@@ -254,7 +254,7 @@ export default function Showcase() {
           transition={sideTransition}
           onPointerDown={() => setFront("dark")}
           className={cn(
-            "absolute left-[8%] top-[54%] hidden w-[280px] cursor-pointer xl:block",
+            "absolute left-[8%] top-[62%] hidden w-[280px] cursor-pointer xl:block",
             !engaged && "pointer-events-none"
           )}
           style={{ zIndex: sideZIndex("dark") }}

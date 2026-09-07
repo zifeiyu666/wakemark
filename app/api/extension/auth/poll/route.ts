@@ -35,6 +35,7 @@ export async function POST(req: Request) {
         pending: false,
         apiKey: grant.apiKey,
         keyId: grant.keyId,
+        user: grant.user,
       })
     );
   } catch (error: unknown) {

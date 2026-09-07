@@ -78,7 +78,11 @@ export const auth = betterAuth({
   },
   session: {
     cookieCache: {
-      enabled: true,
+      // Cookie cache is signed with BETTER_AUTH_SECRET and does not hit the
+      // session table. After switching from Neon to a local empty DB the
+      // cached cookie still looks logged-in while the server has no row,
+      // which bounces /login ↔ /dashboard. Keep it off in development.
+      enabled: process.env.NODE_ENV === "production",
       maxAge: 10 * 60, // Cache duration in seconds
     },
     expiresIn: 60 * 60 * 24 * 30,
@@ -256,7 +260,8 @@ export const auth = betterAuth({
   },
   trustedOrigins: process.env.NODE_ENV === 'development' ? [process.env.NEXT_PUBLIC_SITE_URL!, 'http://localhost:3000'] : [process.env.NEXT_PUBLIC_SITE_URL!],
   plugins: [
-    ...(process.env.TURNSTILE_SECRET_KEY
+    ...(process.env.TURNSTILE_SECRET_KEY &&
+    process.env.NODE_ENV === "production"
       ? [
           captcha({
             provider: "cloudflare-turnstile",

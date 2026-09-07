@@ -8,10 +8,17 @@ import { redis } from "@/lib/upstash";
 const TTL_SECONDS = 120;
 const PREFIX = "ext-auth:";
 
+export type ExtensionUserProfile = {
+  id: string;
+  name: string | null;
+  image: string | null;
+};
+
 type GrantPayload = {
   apiKey: string;
   userId: string;
   keyId: string;
+  user: ExtensionUserProfile;
 };
 
 const memory = new Map<string, { value: GrantPayload; expiresAt: number }>();

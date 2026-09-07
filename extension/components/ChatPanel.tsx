@@ -1,5 +1,44 @@
 import { useEffect, useRef } from "react";
 import { textOf, useAskAiChat } from "../lib/useAskAiChat";
+import { ChatMarkdown } from "./ChatMarkdown";
+
+function TypingDots() {
+  return (
+    <span className="typing" aria-label="Thinking">
+      <span />
+      <span />
+      <span />
+    </span>
+  );
+}
+
+function SendIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M3.4 20.4 21 12 3.4 3.6 3 10.5l11.2 1.5L3 13.5z" />
+    </svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <rect x="6" y="6" width="12" height="12" />
+    </svg>
+  );
+}
 
 export function ChatPanel({
   compact = false,
@@ -8,8 +47,10 @@ export function ChatPanel({
   compact?: boolean;
   onOpenSidePanel?: () => void;
 }) {
-  const { messages, input, setInput, status, error, send } = useAskAiChat();
+  const { messages, input, setInput, status, error, send, stop, clearChat } =
+    useAskAiChat();
   const endRef = useRef<HTMLDivElement>(null);
+  const streaming = status === "streaming";
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -28,64 +69,66 @@ export function ChatPanel({
         className="row"
         style={{ justifyContent: "space-between", flexShrink: 0 }}
       >
-        <div style={{ fontWeight: 600 }}>Ask AI</div>
-        {onOpenSidePanel && (
-          <button
-            type="button"
-            className="btn btn-ghost"
-            style={{ fontSize: 11, padding: "4px 8px" }}
-            onClick={onOpenSidePanel}
-          >
-            Open side panel
-          </button>
-        )}
+        <div className="header-title">Ask AI</div>
+        <div className="row" style={{ gap: 6 }}>
+          {messages.length > 0 && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              style={{ fontSize: 11, padding: "4px 6px" }}
+              disabled={streaming}
+              onClick={() => void clearChat()}
+            >
+              Clear
+            </button>
+          )}
+          {onOpenSidePanel && (
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{ fontSize: 11, padding: "4px 8px" }}
+              onClick={onOpenSidePanel}
+            >
+              Open side panel
+            </button>
+          )}
+        </div>
       </div>
 
       <div
-        className="scroll"
-        style={{
-          flex: 1,
-          minHeight: compact ? 140 : 0,
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          padding: 8,
-          background: "var(--surface)",
-        }}
+        className="chat-shell scroll"
+        style={{ minHeight: compact ? 140 : 0 }}
       >
         {messages.length === 0 && (
-          <p className="muted" style={{ margin: 0 }}>
+          <p className="chat-empty">
             Ask about your bookmarks — topics, authors, or what you saved.
           </p>
         )}
         {messages.map((m) => {
           const text = textOf(m);
           const isUser = m.role === "user";
+          const waiting =
+            !isUser &&
+            streaming &&
+            !text.trim() &&
+            m === messages[messages.length - 1];
+
           return (
             <div
               key={m.id}
-              style={{
-                marginBottom: 8,
-                display: "flex",
-                justifyContent: isUser ? "flex-end" : "flex-start",
-              }}
+              className={`msg-row ${isUser ? "user" : "assistant"}`}
             >
               <div
-                style={{
-                  maxWidth: "92%",
-                  padding: "6px 8px",
-                  borderRadius: 8,
-                  background: isUser ? "var(--accent)" : "var(--bg)",
-                  color: isUser ? "var(--accent-fg)" : "var(--fg)",
-                  border: isUser ? "none" : "1px solid var(--border)",
-                  whiteSpace: "pre-wrap",
-                  wordBreak: "break-word",
-                  fontSize: compact ? 12 : 13,
-                }}
+                className={`msg-bubble ${isUser ? "user" : "assistant"}`}
+                style={{ fontSize: compact ? 12 : 12.5 }}
               >
-                {text ||
-                  (m.role === "assistant" && status === "streaming"
-                    ? "…"
-                    : "")}
+                {waiting ? (
+                  <TypingDots />
+                ) : isUser ? (
+                  text
+                ) : (
+                  <ChatMarkdown content={text} />
+                )}
               </div>
             </div>
           );
@@ -99,21 +142,45 @@ export function ChatPanel({
         </p>
       )}
 
-      <form className="row" onSubmit={send} style={{ flexShrink: 0 }}>
+      <form
+        className="row"
+        onSubmit={(e) => {
+          if (streaming) {
+            e.preventDefault();
+            return;
+          }
+          void send(e);
+        }}
+        style={{ flexShrink: 0 }}
+      >
         <input
           className="input"
           placeholder="Ask your bookmarks…"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={status === "streaming"}
+          disabled={streaming}
         />
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={status === "streaming" || !input.trim()}
-        >
-          {status === "streaming" ? "…" : "Send"}
-        </button>
+        {streaming ? (
+          <button
+            type="button"
+            className="btn btn-primary icon-btn stop-btn"
+            aria-label="Stop"
+            title="Stop"
+            onClick={() => stop()}
+          >
+            <StopIcon />
+          </button>
+        ) : (
+          <button
+            type="submit"
+            className="btn btn-primary icon-btn"
+            aria-label="Send"
+            title="Send"
+            disabled={!input.trim()}
+          >
+            <SendIcon />
+          </button>
+        )}
       </form>
     </div>
   );

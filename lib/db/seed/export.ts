@@ -9,8 +9,7 @@
  * pnpm db:export-pricing
  */
 
-import { loadEnvConfig } from '@next/env'
-import 'dotenv/config'
+import { config } from 'dotenv'
 import type { InferSelectModel } from 'drizzle-orm'
 import { asc } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -22,8 +21,8 @@ import {
   pricingPlans as pricingPlansTable,
 } from '../schema'
 
-const projectDir = process.cwd()
-loadEnvConfig(projectDir)
+config({ path: '.env', quiet: true })
+config({ path: '.env.local', override: true, quiet: true })
 
 // Types derived from schema
 type DbPricingPlanGroup = InferSelectModel<typeof pricingPlanGroups>

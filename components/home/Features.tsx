@@ -1,5 +1,6 @@
 "use client";
 
+import ChromeInstallButton from "@/components/home/ChromeInstallButton";
 import ChatAiDemo from "@/components/home/mock-ui/ChatAiDemo";
 import DigestDemo from "@/components/home/mock-ui/DigestDemo";
 import McpBeamDemo from "@/components/home/mock-ui/McpBeamDemo";
@@ -13,6 +14,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Link as I18nLink } from "@/i18n/routing";
 import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
@@ -44,6 +46,10 @@ type Feature = {
   demoWidthClassName?: string;
   demoPositionClassName?: string;
   demoTransformOrigin?: "top left" | "top center" | "top right";
+  hideBackdrop?: boolean;
+  docsHref?: string;
+  docsLabel?: string;
+  installLabel?: string;
 };
 
 const ScaleBox = ({
@@ -94,6 +100,26 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
             <h3 className="text-foreground">{feature.title}</h3>
             <p className="text-muted-foreground">{feature.description}</p>
           </div>
+          {(feature.installLabel ||
+            (feature.docsHref && feature.docsLabel)) && (
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              {feature.installLabel && (
+                <ChromeInstallButton
+                  label={feature.installLabel}
+                  size="default"
+                  className="h-10 rounded-xl border-border bg-background px-4 font-medium hover:border-foreground/30 hover:bg-muted"
+                />
+              )}
+              {feature.docsHref && feature.docsLabel && (
+                <I18nLink
+                  href={feature.docsHref}
+                  className="text-sm font-medium text-foreground underline underline-offset-4"
+                >
+                  {feature.docsLabel}
+                </I18nLink>
+              )}
+            </div>
+          )}
           {feature.details && (
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {feature.details.map((detail) => (
@@ -112,17 +138,25 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
         </div>
       </div>
 
-      <div className="flex flex-1 bg-muted/65 px-6 py-6 sm:px-10 sm:py-10 md:px-14 md:py-14">
+      <div
+        className={`flex flex-1 px-6 py-6 sm:px-10 sm:py-10 md:px-14 md:py-14 ${
+          feature.hideBackdrop ? "bg-muted/40" : "bg-muted/65"
+        }`}
+      >
         <div className="relative min-h-[430px] w-full overflow-hidden md:min-h-[520px]">
-          <Image
-            src="/dashboard_screenshot.avif"
-            alt=""
-            fill
-            sizes="(min-width: 80rem) 70rem, 100vw"
-            className="feature-backdrop-fade pointer-events-none object-cover object-left-top opacity-90 dark:opacity-30"
-            aria-hidden
-          />
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,transparent_32%,hsl(var(--muted)/0.16)_58%,hsl(var(--muted)/0.96)_100%)] dark:bg-[linear-gradient(90deg,transparent_28%,hsl(var(--muted)/0.34)_58%,hsl(var(--muted)/0.98)_100%)]" />
+          {!feature.hideBackdrop && (
+            <>
+              <Image
+                src="/dashboard_screenshot.avif"
+                alt=""
+                fill
+                sizes="(min-width: 80rem) 70rem, 100vw"
+                className="feature-backdrop-fade pointer-events-none object-cover object-left-top opacity-90 dark:opacity-30"
+                aria-hidden
+              />
+              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,transparent_32%,hsl(var(--muted)/0.16)_58%,hsl(var(--muted)/0.96)_100%)] dark:bg-[linear-gradient(90deg,transparent_28%,hsl(var(--muted)/0.34)_58%,hsl(var(--muted)/0.98)_100%)]" />
+            </>
+          )}
           <div
             className={`absolute z-10 ${
               feature.demoWidthClassName ?? "w-[min(86%,620px)]"
@@ -147,8 +181,8 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
                                   src={image || "/placeholder.svg"}
                                   alt={feature.title}
                                   width={1280}
-                                  height={630}
-                                  className="rounded-none"
+                                  height={800}
+                                  className="h-auto w-full rounded-none"
                                 />
                               </ImagePreview>
                             </CarouselItem>
@@ -164,8 +198,8 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
                         src={feature.images?.[0] || "/placeholder.svg"}
                         alt={feature.title}
                         width={1280}
-                        height={630}
-                        className="rounded-none"
+                        height={800}
+                        className="h-auto w-full rounded-none"
                       />
                     </ImagePreview>
                   )}
@@ -229,6 +263,42 @@ export default function Features() {
       demoPositionClassName:
         "right-4 top-6 sm:right-8 sm:top-8 md:right-10 md:top-10",
       demoTransformOrigin: "top right",
+    },
+    {
+      badge: "Chrome Extension",
+      badgeColor: "#1a73e8",
+      title: "Search and Ask AI from any tab.",
+      description:
+        "Pin WakeMark in Chrome. Search your library from the toolbar, or keep Ask AI open in the side panel while you browse — no need to jump back to the dashboard.",
+      details: [
+        {
+          title: "Toolbar search",
+          description:
+            "Type a keyword or handle and jump straight to the original post.",
+        },
+        {
+          title: "Ask AI popup",
+          description:
+            "Ask in plain language and get answers cited from your bookmarks.",
+        },
+        {
+          title: "Side panel",
+          description:
+            "Keep the chat pinned beside the page you are already reading.",
+        },
+      ],
+      images: [
+        "/images/docs/extension/01-ask-ai-sidebar.png",
+        "/images/docs/extension/02-ask-ai-popup.png",
+        "/images/docs/extension/03-search-popup.png",
+      ],
+      hideBackdrop: true,
+      demoWidthClassName: "w-[min(96%,980px)]",
+      demoPositionClassName:
+        "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+      docsHref: "/docs/extension",
+      docsLabel: "Chrome extension guide",
+      installLabel: t("installCta"),
     },
     {
       badge: "Email Digest",

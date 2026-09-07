@@ -8,7 +8,7 @@ function allowedOrigins(): string[] {
   const ids = new Set<string>();
   const configured = process.env.CHROME_EXTENSION_ID?.trim();
   if (configured) ids.add(configured);
-  // Stable ID from extension/key.pem (see extension/README.md).
+  // Local unpacked ID from extension/key.b64 (dev only).
   ids.add("mlecdjaacmkbddpfddckfjhkchamjfco");
   return [...ids].map((id) => `chrome-extension://${id}`);
 }

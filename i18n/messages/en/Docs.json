@@ -1,0 +1,21 @@
+{
+  "title": "WakeMark docs",
+  "description": "Guides for the Chrome extension and the WakeMark MCP server.",
+  "hero": {
+    "eyebrow": "Docs",
+    "title": "Guides",
+    "subtitle": "Set up the Chrome extension, or connect WakeMark to Claude, ChatGPT, Cursor and other MCP clients."
+  },
+  "items": {
+    "extension": {
+      "eyebrow": "Chrome",
+      "title": "Chrome extension",
+      "body": "Install, sign in, search bookmarks from the toolbar, and Ask AI in the popup or side panel."
+    },
+    "mcp": {
+      "eyebrow": "Developers",
+      "title": "MCP server",
+      "body": "Give agents secure access to your bookmarks. Setup, client configs, and tool reference."
+    }
+  }
+}

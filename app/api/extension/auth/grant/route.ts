@@ -88,6 +88,11 @@ export async function POST(req: Request) {
       apiKey: created.key,
       userId: user.id,
       keyId: created.id,
+      user: {
+        id: user.id,
+        name: user.name ?? null,
+        image: user.image ?? null,
+      },
     });
 
     return withExtensionCors(

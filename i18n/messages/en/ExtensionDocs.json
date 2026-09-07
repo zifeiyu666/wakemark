@@ -1,0 +1,66 @@
+{
+  "title": "WakeMark Chrome extension",
+  "description": "Install the WakeMark Chrome extension to search your X bookmarks and ask AI from any tab — in the toolbar popup or a persistent side panel.",
+  "hero": {
+    "eyebrow": "Chrome extension",
+    "title": "Use WakeMark from any tab",
+    "subtitle": "Search your library and chat with your bookmarks without leaving the page you are on. Sign in once, then the toolbar popup and side panel stay connected to the same WakeMark account."
+  },
+  "overview": {
+    "title": "What it does",
+    "p1": "The extension is a lightweight companion to wakemark.app. It does not replace the dashboard — it brings the two things you need most while browsing, search and Ask AI, into Chrome.",
+    "points": {
+      "popup": "Toolbar popup: switch between Search and Ask AI in a compact window.",
+      "sidebar": "Side panel: keep Ask AI open beside the page while you read.",
+      "auth": "Sign in through wakemark.app. No API key to paste.",
+      "scope": "It reads the bookmarks already synced to your WakeMark account."
+    }
+  },
+  "install": {
+    "title": "Install",
+    "step1Title": "Add WakeMark in Chrome",
+    "step1Body": "Install the extension from the Chrome Web Store, then pin it from the puzzle-piece menu so the icon stays in your toolbar.",
+    "cta": "Add to Chrome",
+    "step2Title": "Sign in",
+    "step2Body": "Click the icon, then Sign in. Chrome opens wakemark.app so you can log in or create an account. After you approve the connection, the popup shows your avatar.",
+    "step3Title": "Sync bookmarks first",
+    "step3Body": "Search and Ask AI use the bookmarks already in WakeMark. If this is a new account, connect X in the dashboard and wait for the first sync to finish.",
+    "step3Link": "Open the dashboard"
+  },
+  "search": {
+    "title": "Search from the popup",
+    "p1": "Click the WakeMark icon and stay on the Search tab. Type a keyword, handle, or phrase — results update as you type, with the author, a short preview, and a link back to the original post.",
+    "caption": "Toolbar popup on the Search tab: type in the box to scan your library without opening the dashboard."
+  },
+  "askAi": {
+    "title": "Ask AI in the popup",
+    "p1": "Switch to the Ask AI tab and ask in plain language: what someone said, which posts cover a topic, or a short briefing of recent saves. Answers come from your bookmarks and include links you can open.",
+    "p2": "Use Clear to start a new thread. For a longer conversation, click Open side panel so the chat stays beside the page instead of inside the popup.",
+    "caption": "Ask AI in the popup: questions stay in context with your saved posts, with a shortcut to the side panel."
+  },
+  "sidebar": {
+    "title": "Keep Ask AI in the side panel",
+    "p1": "The side panel is the same Ask AI chat, pinned to the right of the window. Use it when you want to query your library while you keep reading, drafting, or comparing tabs.",
+    "p2": "Open it from the popup (Open side panel), or from Chrome’s side panel menu after the extension is installed. Sign out lives in the header next to your avatar.",
+    "caption": "Ask AI in the Chrome side panel: a persistent chat next to whatever page you are on."
+  },
+  "tips": {
+    "title": "Tips",
+    "items": {
+      "pin": "Pin the extension so you are not hunting for it in the puzzle-piece menu every time.",
+      "openApp": "Use open app in the popup header to jump to the full dashboard for tags, lists, and digests.",
+      "sameAccount": "The extension uses the same account as the website. If search looks empty, confirm X is connected and a sync has completed."
+    }
+  },
+  "faq": {
+    "title": "Troubleshooting",
+    "q1": "Sign in opened a tab but the extension still says Sign in",
+    "a1": "Finish signing in on wakemark.app and wait a few seconds. The popup polls for the connection. Close the popup and open it again if it still looks signed out.",
+    "q2": "Search returns nothing",
+    "a2": "The extension only searches bookmarks already synced to WakeMark. Open the dashboard, connect X if needed, run a sync, then try again.",
+    "q3": "Ask AI is unavailable",
+    "a3": "You need to be signed in, and Ask AI shares your account’s AI usage. If the website Ask AI works but the extension does not, sign out and sign in again.",
+    "q4": "I cannot find the side panel",
+    "a4": "Open the popup on the Ask AI tab and click Open side panel. You can also open Chrome’s side panel from the toolbar and choose WakeMark."
+  }
+}

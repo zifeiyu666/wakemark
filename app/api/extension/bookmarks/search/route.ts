@@ -25,24 +25,22 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const q = (searchParams.get("q") ?? "").trim();
-    const limit = Math.min(
+    const pageSize = Math.min(
       Math.max(Number(searchParams.get("limit") ?? 10) || 10, 1),
       20
     );
+    const pageIndex = Math.max(
+      Number(searchParams.get("page") ?? 0) || 0,
+      0
+    );
 
-    if (!q) {
-      return withExtensionCors(
-        req,
-        apiResponse.success({ bookmarks: [], totalCount: 0 })
-      );
-    }
-
+    // Empty q lists the newest bookmarks (default popup view).
     const { bookmarks, totalCount } = await queryBookmarks(verified.userId, {
       view: "all",
-      pageIndex: 0,
-      pageSize: limit,
+      pageIndex,
+      pageSize,
       sort: "newest",
-      search: q,
+      search: q || undefined,
       categories: [],
     });
 
@@ -50,6 +48,9 @@ export async function GET(req: Request) {
       req,
       apiResponse.success({
         totalCount,
+        pageIndex,
+        pageSize,
+        hasMore: (pageIndex + 1) * pageSize < totalCount,
         bookmarks: bookmarks.map((b) => ({
           id: b.id,
           tweetId: b.tweetId,

@@ -6,8 +6,9 @@
       "href": "/#pricing"
     },
     "title": "Wake up your X bookmarks.",
-    "description": "Your saved tweets: auto-tagged, auto-synced, AI-chat and MCP, and summarized in a digest that arrives on your schedule.",
+    "description": "Your saved tweets: <features>auto-tagged, auto-synced, AI-chat</features> and <mcp>MCP</mcp>, and summarized in a digest that arrives on your schedule.",
     "cta": "Organize my bookmarks",
+    "installCta": "Add to Chrome",
     "ctaNote": "Free for seven days. No charge today, cancel anytime.",
     "platformsNote": "X today · More platforms coming soon"
   },
@@ -106,7 +107,8 @@
       "A weekly digest, delivered to your inbox",
       "Build and share themed lists",
       "Ask AI about anything you've saved",
-      "Use your bookmarks with AI via MCP"
+      "Use your bookmarks with AI via MCP",
+      "Chrome extension: search and Ask AI from any tab"
     ],
     "trial": "Try free for 7 days"
   },
@@ -117,6 +119,7 @@
     },
     "title": "Bookmarks that organize themselves",
     "description": "WakeMark syncs your X bookmarks, tags them by topic, sorts them into lists, and turns them into digests that arrive on your schedule. No setup, no manual sorting.",
+    "installCta": "Add to Chrome",
     "items": []
   },
   "TextReveal": {

@@ -1,52 +1,113 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { searchBookmarks, type SearchBookmark } from "../lib/api";
 import { useDebouncedValue } from "../lib/hooks";
+
+const PAGE_SIZE = 10;
 
 export function SearchPanel({ enabled }: { enabled: boolean }) {
   const [query, setQuery] = useState("");
   const debounced = useDebouncedValue(query, 250);
   const [results, setResults] = useState<SearchBookmark[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const requestId = useRef(0);
 
   useEffect(() => {
     if (enabled) inputRef.current?.focus();
   }, [enabled]);
 
+  const loadPage = useCallback(
+    async (pageIndex: number, q: string, append: boolean) => {
+      const id = ++requestId.current;
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+      setError(null);
+
+      try {
+        const data = await searchBookmarks({
+          q,
+          page: pageIndex,
+          limit: PAGE_SIZE,
+        });
+        if (id !== requestId.current) return;
+        setResults((prev) =>
+          append
+            ? [
+                ...prev,
+                ...data.bookmarks.filter(
+                  (b) => !prev.some((p) => p.id === b.id)
+                ),
+              ]
+            : data.bookmarks
+        );
+        setTotal(data.totalCount);
+        setPage(pageIndex);
+        setHasMore(data.hasMore);
+      } catch (err: unknown) {
+        if (id !== requestId.current) return;
+        if (!append) {
+          setResults([]);
+          setTotal(0);
+          setHasMore(false);
+        }
+        setError(err instanceof Error ? err.message : "Search failed");
+      } finally {
+        if (id === requestId.current) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
+      }
+    },
+    []
+  );
+
+  // Reset + fetch first page when query changes or auth enables.
   useEffect(() => {
-    if (!enabled) return;
-    const q = debounced.trim();
-    if (!q) {
+    if (!enabled) {
       setResults([]);
       setTotal(0);
+      setHasMore(false);
       setError(null);
       return;
     }
+    void loadPage(0, debounced.trim(), false);
+  }, [debounced, enabled, loadPage]);
 
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    void searchBookmarks(q, 10)
-      .then((data) => {
-        if (cancelled) return;
-        setResults(data.bookmarks);
-        setTotal(data.totalCount);
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setResults([]);
-        setError(err instanceof Error ? err.message : "Search failed");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+  // Infinite scroll via IntersectionObserver on a sentinel.
+  useEffect(() => {
+    if (!enabled || !hasMore || loading || loadingMore) return;
+    const root = listRef.current;
+    const sentinel = sentinelRef.current;
+    if (!root || !sentinel) return;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [debounced, enabled]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          void loadPage(page + 1, debounced.trim(), true);
+        }
+      },
+      { root, rootMargin: "80px", threshold: 0 }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [
+    enabled,
+    hasMore,
+    loading,
+    loadingMore,
+    page,
+    debounced,
+    loadPage,
+  ]);
+
+  const q = query.trim();
 
   return (
     <div className="col" style={{ gap: 10, height: "100%" }}>
@@ -59,49 +120,39 @@ export function SearchPanel({ enabled }: { enabled: boolean }) {
         onChange={(e) => setQuery(e.target.value)}
       />
 
-      <div className="scroll" style={{ flex: 1, minHeight: 0 }}>
+      <div ref={listRef} className="scroll" style={{ flex: 1, minHeight: 0 }}>
         {!enabled && (
           <p className="muted" style={{ padding: "8px 2px" }}>
             Sign in to search your WakeMark bookmarks.
           </p>
         )}
-        {enabled && !query.trim() && (
+
+        {enabled && loading && results.length === 0 && (
           <p className="muted" style={{ padding: "8px 2px" }}>
-            Type to search by text, author, summary, or tags.
+            Loading…
           </p>
         )}
-        {enabled && query.trim() && loading && (
-          <p className="muted" style={{ padding: "8px 2px" }}>
-            Searching…
-          </p>
-        )}
+
         {error && (
           <p className="danger" style={{ padding: "8px 2px" }}>
             {error}
           </p>
         )}
-        {enabled && query.trim() && !loading && !error && results.length === 0 && (
+
+        {enabled && !loading && !error && results.length === 0 && (
           <p className="muted" style={{ padding: "8px 2px" }}>
-            No bookmarks matched “{query.trim()}”.
+            {q
+              ? `No bookmarks matched “${q}”.`
+              : "No bookmarks yet. Sync from the dashboard first."}
           </p>
         )}
+
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {results.map((b) => (
             <li key={b.id}>
               <button
                 type="button"
-                className="btn-ghost"
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "8px 6px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: "transparent",
-                  color: "inherit",
-                }}
+                className="bookmark-item"
                 onClick={() => {
                   void chrome.tabs.create({ url: b.tweetUrl });
                 }}
@@ -110,20 +161,12 @@ export function SearchPanel({ enabled }: { enabled: boolean }) {
                   <img
                     src={b.authorProfileImageUrl}
                     alt=""
+                    className="bookmark-avatar"
                     width={32}
                     height={32}
-                    style={{ borderRadius: "50%", flexShrink: 0 }}
                   />
                 ) : (
-                  <div
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: "50%",
-                      background: "var(--surface)",
-                      flexShrink: 0,
-                    }}
-                  />
+                  <div className="bookmark-avatar" />
                 )}
                 <div style={{ minWidth: 0 }}>
                   <div
@@ -156,10 +199,17 @@ export function SearchPanel({ enabled }: { enabled: boolean }) {
             </li>
           ))}
         </ul>
-        {total > results.length && (
-          <p className="muted" style={{ padding: "4px 6px", fontSize: 11 }}>
-            Showing {results.length} of {total}
-          </p>
+
+        {enabled && results.length > 0 && (
+          <div ref={sentinelRef} className="list-footer">
+            {loadingMore
+              ? "Loading more…"
+              : hasMore
+                ? "Scroll for more"
+                : total > 0
+                  ? `${results.length} of ${total}`
+                  : null}
+          </div>
         )}
       </div>
     </div>

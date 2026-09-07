@@ -12,15 +12,14 @@
  * pnpm db:seed
  */
 
-import { loadEnvConfig } from '@next/env'
-import 'dotenv/config'
+import { config } from 'dotenv'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { pricingPlanGroups, pricingPlans as pricingPlansTable } from '../schema'
 import { pricingGroups, pricingPlans } from './pricing-config'
 
-const projectDir = process.cwd()
-loadEnvConfig(projectDir)
+config({ path: '.env', quiet: true })
+config({ path: '.env.local', override: true, quiet: true })
 
 async function main() {
   const connectionString = process.env.DATABASE_URL
@@ -28,7 +27,9 @@ async function main() {
     throw new Error('DATABASE_URL environment variable is not set')
   }
 
-  console.log('🌱 Seeding database...\n')
+  const dbHost = connectionString.replace(/^postgres(?:ql)?:\/\//, '').replace(/^[^@]*@/, '').split('/')[0]
+  console.log('🌱 Seeding database...')
+  console.log(`🔌 Target: ${dbHost}\n`)
   console.log(`📦 Found ${pricingGroups.length} groups and ${pricingPlans.length} plans`)
 
   const client = postgres(connectionString)

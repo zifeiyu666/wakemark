@@ -59,7 +59,14 @@ import {
 } from "lucide-react";
 import { DashboardHeaderPortals } from "@/components/header/DashboardHeaderPortals";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Children,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import useSWR from "swr";
@@ -76,18 +83,52 @@ export type BookmarksView = "all" | "unread" | "read";
 
 type Banner = { kind: "info" | "warn" | "error"; text: string };
 
+function getMasonryColumnCount() {
+  if (window.matchMedia("(min-width: 1280px)").matches) return 3;
+  if (window.matchMedia("(min-width: 768px)").matches) return 2;
+  return 1;
+}
+
+function subscribeMasonryColumns(onChange: () => void) {
+  const md = window.matchMedia("(min-width: 768px)");
+  const xl = window.matchMedia("(min-width: 1280px)");
+  md.addEventListener("change", onChange);
+  xl.addEventListener("change", onChange);
+  return () => {
+    md.removeEventListener("change", onChange);
+    xl.removeEventListener("change", onChange);
+  };
+}
+
+function useMasonryColumnCount() {
+  return useSyncExternalStore(
+    subscribeMasonryColumns,
+    getMasonryColumnCount,
+    () => 1,
+  );
+}
+
 function BookmarkMasonry({ children }: { children: ReactNode }) {
+  const columnCount = useMasonryColumnCount();
+  const items = Children.toArray(children);
+  const columns = Array.from({ length: columnCount }, () => [] as ReactNode[]);
+  items.forEach((child, index) => {
+    columns[index % columnCount].push(child);
+  });
+
   return (
-    <div className="columns-1 gap-x-4 md:columns-2 xl:columns-3">
-      {children}
+    <div className="flex gap-x-4">
+      {columns.map((column, index) => (
+        <div key={index} className="flex min-w-0 flex-1 flex-col gap-y-4">
+          {column}
+        </div>
+      ))}
     </div>
   );
 }
 
 function BookmarkMasonryItem({ children }: { children: ReactNode }) {
-  return (
-    <div className="mb-4 inline-block w-full break-inside-avoid">{children}</div>
-  );
+  return <div className="w-full">{children}</div>;
 }
 
 export function BookmarksBoard({

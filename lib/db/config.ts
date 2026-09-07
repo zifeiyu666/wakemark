@@ -121,9 +121,21 @@ export function createDatabaseConfig(config: DBConfig) {
       date: true,
     },
 
-    debug: config.debug ?? (process.env.NODE_ENV === 'development'),
-    onnotice: process.env.NODE_ENV === 'development' ? console.log : undefined,
+    // SQL debug logging is opt-in. Enabling it on every local query floods
+    // the terminal and adds I/O while Next is already compiling.
+    debug: config.debug ?? process.env.DATABASE_DEBUG === 'true',
+    onnotice: process.env.DATABASE_DEBUG === 'true' ? console.log : undefined,
   };
+
+  // Local `next dev` is a long-lived Node process. Fail fast when the
+  // database is unreachable instead of stacking 20–30s TCP handshakes.
+  if (process.env.NODE_ENV === 'development' && platform === 'server') {
+    if (!config.maxConnections) {
+      finalConfig.max = 5;
+    }
+    finalConfig.connect_timeout = 5;
+    finalConfig.idle_timeout = 20;
+  }
 
   return finalConfig;
 }

@@ -46,11 +46,22 @@ export default function Hero() {
               </h1>
 
               <p className="mx-auto max-w-xl text-base leading-relaxed tracking-tight text-center text-muted-foreground md:text-lg">
-                {t("description")}
+                {t.rich("description", {
+                  features: (chunks) => (
+                    <strong className="font-semibold text-foreground">
+                      {chunks}
+                    </strong>
+                  ),
+                  mcp: (chunks) => (
+                    <strong className="font-semibold text-foreground">
+                      {chunks}
+                    </strong>
+                  ),
+                })}
               </p>
             </div>
           </div>
-          <div className="flex w-full max-w-sm flex-col items-center gap-4 px-4">
+          <div className="flex w-full max-w-sm flex-col items-center px-4">
             <Button
               asChild
               size="lg"
@@ -58,9 +69,6 @@ export default function Hero() {
             >
               <I18nLink href="/login">{t("cta")}</I18nLink>
             </Button>
-            {/* <p className="text-center text-sm text-muted-foreground md:max-w-none md:whitespace-nowrap">
-              {t("ctaNote")}
-            </p> */}
           </div>
 
           {/* Upcoming platforms: X is live (centered + highlighted), the rest

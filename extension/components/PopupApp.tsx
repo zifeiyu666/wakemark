@@ -4,11 +4,12 @@ import { SITE_URL } from "../lib/config";
 import { useAuth } from "../lib/hooks";
 import { ChatPanel } from "./ChatPanel";
 import { SearchPanel } from "./SearchPanel";
+import { UserAvatar } from "./UserAvatar";
 
 type Tab = "search" | "chat";
 
 export function PopupApp() {
-  const { signedIn, loading } = useAuth();
+  const { signedIn, user, loading, refresh } = useAuth();
   const [tab, setTab] = useState<Tab>("search");
   const [signingIn, setSigningIn] = useState(false);
 
@@ -23,53 +24,51 @@ export function PopupApp() {
 
   async function handleSignOut() {
     await revokeAuth();
+    await refresh();
   }
 
-  function openSidePanel() {
-    void chrome.runtime.sendMessage({ type: "wakemark:open-sidepanel" });
+  async function openSidePanel() {
+    const [active] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (active?.windowId == null) return;
+    await chrome.sidePanel.open({ windowId: active.windowId });
+    window.close();
   }
 
   return (
-    <div
-      className="col"
-      style={{
-        width: 380,
-        height: 520,
-        padding: 12,
-        gap: 10,
-      }}
-    >
-      <header
-        className="row"
-        style={{ justifyContent: "space-between", flexShrink: 0 }}
-      >
+    <div className="shell shell-popup col">
+      <header className="row" style={{ justifyContent: "space-between" }}>
         <div className="row" style={{ gap: 8 }}>
-          <strong style={{ fontSize: 14 }}>WakeMark</strong>
+          <span className="brand">WakeMark</span>
           <a
-            className="muted"
+            className="brand-link"
             href={SITE_URL}
             target="_blank"
             rel="noreferrer"
-            style={{ fontSize: 11, textDecoration: "none" }}
           >
             open app
           </a>
         </div>
-        <div className="row">
+        <div className="row" style={{ gap: 8 }}>
           {signedIn ? (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ fontSize: 11, padding: "4px 8px" }}
-              onClick={() => void handleSignOut()}
-            >
-              Sign out
-            </button>
+            <>
+              <UserAvatar user={user} size={26} />
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ fontSize: 11, padding: "5px 9px" }}
+                onClick={() => void handleSignOut()}
+              >
+                Sign out
+              </button>
+            </>
           ) : (
             <button
               type="button"
               className="btn btn-primary"
-              style={{ fontSize: 11, padding: "4px 10px" }}
+              style={{ fontSize: 11, padding: "5px 11px" }}
               disabled={signingIn || loading}
               onClick={() => void handleSignIn()}
             >
@@ -79,28 +78,12 @@ export function PopupApp() {
         </div>
       </header>
 
-      <div
-        className="row"
-        style={{
-          flexShrink: 0,
-          border: "1px solid var(--border)",
-          borderRadius: 8,
-          padding: 2,
-          gap: 2,
-        }}
-      >
+      <div className="tabs">
         {(["search", "chat"] as Tab[]).map((id) => (
           <button
             key={id}
             type="button"
-            className="btn"
-            style={{
-              flex: 1,
-              border: "none",
-              background: tab === id ? "var(--accent)" : "transparent",
-              color: tab === id ? "var(--accent-fg)" : "var(--fg)",
-              padding: "6px 8px",
-            }}
+            className={`tab ${tab === id ? "active" : ""}`}
             onClick={() => setTab(id)}
           >
             {id === "search" ? "Search" : "Ask AI"}
@@ -112,10 +95,18 @@ export function PopupApp() {
         {tab === "search" ? (
           <SearchPanel enabled={signedIn} />
         ) : signedIn ? (
-          <ChatPanel compact onOpenSidePanel={openSidePanel} />
+          <ChatPanel compact onOpenSidePanel={() => void openSidePanel()} />
         ) : (
-          <div className="col" style={{ paddingTop: 24, alignItems: "center" }}>
-            <p className="muted" style={{ textAlign: "center" }}>
+          <div
+            className="col"
+            style={{
+              height: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 12,
+            }}
+          >
+            <p className="muted" style={{ textAlign: "center", maxWidth: 220 }}>
               Sign in to ask AI about your bookmarks.
             </p>
             <button

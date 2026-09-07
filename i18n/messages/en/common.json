@@ -1,7 +1,7 @@
 {
   "Home": {
     "title": "WakeMark",
-    "tagLine": "Wake your sleeping bookmarks",
+    "tagLine": "X / Twitter Bookmark Manager with AI Digest & MCP",
     "description": "WakeMark syncs your X/Twitter bookmarks, auto-tags them by topic, organizes them into lists, and sends you AI digests on your schedule. Try it free for 7 days."
   },
   "Login": {
@@ -355,6 +355,10 @@
         "href": "/docs/mcp"
       },
       {
+        "name": "Extension",
+        "href": "/docs/extension"
+      },
+      {
         "name": "Roadmap",
         "href": "/roadmap"
       }
@@ -423,6 +427,10 @@
             {
               "name": "MCP",
               "href": "/docs/mcp"
+            },
+            {
+              "name": "Extension",
+              "href": "/docs/extension"
             }
           ]
         },

@@ -2,6 +2,9 @@ import { SiteConfig } from "@/types/siteConfig";
 
 export const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wakemark.app";
 
+export const CHROME_WEB_STORE_URL =
+  "https://chromewebstore.google.com/detail/wakemark/njgbiipglkpcpkapmjimkpbenjjlhbjn";
+
 const GITHUB_URL = ''
 const TWITTER_URL = ''
 const YOUTUBE_URL = ''

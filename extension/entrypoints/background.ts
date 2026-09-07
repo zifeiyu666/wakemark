@@ -20,10 +20,6 @@ export default defineBackground(() => {
         );
       return true;
     }
-    if (message?.type === "wakemark:open-sidepanel") {
-      void openSidePanel().then(sendResponse);
-      return true;
-    }
     if (message?.type === "wakemark:auth-granted") {
       const state = message.state as string | undefined;
       if (state) {
@@ -62,14 +58,6 @@ async function pollFromAlarm() {
   }
   const done = await tryCompleteAuth(state);
   if (done) await chrome.alarms.clear(POLL_ALARM);
-}
-
-async function openSidePanel() {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab?.windowId != null) {
-    await chrome.sidePanel.open({ windowId: tab.windowId });
-  }
-  return { ok: true };
 }
 
 async function startLogin() {
@@ -115,7 +103,10 @@ async function tryCompleteAuth(state: string): Promise<boolean> {
     const session = await chrome.storage.session.get(STORAGE_KEYS.authTabId);
     const tabId = session[STORAGE_KEYS.authTabId] as number | undefined;
 
-    await setStoredAuth(result.apiKey, result.keyId);
+    await setStoredAuth(result.apiKey, {
+      keyId: result.keyId,
+      user: result.user,
+    });
     await chrome.storage.session.remove([
       STORAGE_KEYS.authState,
       STORAGE_KEYS.authTabId,

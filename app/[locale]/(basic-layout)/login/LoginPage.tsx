@@ -17,16 +17,28 @@ function LoginPageInner() {
   const next = sanitizeNextPath(searchParams.get("next"));
 
   useEffect(() => {
-    if (!session?.user) return;
-    // Preserve query string (e.g. extension connect state) via full navigation.
-    if (next) {
-      window.location.assign(next);
-      return;
-    }
-    router.replace("/dashboard/bookmarks");
-  }, [session?.user, next, router]);
+    if (isPending || !session?.user) return;
 
-  if (isPending || session?.user) {
+    let cancelled = false;
+    // Cookie cache can still look signed-in after the DB was replaced.
+    // Confirm against the session table before bouncing to the dashboard.
+    void authClient
+      .getSession({ query: { disableCookieCache: true } })
+      .then(({ data }) => {
+        if (cancelled || !data?.user) return;
+        if (next) {
+          window.location.assign(next);
+          return;
+        }
+        router.replace("/dashboard/bookmarks");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPending, session?.user, next, router]);
+
+  if (isPending) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="w-4 h-4 animate-spin" />

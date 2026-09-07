@@ -17,7 +17,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Pricing: (await import(`./messages/${locale}/Pricing.json`)).default,
       NotFound: (await import(`./messages/${locale}/NotFound.json`)).default,
       Glossary: (await import(`./messages/${locale}/Glossary.json`)).default,
+      Docs: (await import(`./messages/${locale}/Docs.json`)).default,
       McpDocs: (await import(`./messages/${locale}/McpDocs.json`)).default,
+      ExtensionDocs: (await import(`./messages/${locale}/ExtensionDocs.json`)).default,
       Roadmap: (await import(`./messages/${locale}/Roadmap.json`)).default,
 
       // Dashboard - User

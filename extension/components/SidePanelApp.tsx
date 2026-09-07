@@ -2,50 +2,50 @@ import { revokeAuth } from "../lib/api";
 import { SITE_URL } from "../lib/config";
 import { useAuth } from "../lib/hooks";
 import { ChatPanel } from "./ChatPanel";
+import { UserAvatar } from "./UserAvatar";
 
 export function SidePanelApp() {
-  const { signedIn, loading } = useAuth();
+  const { signedIn, user, loading, refresh } = useAuth();
 
   async function handleSignIn() {
     await chrome.runtime.sendMessage({ type: "wakemark:start-login" });
   }
 
+  async function handleSignOut() {
+    await revokeAuth();
+    await refresh();
+  }
+
   return (
-    <div
-      className="col"
-      style={{
-        height: "100vh",
-        padding: 14,
-        gap: 12,
-      }}
-    >
-      <header
-        className="row"
-        style={{ justifyContent: "space-between", flexShrink: 0 }}
-      >
-        <strong style={{ fontSize: 15 }}>WakeMark Ask AI</strong>
-        <div className="row">
+    <div className="shell shell-side col">
+      <header className="row" style={{ justifyContent: "space-between" }}>
+        <span className="brand">WakeMark Ask AI</span>
+        <div className="row" style={{ gap: 8 }}>
           <a
-            className="muted"
+            className="brand-link"
             href={`${SITE_URL}/dashboard/bookmarks`}
             target="_blank"
             rel="noreferrer"
-            style={{ fontSize: 11, textDecoration: "none" }}
           >
             Dashboard
           </a>
           {signedIn ? (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ fontSize: 11, padding: "4px 8px" }}
-              onClick={() => void revokeAuth()}
-            >
-              Sign out
-            </button>
+            <>
+              <UserAvatar user={user} size={26} />
+              <button
+                type="button"
+                className="btn btn-outline"
+                style={{ fontSize: 11, padding: "5px 9px" }}
+                onClick={() => void handleSignOut()}
+              >
+                Sign out
+              </button>
+            </>
           ) : null}
         </div>
       </header>
+
+      <hr className="divider" />
 
       {loading ? (
         <p className="muted">Loading…</p>

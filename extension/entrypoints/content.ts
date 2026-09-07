@@ -1,10 +1,12 @@
 import { SITE_URL } from "../lib/config";
 
+const matches = import.meta.env.PROD
+  ? ["https://wakemark.app/*"]
+  : ["https://wakemark.app/*", "http://localhost/*"];
+
 export default defineContentScript({
-  matches: [
-    "https://wakemark.app/*",
-    "http://localhost:3000/*",
-  ],
+  // Match patterns cannot include a port; http://localhost/* covers :3000.
+  matches,
   runAt: "document_idle",
   main() {
     // Accelerate the poll loop when the connect page finishes granting.
