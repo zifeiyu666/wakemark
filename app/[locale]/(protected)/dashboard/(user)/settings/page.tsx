@@ -6,6 +6,7 @@ import {
   subscriptions as subscriptionsSchema,
   user as userSchema,
 } from "@/lib/db/schema";
+import { constructMetadata } from "@/lib/metadata";
 import { getComplimentaryTrialEnd } from "@/lib/payments/trial";
 import { PricingPlanLangJsonb } from "@/types/pricing";
 import { desc, eq } from "drizzle-orm";
