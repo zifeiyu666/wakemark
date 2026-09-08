@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth/server";
 import { createBookmarkTools } from "@/lib/bookmarks/ask-ai-tools";
 import { db } from "@/lib/db";
 import { askAiMessages } from "@/lib/db/schema";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { getRateLimiter } from "@/lib/upstash";
 import { REDIS_RATE_LIMIT_CONFIGS } from "@/lib/upstash/redis-rate-limit-configs";
 import { stepCountIs } from "ai";
@@ -66,6 +67,13 @@ export async function POST(req: Request) {
     const user = session?.user;
     if (!user) {
       return apiResponse.unauthorized("Please sign in to ask your bookmarks.");
+    }
+
+    if (!(await hasBookmarkServiceAccess(user.id))) {
+      return apiResponse.error(
+        "An active subscription is required to ask your bookmarks.",
+        402
+      );
     }
 
     const limiter = getRateLimiter(REDIS_RATE_LIMIT_CONFIGS.askAi);

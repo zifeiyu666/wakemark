@@ -21,7 +21,7 @@ export default defineConfig({
     return {
       name: "WakeMark",
       description:
-        "Search your X bookmarks and ask AI — powered by WakeMark.",
+        "Search your X bookmarks, ask AI, and check X search visibility — powered by WakeMark.",
       version: "0.1.0",
       // Dev-only: pins unpacked ID to mlecdjaacmkbddpfddckfjhkchamjfco.
       // Chrome Web Store assigns the production ID — do not ship `key`.
@@ -31,6 +31,12 @@ export default defineConfig({
       host_permissions: isDev
         ? ["https://wakemark.app/*", "http://localhost/*"]
         : ["https://wakemark.app/*"],
+      // Requested on first Shadowban Test (guest search visibility checks).
+      optional_host_permissions: [
+        "https://x.com/*",
+        "https://api.x.com/*",
+        "https://abs.twimg.com/*",
+      ],
       action: {
         default_title: "WakeMark",
       },

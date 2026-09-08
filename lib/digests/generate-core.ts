@@ -27,7 +27,7 @@ import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { WeeklyDigestEmail } from "@/emails/weekly-digest";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { generateText } from "ai";
-import { and, eq, gte, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, isNull } from "drizzle-orm";
 import * as React from "react";
 import { z } from "zod";
 
@@ -382,6 +382,7 @@ export async function generateWeeklyDigestForUser(
       and(
         eq(bookmarks.userId, userId),
         eq(bookmarks.isPushed, false),
+        isNull(bookmarks.deletedAt),
         gte(bookmarks.syncedAt, periodStart)
       )
     );

@@ -2,14 +2,14 @@
   "Hero": {
     "badge": {
       "label": "NEW",
-      "text": "Free for seven days. No charge today, cancel anytime.",
+      "text": "Free for seven days. No credit card required.",
       "href": "/#pricing"
     },
     "title": "Wake up your X bookmarks.",
     "description": "Your saved tweets: <features>auto-tagged, auto-synced, AI-chat</features> and <mcp>MCP</mcp>, and summarized in a digest that arrives on your schedule.",
     "cta": "Organize my bookmarks",
     "installCta": "Add to Chrome",
-    "ctaNote": "Free for seven days. No charge today, cancel anytime.",
+    "ctaNote": "Free for seven days. No credit card required.",
     "platformsNote": "X today · More platforms coming soon"
   },
   "Problem": {
@@ -167,6 +167,6 @@
     "title": "Stop saving. Start reading.",
     "description": "Turn your bookmark graveyard into a daily morning briefing.",
     "button": "Wake my bookmarks",
-    "trustText": "Free for seven days. No charge today, cancel anytime."
+    "trustText": "Free for seven days. No credit card required."
   }
 }

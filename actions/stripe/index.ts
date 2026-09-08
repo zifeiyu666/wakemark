@@ -15,6 +15,7 @@ import {
 } from '@/lib/db/schema';
 import { getErrorMessage } from '@/lib/error-utils';
 import { isRecurringPaymentType } from '@/lib/payments/provider-utils';
+import { getComplimentaryTrialEnd, canAlignProviderTrial } from '@/lib/payments/trial';
 import { stripe } from '@/lib/stripe';
 import { isUseSendConfigured } from '@/lib/usesend';
 import { getURL } from '@/lib/url';
@@ -101,7 +102,6 @@ export async function createStripeCheckoutSession(params: {
       id: pricingPlansSchema.id,
       cardTitle: pricingPlansSchema.cardTitle,
       paymentType: pricingPlansSchema.paymentType,
-      trialPeriodDays: pricingPlansSchema.trialPeriodDays,
     })
     .from(pricingPlansSchema)
     .where(eq(pricingPlansSchema.stripePriceId, priceId))
@@ -148,8 +148,15 @@ export async function createStripeCheckoutSession(params: {
   }
 
   if (isSubscription) {
+    // Signup already granted a card-free trial. Align Stripe's first charge
+    // with that window when enough time remains; otherwise bill immediately.
+    const complimentaryEnd = await getComplimentaryTrialEnd(userId);
+    const trialEndUnix = canAlignProviderTrial(complimentaryEnd)
+      ? Math.floor(complimentaryEnd!.getTime() / 1000)
+      : undefined;
+
     sessionParams.subscription_data = {
-      trial_period_days: plan.trialPeriodDays ?? undefined,
+      ...(trialEndUnix ? { trial_end: trialEndUnix } : {}),
       metadata: {
         userId,
         planId: plan.id,

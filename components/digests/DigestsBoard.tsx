@@ -5,6 +5,9 @@ import {
   getDigests,
   type DigestListItem,
 } from "@/actions/digests";
+import { Button } from "@/components/ui/button";
+import { Link as I18nLink } from "@/i18n/routing";
+import { useProductAccess } from "@/components/payments/ProductAccessProvider";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
@@ -13,6 +16,7 @@ import { formatWeekKeyShort } from "./format";
 
 export function DigestsBoard() {
   const t = useTranslations("Digests");
+  const { hasServiceAccess } = useProductAccess();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { data: listData } = useSWR("digests-list", getDigests);
@@ -34,6 +38,16 @@ export function DigestsBoard() {
 
   return (
     <div className="flex h-full min-h-[70vh] flex-col">
+      {!hasServiceAccess && (
+        <div className="mb-4 flex flex-col gap-3 border border-amber-500/40 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between dark:bg-amber-950/40 dark:text-amber-50">
+          <p>{t("subscribeWarning")}</p>
+          <Button asChild size="sm" className="rounded-none shrink-0">
+            <I18nLink href="/subscribe" title={t("subscribeCta")}>
+              {t("subscribeCta")}
+            </I18nLink>
+          </Button>
+        </div>
+      )}
       <div className="flex items-baseline gap-3 px-1 pb-4">
         <h1 className="font-serif text-2xl font-bold tracking-tight">
           {t("title")}

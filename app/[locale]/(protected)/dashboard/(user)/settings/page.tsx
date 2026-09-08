@@ -6,7 +6,7 @@ import {
   subscriptions as subscriptionsSchema,
   user as userSchema,
 } from "@/lib/db/schema";
-import { constructMetadata } from "@/lib/metadata";
+import { getComplimentaryTrialEnd } from "@/lib/payments/trial";
 import { PricingPlanLangJsonb } from "@/types/pricing";
 import { desc, eq } from "drizzle-orm";
 import { Metadata } from "next";
@@ -52,7 +52,7 @@ export default async function SettingsPage() {
 
   const user = session.user as User;
 
-  const [benefits, subscriptionResults] = await Promise.all([
+  const [benefits, subscriptionResults, complimentaryTrialEnd] = await Promise.all([
     getUserBenefits(user.id),
     db
       .select({
@@ -66,6 +66,7 @@ export default async function SettingsPage() {
       .where(eq(subscriptionsSchema.userId, user.id))
       .orderBy(desc(subscriptionsSchema.createdAt))
       .limit(1),
+    getComplimentaryTrialEnd(user.id),
   ]);
 
   const subscription = subscriptionResults[0] ?? null;
@@ -107,6 +108,7 @@ export default async function SettingsPage() {
         isMember={isMember}
         subscription={subscription}
         plan={plan}
+        complimentaryTrialEnd={complimentaryTrialEnd}
       />
       <Settings user={user} />
     </div>

@@ -1,5 +1,6 @@
 import { verifyApiKeyFromRequest } from "@/lib/auth/api-key";
 import { createMcpServer } from "@/lib/mcp/server";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
 // Stateless Streamable HTTP MCP endpoint for AI agents. Every request is
@@ -44,6 +45,11 @@ export async function POST(req: Request): Promise<Response> {
   if (!apiKey) {
     return unauthorized(
       "Missing or invalid API key. Create one at Dashboard > MCP and send it as Authorization: Bearer wkm_..."
+    );
+  }
+  if (!(await hasBookmarkServiceAccess(apiKey.userId))) {
+    return unauthorized(
+      "An active subscription is required to use the WakeMark MCP endpoint."
     );
   }
 

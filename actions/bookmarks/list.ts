@@ -13,15 +13,18 @@ import {
 } from "@/lib/bookmarks/tag-counts";
 import {
   bookmarkFilterSchema,
+  permanentlyDeleteBookmarks as permanentlyDeleteBookmarksQuery,
   queryBookmarks,
+  restoreBookmarks,
   setBookmarksRead,
+  trashBookmarks,
   type BookmarkFilters,
   type BookmarkRow,
 } from "@/lib/bookmarks/query";
 import { db } from "@/lib/db";
 import { bookmarks } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
-import { and, count, eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 
 export type GetBookmarksResult = ActionResult<{
@@ -55,6 +58,7 @@ export type BookmarkStats = {
   total: number;
   unread: number;
   pending: number;
+  trash: number;
   // True while a history backfill checkpoint exists; the dashboard's
   // ImportProgressBanner uses it (together with `pending`) to auto-resume
   // the frontend-driven import/tagging loop.
@@ -72,9 +76,10 @@ export async function getBookmarkStats(): Promise<ActionResult<BookmarkStats>> {
 
     const [stats] = await db
       .select({
-        total: count(),
-        unread: sql<number>`count(*) filter (where ${bookmarks.isRead} = false)`,
-        pending: sql<number>`count(*) filter (where ${bookmarks.status} in ('pending', 'processing', 'failed'))`,
+        total: sql<number>`count(*) filter (where ${bookmarks.deletedAt} is null)`,
+        unread: sql<number>`count(*) filter (where ${bookmarks.deletedAt} is null and ${bookmarks.isRead} = false)`,
+        pending: sql<number>`count(*) filter (where ${bookmarks.deletedAt} is null and ${bookmarks.status} in ('pending', 'processing', 'failed'))`,
+        trash: sql<number>`count(*) filter (where ${bookmarks.deletedAt} is not null)`,
       })
       .from(bookmarks)
       .where(eq(bookmarks.userId, user.id));
@@ -85,6 +90,7 @@ export async function getBookmarkStats(): Promise<ActionResult<BookmarkStats>> {
       total: Number(stats?.total ?? 0),
       unread: Number(stats?.unread ?? 0),
       pending: Number(stats?.pending ?? 0),
+      trash: Number(stats?.trash ?? 0),
       importing: conn?.paginationToken != null,
     });
   } catch (error) {
@@ -116,6 +122,61 @@ export async function updateBookmarksRead(
   }
 }
 
+const BulkIdsSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(200),
+});
+
+export async function moveBookmarksToTrash(
+  ids: string[],
+): Promise<ActionResult<{ moved: number }>> {
+  const session = await getSession();
+  const user = session?.user;
+  if (!user) return actionResponse.unauthorized();
+
+  try {
+    const parsed = BulkIdsSchema.parse({ ids });
+    await trashBookmarks(user.id, parsed.ids);
+    return actionResponse.success({ moved: parsed.ids.length });
+  } catch (error) {
+    console.error("Error moving bookmarks to trash", error);
+    return actionResponse.error(getErrorMessage(error));
+  }
+}
+
+export async function restoreBookmarksFromTrash(
+  ids: string[],
+): Promise<ActionResult<{ restored: number }>> {
+  const session = await getSession();
+  const user = session?.user;
+  if (!user) return actionResponse.unauthorized();
+
+  try {
+    const parsed = BulkIdsSchema.parse({ ids });
+    await restoreBookmarks(user.id, parsed.ids);
+    return actionResponse.success({ restored: parsed.ids.length });
+  } catch (error) {
+    console.error("Error restoring bookmarks from trash", error);
+    return actionResponse.error(getErrorMessage(error));
+  }
+}
+
+export async function permanentlyDeleteBookmarks(
+  ids: string[],
+): Promise<ActionResult<{ deleted: number }>> {
+  const session = await getSession();
+  const user = session?.user;
+  if (!user) return actionResponse.unauthorized();
+
+  try {
+    const parsed = BulkIdsSchema.parse({ ids });
+    await permanentlyDeleteBookmarksQuery(user.id, parsed.ids);
+    return actionResponse.success({ deleted: parsed.ids.length });
+  } catch (error) {
+    console.error("Error permanently deleting bookmarks", error);
+    return actionResponse.error(getErrorMessage(error));
+  }
+}
+
 const TagUpdateSchema = z.object({
   id: z.string().uuid(),
   add: z.string().trim().min(1).max(30).optional(),
@@ -138,7 +199,13 @@ export async function updateBookmarkTags(params: {
     const [row] = await db
       .select()
       .from(bookmarks)
-      .where(and(eq(bookmarks.id, parsed.id), eq(bookmarks.userId, user.id)))
+      .where(
+        and(
+          eq(bookmarks.id, parsed.id),
+          eq(bookmarks.userId, user.id),
+          isNull(bookmarks.deletedAt),
+        ),
+      )
       .limit(1);
     if (!row) return actionResponse.notFound();
 

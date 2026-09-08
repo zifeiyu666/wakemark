@@ -15,6 +15,7 @@ import {
   eq,
   ilike,
   isNotNull,
+  isNull,
   or,
   sql,
   type SQL,
@@ -79,7 +80,10 @@ export function serializeBookmark(row: typeof bookmarks.$inferSelect): Serialize
 // ============================================================
 
 export function buildFilterWhere(userId: string, filters: AskAiFilters): SQL {
-  const conditions: SQL[] = [eq(bookmarks.userId, userId)];
+  const conditions: SQL[] = [
+    eq(bookmarks.userId, userId),
+    isNull(bookmarks.deletedAt),
+  ];
 
   if (filters.category) {
     conditions.push(
@@ -203,7 +207,13 @@ export async function vectorSearchWithFallback(
     const rows = await db
       .select()
       .from(bookmarks)
-      .where(and(eq(bookmarks.userId, userId), isNotNull(bookmarks.embedding)))
+      .where(
+        and(
+          eq(bookmarks.userId, userId),
+          isNotNull(bookmarks.embedding),
+          isNull(bookmarks.deletedAt),
+        ),
+      )
       .orderBy(cosineDistance(bookmarks.embedding, vector))
       .limit(limit);
     if (rows.length > 0) return rows.map(serializeBookmark);

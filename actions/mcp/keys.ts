@@ -4,6 +4,7 @@ import { ActionResult, actionResponse } from "@/lib/action-response";
 import { auth } from "@/lib/auth";
 import { getSession } from "@/lib/auth/server";
 import { getErrorMessage } from "@/lib/error-utils";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { headers } from "next/headers";
 import { z } from "zod";
 
@@ -33,6 +34,12 @@ export async function createMcpApiKey(params: {
   const session = await getSession();
   const user = session?.user;
   if (!user) return actionResponse.unauthorized();
+  if (!(await hasBookmarkServiceAccess(user.id))) {
+    return actionResponse.error(
+      "An active subscription is required to create MCP keys.",
+      "not-subscribed"
+    );
+  }
 
   try {
     const parsed = CreateKeySchema.parse(params);

@@ -15,7 +15,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Link as I18nLink, usePathname } from "@/i18n/routing";
-import { Bookmark, BookmarkCheck, ChevronDown, Inbox } from "lucide-react";
+import { Bookmark, BookmarkCheck, ChevronDown, Inbox, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import useSWR from "swr";
 
@@ -31,6 +31,7 @@ export function BookmarksSidebarMenu() {
   });
   const stats = data?.success ? data.data : null;
   const unread = stats?.connected ? stats.unread : 0;
+  const trashCount = stats?.connected ? stats.trash : 0;
 
   const isInBookmarks = pathname.startsWith("/dashboard/bookmarks");
 
@@ -52,6 +53,12 @@ export function BookmarksSidebarMenu() {
       label: t("sidebar.read"),
       icon: BookmarkCheck,
       badge: 0,
+    },
+    {
+      href: "/dashboard/bookmarks/trash",
+      label: t("sidebar.trash"),
+      icon: Trash2,
+      badge: trashCount,
     },
   ];
 

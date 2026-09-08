@@ -4,9 +4,16 @@ import { SITE_URL } from "../lib/config";
 import { useAuth } from "../lib/hooks";
 import { ChatPanel } from "./ChatPanel";
 import { SearchPanel } from "./SearchPanel";
+import { ShadowbanPanel } from "./ShadowbanPanel";
 import { UserAvatar } from "./UserAvatar";
 
-type Tab = "search" | "chat";
+type Tab = "search" | "chat" | "health";
+
+const TAB_LABEL: Record<Tab, string> = {
+  search: "Search",
+  chat: "Ask AI",
+  health: "Health",
+};
 
 export function PopupApp() {
   const { signedIn, user, loading, refresh } = useAuth();
@@ -79,14 +86,14 @@ export function PopupApp() {
       </header>
 
       <div className="tabs">
-        {(["search", "chat"] as Tab[]).map((id) => (
+        {(["search", "chat", "health"] as Tab[]).map((id) => (
           <button
             key={id}
             type="button"
             className={`tab ${tab === id ? "active" : ""}`}
             onClick={() => setTab(id)}
           >
-            {id === "search" ? "Search" : "Ask AI"}
+            {TAB_LABEL[id]}
           </button>
         ))}
       </div>
@@ -94,6 +101,8 @@ export function PopupApp() {
       <div style={{ flex: 1, minHeight: 0 }}>
         {tab === "search" ? (
           <SearchPanel enabled={signedIn} />
+        ) : tab === "health" ? (
+          <ShadowbanPanel />
         ) : signedIn ? (
           <ChatPanel compact onOpenSidePanel={() => void openSidePanel()} />
         ) : (

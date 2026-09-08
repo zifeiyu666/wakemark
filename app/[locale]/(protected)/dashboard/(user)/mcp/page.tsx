@@ -14,6 +14,7 @@ import { getSession } from "@/lib/auth/server";
 import { constructMetadata } from "@/lib/metadata";
 import { mcpServerUrl } from "@/lib/mcp/server";
 import { MCP_TOOL_DOCS } from "@/lib/mcp/tools";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { ArrowUpRight } from "lucide-react";
 import { Metadata } from "next";
 import { Locale } from "next-intl";
@@ -45,6 +46,9 @@ export default async function McpPage() {
   const session = await getSession();
   if (!session) {
     redirect("/login");
+  }
+  if (!(await hasBookmarkServiceAccess(session.user.id))) {
+    redirect("/subscribe");
   }
 
   const t = await getTranslations("Mcp");

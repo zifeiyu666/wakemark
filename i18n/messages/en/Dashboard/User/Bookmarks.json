@@ -3,12 +3,14 @@
     "group": "Bookmarks",
     "all": "All bookmarks",
     "unread": "Unread",
-    "read": "Read"
+    "read": "Read",
+    "trash": "Trash"
   },
   "titles": {
     "all": "All bookmarks",
     "unread": "Unread",
-    "read": "Read"
+    "read": "Read",
+    "trash": "Trash"
   },
   "toolbar": {
     "newestFirst": "Newest first",
@@ -24,13 +26,18 @@
     "title": "Sync with X",
     "description": "Connect your X account to pull your bookmarks, auto-tag them with AI, and keep them searchable forever.",
     "button": "Sync with X",
+    "useDifferentX": "Use a different X account",
+    "signInAsX": "Sign in as @{username}",
+    "signInAsXUnknown": "Sign in with this X account",
     "note": "Read-only access to your bookmarks. We never post on your behalf."
   },
   "empty": {
     "title": "No bookmarks yet",
     "description": "Hit Sync to pull your latest X bookmarks.",
     "noResults": "No bookmarks match your search",
-    "noResultsDescription": "Try different keywords or remove some filters."
+    "noResultsDescription": "Try different keywords or remove some filters.",
+    "trashTitle": "Trash is empty",
+    "trashDescription": "Deleted bookmarks appear here. You can restore them or delete them permanently."
   },
   "card": {
     "unread": "Unread",
@@ -42,7 +49,9 @@
     "processing": "AI processing…",
     "failed": "Processing failed",
     "playVideo": "Play video on X",
-    "videoCover": "Video thumbnail"
+    "videoCover": "Video thumbnail",
+    "showMore": "Show more",
+    "showLess": "Show less"
   },
   "bulk": {
     "selected": "{count} selected",
@@ -51,6 +60,14 @@
     "addToList": "Add to list",
     "addedToList": "Added {count} to {name}",
     "alreadyInList": "Already in {name}",
+    "moveToTrash": "Move to trash",
+    "movedToTrash": "Moved {count} to trash",
+    "restore": "Restore",
+    "restored": "Restored {count} bookmarks",
+    "deletePermanently": "Delete permanently",
+    "deletedPermanently": "Permanently deleted {count} bookmarks",
+    "deletePermanentlyConfirmTitle": "Delete permanently?",
+    "deletePermanentlyConfirmDescription": "{count} bookmarks will be permanently deleted. This cannot be undone.",
     "clear": "Clear"
   },
   "syncBanner": {
@@ -64,6 +81,11 @@
     "syncBusy": "A sync is already running in another tab or in the background. Please try again shortly.",
     "caughtUp": "You're all caught up. {added} new bookmarks."
   },
+  "subscribePrompt": {
+    "title": "Subscribe to sync",
+    "description": "Your free trial has ended. Subscribe to keep pulling new bookmarks from X. Already-synced bookmarks stay available to browse.",
+    "cta": "Subscribe"
+  },
   "importBanner": {
     "pulling": "Importing your bookmark history… {count} imported",
     "organizing": "AI is tagging & summarizing your bookmarks… {remaining} left"
@@ -72,7 +94,11 @@
     "loadFailed": "Failed to load bookmarks.",
     "syncFailed": "Sync failed. Please try again.",
     "notConnected": "Connect your X account first.",
-    "disconnect": "Disconnect"
+    "disconnect": "Disconnect",
+    "linkFailed": "Could not connect your X account. Please try again.",
+    "xAlreadyLinked": "This X account is already connected to another WakeMark user. Sign in with that account, or connect a different X account.",
+    "xEmailMismatch": "That X account could not be linked because its email does not match this WakeMark account.",
+    "xUnableToLink": "Could not link this X account. Please try again, or use a different X account."
   },
   "connectedAs": "Connected as @{username}"
 }

@@ -18,6 +18,7 @@ import {
   type TagColorId,
 } from "@/config/bookmark-categories";
 import { Button } from "@/components/ui/button";
+import { CollapsibleBookmarkText } from "@/components/bookmarks/CollapsibleBookmarkText";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -299,10 +300,8 @@ export function BookmarkCard({
         </span>
       </div>
 
-      {/* text */}
-      <p className="line-clamp-6 whitespace-pre-wrap text-sm text-foreground">
-        {bookmark.text}
-      </p>
+      {/* text — clamped so media below stays visible */}
+      <CollapsibleBookmarkText text={bookmark.text} />
 
       {/* media */}
       {videoMedia && (

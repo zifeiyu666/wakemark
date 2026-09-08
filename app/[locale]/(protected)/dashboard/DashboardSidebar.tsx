@@ -50,8 +50,8 @@ export function DashboardSidebar({
     "/dashboard/my-orders",
     "/dashboard/credit-history",
   ];
-  // MCP is a product surface; Settings stays visible so billing can be managed
-  // before a plan is active (admins can open dashboard without a subscription).
+  // MCP stays a paid surface. Bookmarks, lists, and digests stay visible so
+  // expired trials can still open already-synced data.
   const unsubscribedHiddenHrefs = hasProductAccess ? [] : ["/dashboard/mcp"];
 
   const allUserMenus: Menu[] = t.raw("UserMenus");
@@ -89,35 +89,33 @@ export function DashboardSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        {hasProductAccess && (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <BookmarksSidebarMenu />
-                <ListsSidebarMenu />
-                <SidebarMenuItem data-onboarding-target="digests">
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive("/dashboard/digests")}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <BookmarksSidebarMenu />
+              <ListsSidebarMenu />
+              <SidebarMenuItem data-onboarding-target="digests">
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard/digests")}
+                >
+                  <I18nLink
+                    href="/dashboard/digests"
+                    title={tDigests("title")}
+                    prefetch={false}
                   >
-                    <I18nLink
-                      href="/dashboard/digests"
-                      title={tDigests("title")}
-                      prefetch={false}
-                    >
-                      <MailOpen className="h-4 w-4" />
-                      {!isCollapsed && <span>{tDigests("title")}</span>}
-                    </I18nLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+                    <MailOpen className="h-4 w-4" />
+                    {!isCollapsed && <span>{tDigests("title")}</span>}
+                  </I18nLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         {isAdmin && (
           <>
-            {hasProductAccess && <SidebarSeparator />}
+            <SidebarSeparator />
             <SidebarGroup>
               <SidebarGroupLabel>Admin Menus</SidebarGroupLabel>
               <SidebarGroupContent>

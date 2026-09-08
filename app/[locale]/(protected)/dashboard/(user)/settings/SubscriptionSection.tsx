@@ -40,6 +40,7 @@ interface SubscriptionSectionProps {
   isMember: boolean;
   subscription: SubscriptionDisplay | null;
   plan: SubscriptionPlanDisplay | null;
+  complimentaryTrialEnd: Date | null;
 }
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
@@ -57,12 +58,24 @@ export default async function SubscriptionSection({
   isMember,
   subscription,
   plan,
+  complimentaryTrialEnd,
 }: SubscriptionSectionProps) {
   const t = await getTranslations("Settings");
   const locale = await getLocale();
   const formatter = await getFormatter({ locale });
 
   if (!isMember || !subscription) {
+    const trialActive =
+      !!complimentaryTrialEnd &&
+      new Date(complimentaryTrialEnd).getTime() > Date.now();
+    const trialLabel = complimentaryTrialEnd
+      ? formatter.dateTime(new Date(complimentaryTrialEnd), {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+      : null;
+
     return (
       <div className="max-w-2xl mx-auto">
         <SettingsCard
@@ -72,7 +85,7 @@ export default async function SubscriptionSection({
           action={
             <Button asChild>
               <I18nLink
-                href={process.env.NEXT_PUBLIC_PRICING_PATH!}
+                href="/subscribe"
                 title={t("subscription.upgradePlan")}
               >
                 {t("subscription.upgradePlan")}
@@ -80,7 +93,13 @@ export default async function SubscriptionSection({
             </Button>
           }
         >
-          <p>{t("subscription.notSubscribed")}</p>
+          <p>
+            {trialActive && trialLabel
+              ? t("subscription.complimentaryTrial", { date: trialLabel })
+              : complimentaryTrialEnd
+                ? t("subscription.trialEnded")
+                : t("subscription.notSubscribed")}
+          </p>
         </SettingsCard>
       </div>
     );

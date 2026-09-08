@@ -138,6 +138,10 @@ export function ImportProgressBanner({
             const res = await advanceImport();
             if (cancelled) break;
             if (!res.success) {
+              if (res.customCode === "not-subscribed") {
+                setPhase(null);
+                break;
+              }
               if (res.customCode === "auth-error") {
                 setPhase(null);
                 startReconnect();

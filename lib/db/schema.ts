@@ -31,6 +31,10 @@ export const user = pgTable('user', {
   banned: boolean('banned'),
   banReason: text('ban_reason'),
   banExpires: timestamp('ban_expires'),
+  // Complimentary signup trial (no card). Paid access is tracked in
+  // subscriptions; this timestamp only covers the free window granted at
+  // registration. Existing bookmarks stay readable after it expires.
+  trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -627,6 +631,8 @@ export const bookmarks = pgTable(
     isRead: boolean('is_read').default(false).notNull(),
     // reserved for weekly digest
     isPushed: boolean('is_pushed').default(false).notNull(),
+    // Soft-delete: non-null means the bookmark is in trash.
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
     syncedAt: timestamp('synced_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -652,6 +658,10 @@ export const bookmarks = pgTable(
       userStatusIdx: index('idx_bookmarks_user_status').on(
         table.userId,
         table.status
+      ),
+      userDeletedIdx: index('idx_bookmarks_user_deleted').on(
+        table.userId,
+        table.deletedAt
       ),
     }
   }

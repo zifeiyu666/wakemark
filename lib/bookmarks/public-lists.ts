@@ -5,7 +5,7 @@ import {
   bookmarks,
   xConnections,
 } from "@/lib/db/schema";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 
 export type PublicListBookmark = {
   id: string;
@@ -79,7 +79,12 @@ export async function loadPublicList(
     })
     .from(bookmarkListItems)
     .innerJoin(bookmarks, eq(bookmarks.id, bookmarkListItems.bookmarkId))
-    .where(eq(bookmarkListItems.listId, list.id))
+    .where(
+      and(
+        eq(bookmarkListItems.listId, list.id),
+        isNull(bookmarks.deletedAt),
+      ),
+    )
     // Tie-break by snowflake tweet id: same-batch rows share syncedAt.
     .orderBy(desc(bookmarks.syncedAt), desc(bookmarks.tweetId))
     .limit(200);

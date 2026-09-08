@@ -10,6 +10,7 @@ import {
   isYearlyInterval,
 } from "@/lib/payments/provider-utils";
 import { hasActiveSubscription } from "@/lib/payments/subscription";
+import { getComplimentaryTrialEnd, canAlignProviderTrial } from "@/lib/payments/trial";
 import { PricingPlanLangJsonb } from "@/types/pricing";
 import { Check, Medal, ShieldCheck } from "lucide-react";
 import { Metadata } from "next";
@@ -20,7 +21,6 @@ type PricingPlan = typeof pricingPlansSchema.$inferSelect;
 
 /* The pricing ladder (Early Bird → Standard) lives under the "default" group */
 const LADDER_GROUP_SLUG = "default";
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 const parseAmount = (value: string | null | undefined): number | null => {
   if (!value) return null;
@@ -51,6 +51,12 @@ export default async function SubscribePage() {
   const tLanding = await getTranslations("Landing.PricingLock");
   const locale = await getLocale();
   const formatter = await getFormatter({ locale });
+  const complimentaryEnd = session?.user
+    ? await getComplimentaryTrialEnd(session.user.id)
+    : null;
+  const complimentaryActive =
+    !!complimentaryEnd && complimentaryEnd.getTime() > Date.now();
+  const delayFirstCharge = canAlignProviderTrial(complimentaryEnd);
   const included = [
     ...(tLanding.raw("included") as string[]),
     t("mcpSupport"),
@@ -107,22 +113,22 @@ export default async function SubscribePage() {
     : t("periodMonth");
   const progress = Number(t.raw("progress")) || 0;
 
-  // First charge lands when the trial ends (today + trial period).
-  const trialDays = plan?.trialPeriodDays ?? 7;
-  const firstChargeLabel = formatter.dateTime(
-    new Date(Date.now() + trialDays * DAY_IN_MS),
-    { month: "long", day: "numeric" }
-  );
+  const firstChargeLabel = complimentaryEnd
+    ? formatter.dateTime(complimentaryEnd, {
+        month: "long",
+        day: "numeric",
+      })
+    : "";
 
   return (
     <div className="w-full flex-1 bg-muted">
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-16 md:gap-10 md:py-20">
         <header className="text-center">
           <h1 className="font-serif text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-            {t("title")}
+            {complimentaryActive ? t("upgradeTitle") : t("title")}
           </h1>
           <p className="mx-auto mt-3 max-w-md text-base text-muted-foreground md:text-lg">
-            {t("subtitle")}
+            {complimentaryActive ? t("upgradeSubtitle") : t("subtitle")}
           </p>
         </header>
 
@@ -171,10 +177,19 @@ export default async function SubscribePage() {
         </ul>
 
         <div className="flex flex-col gap-5">
-          {plan ? <SubscribeCTA plan={plan} label={t("cta")} /> : null}
+          {plan ? (
+            <SubscribeCTA
+              plan={plan}
+              label={complimentaryActive ? t("upgradeCta") : t("cta")}
+            />
+          ) : null}
           <p className="flex items-start justify-center gap-2 text-center text-sm text-muted-foreground">
             <ShieldCheck className="size-4 shrink-0" />
-            <span>{t("noCharge", { date: firstChargeLabel })}</span>
+            <span>
+              {delayFirstCharge
+                ? t("noCharge", { date: firstChargeLabel })
+                : t("cancelAnytime")}
+            </span>
           </p>
         </div>
       </div>

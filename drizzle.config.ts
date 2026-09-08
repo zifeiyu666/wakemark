@@ -1,10 +1,16 @@
 import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
 
-// drizzle-kit preloads `.env`. Reload `.env.local` with override so local
-// Postgres wins over the Neon URL during `pnpm db:migrate`.
-config({ path: '.env', quiet: true });
-config({ path: '.env.local', override: true, quiet: true });
+// Default: `.env` then `.env.local` (local Postgres wins).
+// Production migrate without moving files:
+//   DOTENV_PATH=.env pnpm db:migrate
+const envFile = process.env.DOTENV_PATH;
+if (envFile) {
+  config({ path: envFile, override: true, quiet: true });
+} else {
+  config({ path: '.env', quiet: true });
+  config({ path: '.env.local', override: true, quiet: true });
+}
 
 export default defineConfig({
   out: './lib/db/migrations',

@@ -11,7 +11,7 @@ import {
   xConnections,
 } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import slugify from "slugify";
 import { z } from "zod";
 
@@ -262,7 +262,11 @@ export async function setBookmarkInList(
       .select({ id: bookmarks.id })
       .from(bookmarks)
       .where(
-        and(eq(bookmarks.id, bookmarkId), eq(bookmarks.userId, user.id))
+        and(
+          eq(bookmarks.id, bookmarkId),
+          eq(bookmarks.userId, user.id),
+          isNull(bookmarks.deletedAt),
+        ),
       )
       .limit(1);
     if (!bookmark) return actionResponse.notFound();
@@ -319,8 +323,9 @@ export async function addBookmarksToList(
       .where(
         and(
           eq(bookmarks.userId, user.id),
-          inArray(bookmarks.id, parsed.bookmarkIds)
-        )
+          inArray(bookmarks.id, parsed.bookmarkIds),
+          isNull(bookmarks.deletedAt),
+        ),
       );
     if (owned.length === 0) return actionResponse.notFound();
 

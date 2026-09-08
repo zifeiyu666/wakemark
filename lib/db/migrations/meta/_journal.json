@@ -253,6 +253,20 @@
       "when": 1788531481916,
       "tag": "0035_regular_donald_blake",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1788838352713,
+      "tag": "0036_wise_blackheart",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1788852003262,
+      "tag": "0037_flimsy_wasp",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,8 @@ import {
 } from "@/lib/tracking/server";
 import { isTrackingEnabled } from "@/lib/tracking/shared";
 import { redis } from "@/lib/upstash";
+import { grantComplimentaryTrial } from "@/lib/payments/trial";
+import { rememberXHandoff } from "@/lib/auth/x-handoff";
 import { upsertXConnectionFromAccount } from "@/lib/x/connection-store";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -92,6 +94,9 @@ export const auth = betterAuth({
     accountLinking: {
       enabled: true,
       trustedProviders: ['twitter', 'google'],
+      // Email/password (or QQ) signups connect a different X identity; the
+      // X email (or synthetic placeholder) will not match the WakeMark user.
+      allowDifferentEmails: true,
     },
   },
   user: {
@@ -158,6 +163,16 @@ export const auth = betterAuth({
         if (!json.data) return null;
         const profile = json.data;
         const email = profile.confirmed_email?.toLowerCase();
+        // Remember which X identity just completed OAuth so a failed link
+        // (already tied to another WakeMark user) can offer "sign in as @user".
+        try {
+          await rememberXHandoff({
+            id: profile.id,
+            username: profile.username,
+          });
+        } catch (error) {
+          console.warn("Failed to store X handoff cookie:", error);
+        }
         return {
           user: {
             id: profile.id,
@@ -175,6 +190,17 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (createdUser) => {
+          try {
+            await grantComplimentaryTrial(
+              createdUser.id,
+              createdUser.createdAt
+                ? new Date(createdUser.createdAt)
+                : new Date()
+            );
+          } catch (error) {
+            console.error("Failed to grant complimentary trial:", error);
+          }
+
           const cookieStore = await cookies();
 
           // Only track user source if enabled via environment variable

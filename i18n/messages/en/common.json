@@ -2,7 +2,7 @@
   "Home": {
     "title": "WakeMark",
     "tagLine": "X / Twitter Bookmark Manager with AI Digest & MCP",
-    "description": "WakeMark syncs your X/Twitter bookmarks, auto-tags them by topic, organizes them into lists, and sends you AI digests on your schedule. Try it free for 7 days."
+    "description": "WakeMark is an X/Twitter bookmark manager that auto-tags your saves, emails an AI digest, and lets you chat—or connect via MCP in Cursor and Claude."
   },
   "Login": {
     "title": "Let's organize your bookmarks",
@@ -460,6 +460,15 @@
             {
               "name": "Readwise Alternative",
               "href": "/alternatives/readwise-alternative"
+            }
+          ]
+        },
+        {
+          "title": "Free Tools",
+          "links": [
+            {
+              "name": "Shadowban Checker",
+              "href": "/tools/shadowban-check"
             }
           ]
         }

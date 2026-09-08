@@ -28,7 +28,13 @@ export function useImportProgress() {
 // Renders the resumable import/organizing banner above the dashboard content
 // and shares a "manual Sync is running" flag so the banner loop stands down
 // while BookmarksBoard's own Sync loop owns the connection.
-export function ImportProgressProvider({ children }: { children: ReactNode }) {
+export function ImportProgressProvider({
+  children,
+  enabled = true,
+}: {
+  children: ReactNode;
+  enabled?: boolean;
+}) {
   const [manualSyncActive, setManualSyncActive] = useState(false);
   const value = useMemo(
     () => ({ manualSyncActive, setManualSyncActive }),
@@ -36,7 +42,9 @@ export function ImportProgressProvider({ children }: { children: ReactNode }) {
   );
   return (
     <ImportProgressContext.Provider value={value}>
-      <ImportProgressBanner manualSyncActive={manualSyncActive} />
+      {enabled ? (
+        <ImportProgressBanner manualSyncActive={manualSyncActive} />
+      ) : null}
       {children}
     </ImportProgressContext.Provider>
   );

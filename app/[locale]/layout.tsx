@@ -27,7 +27,7 @@ import {
   getTranslations,
   setRequestLocale,
 } from "next-intl/server";
-import { ThemeProvider } from "next-themes";
+import { AppThemeProvider } from "@/components/providers/AppThemeProvider";
 import { Inter as FontSans } from "next/font/google";
 import { notFound } from "next/navigation";
 
@@ -89,17 +89,13 @@ export default async function LocaleLayout({
         )}
       >
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme={siteConfig.defaultNextTheme}
-            enableSystem
-          >
+          <AppThemeProvider defaultTheme={siteConfig.defaultNextTheme}>
             <PostHogProvider>
               {messages.LanguageDetection && <LanguageDetectionAlert />}
 
               {children}
             </PostHogProvider>
-          </ThemeProvider>
+          </AppThemeProvider>
         </NextIntlClientProvider>
         <CrispChat />
         <Toaster richColors />

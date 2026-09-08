@@ -4,6 +4,9 @@ import {
   getBookmarks,
   getBookmarkStats,
   getBookmarkTags,
+  moveBookmarksToTrash,
+  permanentlyDeleteBookmarks,
+  restoreBookmarksFromTrash,
   updateBookmarksRead,
 } from "@/actions/bookmarks/list";
 import type { BookmarkRow } from "@/lib/bookmarks/query";
@@ -22,6 +25,16 @@ import { BookmarkCard } from "@/components/bookmarks/BookmarkCard";
 import { ConnectXCard } from "@/components/bookmarks/ConnectXCard";
 import { useImportProgress } from "@/components/bookmarks/ImportProgressProvider";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -56,8 +69,12 @@ import {
   Eye,
   EyeOff,
   ListPlus,
+  RotateCcw,
+  Trash2,
 } from "lucide-react";
 import { DashboardHeaderPortals } from "@/components/header/DashboardHeaderPortals";
+import { SubscribePromptDialog } from "@/components/payments/SubscribePromptDialog";
+import { useProductAccess } from "@/components/payments/ProductAccessProvider";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Children,
@@ -79,9 +96,26 @@ const SYNC_COOLDOWN_MS = 30 * 60 * 1000;
 // multi-thousand first import loops the action here until X runs out of pages.
 const MAX_SYNC_ROUNDS = 60;
 
-export type BookmarksView = "all" | "unread" | "read";
+export type BookmarksView = "all" | "unread" | "read" | "trash";
 
 type Banner = { kind: "info" | "warn" | "error"; text: string };
+
+function oauthErrorMessage(
+  code: string | null | undefined,
+  t: (key: string) => string,
+): string | null {
+  if (!code) return null;
+  if (code === "account_already_linked_to_different_user") {
+    return t("errors.xAlreadyLinked");
+  }
+  if (code === "email_doesn't_match") {
+    return t("errors.xEmailMismatch");
+  }
+  if (code === "unable_to_link_account") {
+    return t("errors.xUnableToLink");
+  }
+  return t("errors.linkFailed");
+}
 
 function getMasonryColumnCount() {
   if (window.matchMedia("(min-width: 1280px)").matches) return 3;
@@ -134,17 +168,23 @@ function BookmarkMasonryItem({ children }: { children: ReactNode }) {
 export function BookmarksBoard({
   view,
   oauthError,
+  linkedXUsername,
   list,
 }: {
   view: BookmarksView;
   oauthError?: string | null;
+  linkedXUsername?: string | null;
   list?: BookmarkListRow | null;
 }) {
   const t = useTranslations("Bookmarks");
   const tLists = useTranslations("Lists");
   const locale = useLocale();
+  const { hasServiceAccess } = useProductAccess();
+  const [subscribeOpen, setSubscribeOpen] = useState(false);
+  const linkError = oauthErrorMessage(oauthError, t);
   const { mutate: globalMutate } = useSWRConfig();
   const isListMode = !!list;
+  const isTrashView = view === "trash" && !isListMode;
   const [listMeta, setListMeta] = useState<BookmarkListRow | null>(
     list ?? null,
   );
@@ -159,6 +199,8 @@ export function BookmarksBoard({
   const [selected, setSelected] = useState<string[]>([]);
   const [bulkListOpen, setBulkListOpen] = useState(false);
   const [bulkNewListName, setBulkNewListName] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [syncPhase, setSyncPhase] = useState<"idle" | "syncing" | "processing">(
     "idle",
   );
@@ -258,11 +300,10 @@ export function BookmarksBoard({
 
   // OAuth callback feedback.
   useEffect(() => {
-    if (oauthError) {
-      toast.error(t("errors.syncFailed"));
+    if (linkError) {
+      toast.error(linkError);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [oauthError]);
+  }, [linkError]);
 
   // Auto-dismiss informational banners.
   useEffect(() => {
@@ -331,6 +372,10 @@ export function BookmarksBoard({
   };
 
   const runSync = async () => {
+    if (!hasServiceAccess) {
+      setSubscribeOpen(true);
+      return;
+    }
     if (syncPhase !== "idle" || isSyncCoolingDown) return;
     setBanner(null);
     setSyncPhase("syncing");
@@ -353,6 +398,10 @@ export function BookmarksBoard({
         if (res.customCode === "sync-busy") {
           // Another tab or the cron tick holds the sync lock: not a failure.
           setBanner({ kind: "warn", text: t("syncBanner.syncBusy") });
+          return;
+        }
+        if (res.customCode === "not-subscribed") {
+          setSubscribeOpen(true);
           return;
         }
         setBanner({
@@ -486,6 +535,67 @@ export function BookmarksBoard({
     await bulkAddToList(created.data.id, created.data.name);
   };
 
+  const clearSelection = () => {
+    setSelected([]);
+    setSelectionMode(false);
+  };
+
+  const bulkTrash = async () => {
+    if (selected.length === 0) return;
+    const res = await moveBookmarksToTrash(selected);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success(
+      t("bulk.movedToTrash", { count: res.data?.moved ?? selected.length }),
+    );
+    clearSelection();
+    mutateList();
+    refreshStats();
+    refreshLists();
+  };
+
+  const bulkRestore = async () => {
+    if (selected.length === 0) return;
+    const res = await restoreBookmarksFromTrash(selected);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success(
+      t("bulk.restored", { count: res.data?.restored ?? selected.length }),
+    );
+    clearSelection();
+    mutateList();
+    refreshStats();
+    refreshLists();
+  };
+
+  const confirmPermanentDelete = async () => {
+    if (selected.length === 0) return;
+    setIsDeleting(true);
+    try {
+      const res = await permanentlyDeleteBookmarks(selected);
+      if (!res.success) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(
+        t("bulk.deletedPermanently", {
+          count: res.data?.deleted ?? selected.length,
+        }),
+      );
+      setDeleteConfirmOpen(false);
+      clearSelection();
+      mutateList();
+      refreshStats();
+      refreshLists();
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleDisconnect = async () => {
     const res = await disconnectX();
     if (!res.success) {
@@ -505,7 +615,9 @@ export function BookmarksBoard({
       ? t("titles.all")
       : view === "unread"
         ? t("titles.unread")
-        : t("titles.read");
+        : view === "read"
+          ? t("titles.read")
+          : t("titles.trash");
 
   return (
     <div className="space-y-4">
@@ -546,7 +658,11 @@ export function BookmarksBoard({
       />
 
       {!connected && !isListMode ? (
-        <ConnectXCard />
+        <ConnectXCard
+          errorMessage={linkError}
+          oauthError={oauthError}
+          linkedXUsername={linkedXUsername}
+        />
       ) : (
         <>
           {/* toolbar */}
@@ -608,7 +724,7 @@ export function BookmarksBoard({
                     : tLists("board.makePublic")}
                 </Button>
               )}
-              {!isListMode && (
+              {!isListMode && !isTrashView && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -729,75 +845,103 @@ export function BookmarksBoard({
           {selectionMode && selected.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded-none border border-border bg-secondary px-3 py-2 text-sm">
               <span>{t("bulk.selected", { count: selected.length })}</span>
-              <Button
-                size="sm"
-                variant="outline"
-                className="ml-auto"
-                onClick={() => bulkRead(true)}
-              >
-                <BookmarkCheck className="h-4 w-4" />
-                {t("bulk.markRead")}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => bulkRead(false)}
-              >
-                <BookmarkX className="h-4 w-4" />
-                {t("bulk.markUnread")}
-              </Button>
-              <Popover open={bulkListOpen} onOpenChange={setBulkListOpen}>
-                <PopoverTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <ListPlus className="h-4 w-4" />
-                    {t("bulk.addToList")}
+              {isTrashView ? (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto"
+                    onClick={bulkRestore}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    {t("bulk.restore")}
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  align="end"
-                  className="w-56 rounded-none p-2 shadow-none"
-                >
-                  <div className="flex flex-col gap-1">
-                    {lists.length === 0 && (
-                      <p className="px-1 pb-1 text-xs text-muted-foreground">
-                        {tLists("card.empty")}
-                      </p>
-                    )}
-                    {lists.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className="flex items-center gap-2 rounded-none px-2 py-1 text-left text-xs hover:bg-secondary"
-                        onClick={() => bulkAddToList(item.id, item.name)}
-                      >
-                        <span className="truncate">{item.name}</span>
-                        <span className="ml-auto text-muted-foreground">
-                          {item.count}
-                        </span>
-                      </button>
-                    ))}
-                    <div className="mt-1 border-t border-border pt-2">
-                      <Input
-                        value={bulkNewListName}
-                        placeholder={tLists("card.newListPlaceholder")}
-                        className="h-7 text-xs"
-                        onChange={(e) => setBulkNewListName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") bulkCreateAndAddToList();
-                        }}
-                      />
-                      <Button
-                        size="sm"
-                        className="mt-1.5 w-full"
-                        disabled={!bulkNewListName.trim()}
-                        onClick={bulkCreateAndAddToList}
-                      >
-                        {tLists("card.create")}
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {t("bulk.deletePermanently")}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto"
+                    onClick={() => bulkRead(true)}
+                  >
+                    <BookmarkCheck className="h-4 w-4" />
+                    {t("bulk.markRead")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => bulkRead(false)}
+                  >
+                    <BookmarkX className="h-4 w-4" />
+                    {t("bulk.markUnread")}
+                  </Button>
+                  <Popover open={bulkListOpen} onOpenChange={setBulkListOpen}>
+                    <PopoverTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        <ListPlus className="h-4 w-4" />
+                        {t("bulk.addToList")}
                       </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="end"
+                      className="w-56 rounded-none p-2 shadow-none"
+                    >
+                      <div className="flex flex-col gap-1">
+                        {lists.length === 0 && (
+                          <p className="px-1 pb-1 text-xs text-muted-foreground">
+                            {tLists("card.empty")}
+                          </p>
+                        )}
+                        {lists.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className="flex items-center gap-2 rounded-none px-2 py-1 text-left text-xs hover:bg-secondary"
+                            onClick={() => bulkAddToList(item.id, item.name)}
+                          >
+                            <span className="truncate">{item.name}</span>
+                            <span className="ml-auto text-muted-foreground">
+                              {item.count}
+                            </span>
+                          </button>
+                        ))}
+                        <div className="mt-1 border-t border-border pt-2">
+                          <Input
+                            value={bulkNewListName}
+                            placeholder={tLists("card.newListPlaceholder")}
+                            className="h-7 text-xs"
+                            onChange={(e) => setBulkNewListName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") bulkCreateAndAddToList();
+                            }}
+                          />
+                          <Button
+                            size="sm"
+                            className="mt-1.5 w-full"
+                            disabled={!bulkNewListName.trim()}
+                            onClick={bulkCreateAndAddToList}
+                          >
+                            {tLists("card.create")}
+                          </Button>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  <Button size="sm" variant="outline" onClick={bulkTrash}>
+                    <Trash2 className="h-4 w-4" />
+                    {t("bulk.moveToTrash")}
+                  </Button>
+                </>
+              )}
               <Button size="sm" variant="ghost" onClick={() => setSelected([])}>
                 {t("bulk.clear")}
               </Button>
@@ -828,9 +972,13 @@ export function BookmarksBoard({
               </div>
             ) : (
               <div className="rounded-none border border-border bg-background px-6 py-16 text-center">
-                <h2 className="text-lg font-semibold">{t("empty.title")}</h2>
+                <h2 className="text-lg font-semibold">
+                  {isTrashView ? t("empty.trashTitle") : t("empty.title")}
+                </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {t("empty.description")}
+                  {isTrashView
+                    ? t("empty.trashDescription")
+                    : t("empty.description")}
                 </p>
               </div>
             )
@@ -870,6 +1018,41 @@ export function BookmarksBoard({
           )}
         </>
       )}
+      <SubscribePromptDialog
+        open={subscribeOpen}
+        onOpenChange={setSubscribeOpen}
+      />
+      <AlertDialog
+        open={deleteConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) setDeleteConfirmOpen(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("bulk.deletePermanentlyConfirmTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("bulk.deletePermanentlyConfirmDescription", {
+                count: selected.length,
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>
+              {t("card.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+              onClick={confirmPermanentDelete}
+            >
+              {t("bulk.deletePermanently")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

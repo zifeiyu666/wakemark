@@ -23,6 +23,7 @@ import {
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useMemo, useState } from "react";
+import { CollapsibleBookmarkText } from "@/components/bookmarks/CollapsibleBookmarkText";
 
 const compactNumber = new Intl.NumberFormat("en", {
   notation: "compact",
@@ -91,9 +92,7 @@ function PublicBookmarkCard({
         </span>
       </div>
 
-      <p className="line-clamp-6 whitespace-pre-wrap text-sm text-foreground">
-        {bookmark.text}
-      </p>
+      <CollapsibleBookmarkText text={bookmark.text} />
 
       {tags.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">

@@ -8,6 +8,7 @@ import {
   extensionOptionsResponse,
   withExtensionCors,
 } from "@/lib/extension/cors";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { getRateLimiter } from "@/lib/upstash";
 import { REDIS_RATE_LIMIT_CONFIGS } from "@/lib/upstash/redis-rate-limit-configs";
 import { stepCountIs } from "ai";
@@ -78,6 +79,16 @@ export async function POST(req: Request) {
     }
 
     const userId = verified.userId;
+
+    if (!(await hasBookmarkServiceAccess(userId))) {
+      return withExtensionCors(
+        req,
+        apiResponse.error(
+          "An active subscription is required to ask your bookmarks.",
+          402
+        )
+      );
+    }
 
     const limiter = getRateLimiter(REDIS_RATE_LIMIT_CONFIGS.askAi);
     if (limiter) {

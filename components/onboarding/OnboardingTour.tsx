@@ -117,9 +117,10 @@ function placeCard(
 
 /**
  * One-time welcome tour for newly registered users. Rendered by the dashboard
- * layout only while `userPreferences.onboardingCompletedAt` is NULL. Each step
- * spotlights the real UI region it describes and hugs the card next to it;
- * every exit path (finish, skip, escape) records completion so the tour never
+ * layout only after X is connected and while `onboardingCompletedAt` is NULL.
+ * Email/password signups see Connect X first; the tour starts on the next
+ * dashboard load. Each step spotlights the real UI region it describes; every
+ * exit path (finish, skip, escape) records completion so the tour never
  * re-opens.
  */
 export function OnboardingTour() {

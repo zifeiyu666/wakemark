@@ -10,6 +10,8 @@ import {
   eq,
   ilike,
   inArray,
+  isNotNull,
+  isNull,
   or,
   sql,
   type SQL,
@@ -23,7 +25,7 @@ import { z } from "zod";
 export const PAGE_SIZE_DEFAULT = 24;
 
 export const bookmarkFilterSchema = z.object({
-  view: z.enum(["all", "unread", "read"]).default("all"),
+  view: z.enum(["all", "unread", "read", "trash"]).default("all"),
   pageIndex: z.coerce.number().default(0),
   pageSize: z.coerce.number().default(PAGE_SIZE_DEFAULT),
   sort: z.enum(["newest", "oldest"]).default("newest"),
@@ -59,10 +61,15 @@ export function buildBookmarkWhere(
 ): SQL {
   const conditions: SQL[] = [eq(bookmarks.userId, userId)];
 
-  if (params.view === "unread") {
-    conditions.push(eq(bookmarks.isRead, false));
-  } else if (params.view === "read") {
-    conditions.push(eq(bookmarks.isRead, true));
+  if (params.view === "trash") {
+    conditions.push(isNotNull(bookmarks.deletedAt));
+  } else {
+    conditions.push(isNull(bookmarks.deletedAt));
+    if (params.view === "unread") {
+      conditions.push(eq(bookmarks.isRead, false));
+    } else if (params.view === "read") {
+      conditions.push(eq(bookmarks.isRead, true));
+    }
   }
 
   if (params.categories.length > 0) {
@@ -210,7 +217,60 @@ export async function setBookmarksRead(
   await db
     .update(bookmarks)
     .set({ isRead })
-    .where(and(eq(bookmarks.userId, userId), inArray(bookmarks.id, ids)));
+    .where(
+      and(
+        eq(bookmarks.userId, userId),
+        inArray(bookmarks.id, ids),
+        isNull(bookmarks.deletedAt),
+      ),
+    );
+}
+
+export async function trashBookmarks(
+  userId: string,
+  ids: string[],
+): Promise<void> {
+  await db
+    .update(bookmarks)
+    .set({ deletedAt: new Date() })
+    .where(
+      and(
+        eq(bookmarks.userId, userId),
+        inArray(bookmarks.id, ids),
+        isNull(bookmarks.deletedAt),
+      ),
+    );
+}
+
+export async function restoreBookmarks(
+  userId: string,
+  ids: string[],
+): Promise<void> {
+  await db
+    .update(bookmarks)
+    .set({ deletedAt: null })
+    .where(
+      and(
+        eq(bookmarks.userId, userId),
+        inArray(bookmarks.id, ids),
+        isNotNull(bookmarks.deletedAt),
+      ),
+    );
+}
+
+export async function permanentlyDeleteBookmarks(
+  userId: string,
+  ids: string[],
+): Promise<void> {
+  await db
+    .delete(bookmarks)
+    .where(
+      and(
+        eq(bookmarks.userId, userId),
+        inArray(bookmarks.id, ids),
+        isNotNull(bookmarks.deletedAt),
+      ),
+    );
 }
 
 export type BookmarkListWithCount = {
@@ -232,10 +292,11 @@ export async function listListsWithCounts(
       slug: bookmarkLists.slug,
       isPublic: bookmarkLists.isPublic,
       createdAt: bookmarkLists.createdAt,
-      count: sql<number>`count(${bookmarkListItems.bookmarkId})::int`,
+      count: sql<number>`count(${bookmarkListItems.bookmarkId}) filter (where ${bookmarks.deletedAt} is null)::int`,
     })
     .from(bookmarkLists)
     .leftJoin(bookmarkListItems, eq(bookmarkListItems.listId, bookmarkLists.id))
+    .leftJoin(bookmarks, eq(bookmarks.id, bookmarkListItems.bookmarkId))
     .where(eq(bookmarkLists.userId, userId))
     .groupBy(bookmarkLists.id)
     .orderBy(asc(bookmarkLists.createdAt));

@@ -2,12 +2,12 @@ import 'server-only';
 
 import { db, isDatabaseEnabled } from "@/lib/db";
 import { subscriptions } from "@/lib/db/schema";
+import { hasComplimentaryTrial } from "@/lib/payments/trial";
 import { and, desc, eq, inArray } from "drizzle-orm";
 
 /**
- * The project has no credit system: the single condition to provide the
- * service is a valid subscription (paid or trialing). These statuses match
- * the convention used across payment webhooks and verify-success handlers.
+ * Paid (or provider-trialing) statuses. Complimentary signup trials live on
+ * the user row and are checked separately by hasBookmarkServiceAccess.
  */
 const ACTIVE_STATUSES = ["active", "trialing"];
 
@@ -68,12 +68,12 @@ export async function hasActiveSubscription(userId: string): Promise<boolean> {
 }
 
 /**
- * Background bookmark sync, AI tagging, and digest email may run without a
- * session. Product access follows the same gate as the dashboard menus: an
- * active or trialing subscription. Admin role only unlocks the ops dashboard.
+ * Sync, AI tagging, digest email, and cron jobs. Dashboard viewing is not
+ * gated here: expired users keep read access to already-synced bookmarks.
  */
 export async function hasBookmarkServiceAccess(
   userId: string
 ): Promise<boolean> {
-  return hasActiveSubscription(userId);
+  if (await hasActiveSubscription(userId)) return true;
+  return hasComplimentaryTrial(userId);
 }

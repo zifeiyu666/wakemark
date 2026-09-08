@@ -78,7 +78,9 @@
     "perYear": "/yr",
     "perMonth": "/mo",
     "notSubscribed": "You are currently not subscribed to any plan.",
-    "upgradePlan": "Upgrade Plan",
-    "footerHint": "Upgrade anytime to unlock more credits and features."
+    "complimentaryTrial": "You're on a free trial until {date}. Subscribe anytime to keep sync and digest emails after it ends.",
+    "trialEnded": "Your free trial has ended. You can still browse already-synced bookmarks. Subscribe to restore sync and digest emails.",
+    "upgradePlan": "Subscribe",
+    "footerHint": "Subscribe anytime to restore sync and digest emails."
   }
 }

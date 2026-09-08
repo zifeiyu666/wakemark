@@ -2,14 +2,15 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import AskAiWidget from "@/components/bookmarks/ask-ai/AskAiWidget";
 import { ImportProgressProvider } from "@/components/bookmarks/ImportProgressProvider";
 import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { ProductAccessProvider } from "@/components/payments/ProductAccessProvider";
 import EmailPromptDialog from "@/components/shared/EmailPromptDialog";
 import SidebarInsetHeader from "@/components/header/SidebarInsetHeader";
 import { TimezoneReporter } from "@/components/tracking/TimezoneReporter";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getSession } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { userPreferences } from "@/lib/db/schema";
-import { hasActiveSubscription } from "@/lib/payments/subscription";
+import { userPreferences, xConnections } from "@/lib/db/schema";
+import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import React from "react";
@@ -26,39 +27,42 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession();
 
-  // Keep authentication and entitlement checks in this server layout so no
-  // dashboard child can render before the decision is made.
+  // Keep authentication in this server layout so no dashboard child can
+  // render before the decision is made. Expired trials still reach the
+  // dashboard to view already-synced bookmarks; sync/email stay gated.
   if (!session?.user) {
     redirect("/login");
   }
 
   const isAdmin = session.user.role === "admin";
-  const hasProductAccess = await hasActiveSubscription(session.user.id);
-
-  // Administrators can open the dashboard to manage the service without a
-  // customer plan. Regular users need an active or trialing subscription.
-  // Product menus (bookmarks, lists, digests) follow hasProductAccess, not role.
-  if (!isAdmin && !hasProductAccess) {
-    redirect("/subscribe");
-  }
+  const hasServiceAccess = await hasBookmarkServiceAccess(session.user.id);
 
   let storedTimeZone: string | null = null;
   let showOnboardingTour = false;
-  if (session.user.id && hasProductAccess) {
-    const [pref] = await db
-      .select({
-        timeZone: userPreferences.timeZone,
-        onboardingCompletedAt: userPreferences.onboardingCompletedAt,
-      })
-      .from(userPreferences)
-      .where(eq(userPreferences.userId, session.user.id))
-      .limit(1);
+  if (session.user.id) {
+    const [[pref], [xConnection]] = await Promise.all([
+      db
+        .select({
+          timeZone: userPreferences.timeZone,
+          onboardingCompletedAt: userPreferences.onboardingCompletedAt,
+        })
+        .from(userPreferences)
+        .where(eq(userPreferences.userId, session.user.id))
+        .limit(1),
+      db
+        .select({ userId: xConnections.userId })
+        .from(xConnections)
+        .where(eq(xConnections.userId, session.user.id))
+        .limit(1),
+    ]);
     storedTimeZone = pref?.timeZone ?? null;
     // The welcome tour targets newly registered users only: accounts created
     // before the feature shipped keep their existing experience, and it never
     // re-opens once completed or dismissed. Admins skip it even after
     // subscribing, since they already know the ops dashboard.
-    if (!isAdmin) {
+    // Wait until X is linked: email/password signups must connect first,
+    // otherwise step 1 claims bookmarks are already syncing.
+    if (!isAdmin && hasServiceAccess && xConnection) {
       const isNewAccount =
         (session.user.createdAt?.getTime() ?? 0) >=
         ONBOARDING_TOUR_LAUNCH_AT.getTime();
@@ -68,31 +72,27 @@ export default async function DashboardLayout({
 
   return (
     <AuthGuard>
-      <TimezoneReporter storedTimeZone={storedTimeZone} />
-      <SidebarProvider className="dashboard-sharp">
-        <DashboardSidebar hasProductAccess={hasProductAccess} />
-        <SidebarInset className="min-w-0">
-          <SidebarInsetHeader />
-          <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pt-0 pb-2">
-            {/* Resumable first-import banner: shows while a history backfill
-                checkpoint or an untagged backlog exists, and drives both. */}
-            {hasProductAccess ? (
-              <ImportProgressProvider>
+      <ProductAccessProvider hasServiceAccess={hasServiceAccess}>
+        <TimezoneReporter storedTimeZone={storedTimeZone} />
+        <SidebarProvider className="dashboard-sharp">
+          <DashboardSidebar hasProductAccess={hasServiceAccess} />
+          <SidebarInset className="min-w-0">
+            <SidebarInsetHeader />
+            <div className="flex min-w-0 flex-1 flex-col gap-4 px-4 pt-0 pb-2">
+              {/* Resumable first-import banner: shows while a history backfill
+                  checkpoint or an untagged backlog exists, and drives both. */}
+              <ImportProgressProvider enabled={hasServiceAccess}>
                 <div className="min-h-screen min-w-0 flex-1 md:min-h-min">
                   {children}
                 </div>
               </ImportProgressProvider>
-            ) : (
-              <div className="min-h-screen min-w-0 flex-1 md:min-h-min">
-                {children}
-              </div>
-            )}
-          </div>
-        </SidebarInset>
-        {hasProductAccess && <AskAiWidget />}
-        {hasProductAccess && showOnboardingTour && <OnboardingTour />}
-        {hasProductAccess && <EmailPromptDialog email={session.user.email} />}
-      </SidebarProvider>
+            </div>
+          </SidebarInset>
+          {hasServiceAccess && <AskAiWidget />}
+          {hasServiceAccess && showOnboardingTour && <OnboardingTour />}
+          {hasServiceAccess && <EmailPromptDialog email={session.user.email} />}
+        </SidebarProvider>
+      </ProductAccessProvider>
     </AuthGuard>
   );
 }

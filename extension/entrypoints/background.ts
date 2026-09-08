@@ -1,5 +1,6 @@
 import { pollAuth, setStoredAuth } from "../lib/api";
 import { SITE_URL, STORAGE_KEYS } from "../lib/config";
+import { runShadowbanTest } from "../lib/shadowban";
 
 const POLL_ALARM = "wakemark-auth-poll";
 
@@ -26,6 +27,19 @@ export default defineBackground(() => {
         void tryCompleteAuth(state).then((ok) => sendResponse({ ok }));
         return true;
       }
+    }
+    if (message?.type === "wakemark:shadowban-test") {
+      const handle = typeof message.handle === "string" ? message.handle : "";
+      void runShadowbanTest(handle)
+        .then((data) => sendResponse({ ok: true, data }))
+        .catch((err: unknown) =>
+          sendResponse({
+            ok: false,
+            error:
+              err instanceof Error ? err.message : "Shadowban test failed",
+          })
+        );
+      return true;
     }
     return false;
   });

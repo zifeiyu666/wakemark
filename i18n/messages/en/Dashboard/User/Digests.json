@@ -11,5 +11,7 @@
   "highlightCountOne": "1 highlight",
   "emptyTitle": "No digests yet",
   "emptyDescription": "Your first weekly digest arrives on Friday — a summary of everything you bookmarked this week, highlights first.",
-  "loading": "Loading digest..."
+  "loading": "Loading digest...",
+  "subscribeWarning": "Digest emails have stopped because your trial or subscription ended. Historical digests below are still available.",
+  "subscribeCta": "Subscribe"
 }
