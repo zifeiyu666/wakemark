@@ -4,6 +4,7 @@ import { DEFAULT_LOCALE, LOCALES } from '@/i18n/routing'
 import { blogCms } from '@/lib/cms'
 import { db } from '@/lib/db'
 import { posts as postsSchema } from '@/lib/db/schema'
+import { DOCS_NAV, isDocsNavGroup } from '@/lib/docs/nav'
 import { MetadataRoute } from 'next'
 import { eq, max } from 'drizzle-orm'
 
@@ -13,20 +14,58 @@ const STATIC_PAGE_MTIME = new Date(new Date().getFullYear(), 0, 1)
 
 type ChangeFrequency = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never' | undefined
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Static pages
-  const staticPages = [
-    '',
-  ]
+function localizedUrl(locale: string, path: string) {
+  const prefix = locale === DEFAULT_LOCALE ? '' : `/${locale}`
+  return `${siteUrl}${prefix}${path}`
+}
 
-  const pages = LOCALES.flatMap(locale => {
-    return staticPages.map(page => ({
-      url: `${siteUrl}${locale === DEFAULT_LOCALE ? '' : `/${locale}`}${page}`,
+function docsPaths(): string[] {
+  const paths = ['/docs']
+  for (const entry of DOCS_NAV) {
+    if (isDocsNavGroup(entry)) {
+      paths.push(...entry.items.map((item) => item.href))
+    } else {
+      paths.push(entry.href)
+    }
+  }
+  return paths
+}
+
+const MARKETING_PATHS = [
+  '/about',
+  '/roadmap',
+  '/subscribe',
+  '/tools/shadowban-check',
+  '/alternatives/readwise-alternative',
+  '/alternatives/dewey-alternative',
+]
+
+const LEGAL_PATHS = [
+  '/privacy-policy',
+  '/terms-of-service',
+  '/refund-policy',
+]
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const staticPages = ['', ...docsPaths(), ...MARKETING_PATHS]
+
+  const pages: MetadataRoute.Sitemap = LOCALES.flatMap((locale) =>
+    staticPages.map((page) => ({
+      url: localizedUrl(locale, page),
       lastModified: STATIC_PAGE_MTIME,
-      changeFrequency: 'daily' as ChangeFrequency,
-      priority: page === '' ? 1.0 : 0.8,
+      changeFrequency: (page.startsWith('/docs') ? 'weekly' : 'daily') as ChangeFrequency,
+      priority: page === '' ? 1.0 : page.startsWith('/docs') ? 0.8 : 0.7,
     }))
-  })
+  )
+
+  for (const path of LEGAL_PATHS) {
+    pages.push({
+      url: `${siteUrl}${path}`,
+      lastModified: STATIC_PAGE_MTIME,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    })
+  }
 
   const [latestGlossaryResult] = await db
     .select({ latest: max(postsSchema.updatedAt) })
