@@ -67,8 +67,7 @@ export default async function ExtensionDocsPage() {
   const t = await getTranslations("ExtensionDocs");
 
   return (
-    <div className="w-full border-b">
-      <article className="mx-auto max-w-3xl px-4 py-12 md:py-16">
+    <>
         <header className="mb-12 space-y-3">
           <Badge variant="secondary">{t("hero.eyebrow")}</Badge>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
@@ -217,7 +216,6 @@ export default async function ExtensionDocsPage() {
             </div>
           </section>
         </div>
-      </article>
-    </div>
+    </>
   );
 }

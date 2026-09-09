@@ -1,0 +1,47 @@
+{
+  "title": "WakeMark for Raycast",
+  "description": "Search synced X bookmarks and Ask AI from Raycast. History import stays in the Chrome extension.",
+  "hero": {
+    "eyebrow": "Raycast",
+    "title": "WakeMark in your launcher",
+    "subtitle": "Search your library and ask questions from Raycast. Sign in through wakemark.app — the same account as the website and Chrome extension."
+  },
+  "overview": {
+    "title": "What it does",
+    "p1": "The Raycast extension is a companion, not a Chrome replacement. It talks to the same WakeMark APIs the Chrome popup uses for search and Ask AI.",
+    "points": {
+      "search": "Search Bookmarks: type a keyword, handle, or phrase and open the original post.",
+      "ask": "Ask AI: questions are answered from your synced bookmarks, with links you can copy.",
+      "auth": "Sign in through wakemark.app. Chrome and Raycast keep separate device keys, so both can stay connected.",
+      "scope": "It only sees bookmarks already in WakeMark. Import years of X history with the Chrome extension."
+    }
+  },
+  "install": {
+    "title": "Install",
+    "step1Title": "Add the extension in Raycast",
+    "step1Body": "Search for WakeMark in the Raycast Store, or import the local raycast/ folder while developing.",
+    "step2Title": "Sign in",
+    "step2Body": "Run Sign In (or Search Bookmarks while signed out). Raycast opens wakemark.app; after you approve, return to Raycast.",
+    "step3Title": "Sync bookmarks first",
+    "step3Body": "Search and Ask AI use bookmarks already in WakeMark. Connect X and finish a sync in the dashboard if the list is empty.",
+    "step3Link": "Open the dashboard"
+  },
+  "notIncluded": {
+    "title": "What stays in Chrome",
+    "p1": "Raycast cannot inject into x.com, so it cannot scroll your bookmark timeline or intercept GraphQL the way the Chrome extension does.",
+    "items": {
+      "import": "Full history import from x.com/i/bookmarks",
+      "sidebar": "A side panel next to the page you are reading",
+      "sitePing": "The website’s one-click “import history” button, which talks to Chrome only"
+    }
+  },
+  "faq": {
+    "title": "Troubleshooting",
+    "q1": "Sign in opened a tab but Raycast still looks signed out",
+    "a1": "Finish signing in on wakemark.app and wait until the page says connected. The command polls for about two minutes. Run Sign In again if it timed out.",
+    "q2": "Search returns nothing",
+    "a2": "Raycast only searches bookmarks already synced to WakeMark. Open the dashboard, connect X if needed, then try again.",
+    "q3": "I use both Chrome and Raycast",
+    "a3": "That is expected. Sign in once in each; they do not share storage. History import still happens in Chrome."
+  }
+}

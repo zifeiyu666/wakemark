@@ -153,6 +153,21 @@ function toBookmarkRow(row: {
   };
 }
 
+export function bookmarkSortOrder(sort: "newest" | "oldest") {
+  // Sort by when the tweet was published, not when we imported it. Extension
+  // history import writes older pages later, so synced_at would invert order.
+  if (sort === "oldest") {
+    return [
+      sql`${bookmarks.tweetCreatedAt} asc nulls last`,
+      asc(bookmarks.tweetId),
+    ];
+  }
+  return [
+    sql`${bookmarks.tweetCreatedAt} desc nulls last`,
+    desc(bookmarks.tweetId),
+  ];
+}
+
 export async function queryBookmarks(
   userId: string,
   params: BookmarkFilters,
@@ -164,16 +179,7 @@ export async function queryBookmarks(
       .select(bookmarkColumns)
       .from(bookmarks)
       .where(where)
-      .orderBy(
-        params.sort === "oldest"
-          ? asc(bookmarks.syncedAt)
-          : desc(bookmarks.syncedAt),
-        // Stable tie-break: rows from the same sync batch share syncedAt;
-        // tweet id is a snowflake so it doubles as tweet publish order.
-        params.sort === "oldest"
-          ? asc(bookmarks.tweetId)
-          : desc(bookmarks.tweetId),
-      )
+      .orderBy(...bookmarkSortOrder(params.sort))
       .offset(params.pageIndex * params.pageSize)
       .limit(params.pageSize),
     db.select({ value: count() }).from(bookmarks).where(where),

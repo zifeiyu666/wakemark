@@ -4,6 +4,7 @@ import {
   BOOKMARK_CATEGORIES,
   type BookmarkCategory,
 } from "@/config/bookmark-categories";
+import { maybeEnqueueNotionAutoSync } from "@/lib/notion/sync-core";
 import { db } from "@/lib/db";
 import { bookmarks, type BookmarkStatus } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
@@ -588,5 +589,13 @@ export async function processPendingForUser(
   console.log(
     `${LOG} done: processed=${processed} remaining=${remainingRow?.value ?? 0}`
   );
+  if (processed > 0) {
+    void maybeEnqueueNotionAutoSync(userId).catch((error) => {
+      console.warn(
+        "[notion:auto-sync] enqueue failed:",
+        error instanceof Error ? error.message : String(error)
+      );
+    });
+  }
   return { processed, remaining: remainingRow?.value ?? 0 };
 }

@@ -65,7 +65,7 @@ export function DigestsBoard() {
           </p>
         </div>
       ) : (
-        <div className="flex h-[calc(100vh-108px)] min-h-[420px] overflow-hidden rounded-xl border bg-background">
+        <div className="flex h-[calc(100vh-108px)] min-h-[420px] overflow-hidden rounded-xl border bg-card">
           {/* Digest list */}
           <div className="w-72 shrink-0 overflow-y-auto border-r">
             {list.map((item, index) => {

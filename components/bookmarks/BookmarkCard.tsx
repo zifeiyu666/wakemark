@@ -261,8 +261,10 @@ export function BookmarkCard({
   return (
     <article
       className={cn(
-        "flex flex-col gap-3 rounded-none border border-border bg-background p-4 shadow-none transition-colors",
-        selected && "border-foreground"
+        "group/card flex flex-col gap-3 rounded-none border border-border bg-card p-4 shadow-none",
+        "transition-[border-color,background-color] duration-200 ease-out",
+        "hover:border-foreground hover:bg-muted/40",
+        selected && "border-foreground bg-muted/25"
       )}
     >
       {/* header */}
@@ -318,7 +320,7 @@ export function BookmarkCard({
               alt={t("card.videoCover")}
               width={600}
               height={338}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover/card:scale-[1.04]"
             />
             <span className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
               <span className="flex size-12 items-center justify-center rounded-full bg-black/60 backdrop-blur-sm transition-transform group-hover:scale-105">
@@ -336,14 +338,15 @@ export function BookmarkCard({
           )}
         >
           {photoMedia.map((m) => (
-            <Image
-              key={m.url}
-              src={m.url}
-              alt="bookmark media"
-              width={600}
-              height={314}
-              className="aspect-[1.91/1] w-full rounded-none object-cover"
-            />
+            <div key={m.url} className="overflow-hidden">
+              <Image
+                src={m.url}
+                alt="bookmark media"
+                width={600}
+                height={314}
+                className="aspect-[1.91/1] w-full rounded-none object-cover transition-transform duration-500 ease-out motion-safe:group-hover/card:scale-[1.04]"
+              />
+            </div>
           ))}
         </div>
       )}
@@ -545,7 +548,7 @@ export function BookmarkCard({
           className="ml-auto inline-flex items-center gap-1 font-medium text-foreground transition-opacity hover:opacity-70"
         >
           {t("card.openTweet")}
-          <ArrowUpRight className="h-3.5 w-3.5" />
+          <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 ease-out motion-safe:group-hover/card:translate-x-0.5 motion-safe:group-hover/card:-translate-y-0.5" />
         </a>
       </div>
     </article>

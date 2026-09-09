@@ -104,8 +104,9 @@ interface XBookmarksResponse {
 
 // Field set verified against real-world usage: note_tweet avoids 280-char
 // truncation; entities carries expanded urls; includes must be joined manually.
+// max_results is 20: cold-start and daily incremental must not paginate history.
 const BOOKMARKS_QUERY: Record<string, string> = {
-  max_results: "100",
+  max_results: "20",
   "tweet.fields":
     "id,text,note_tweet,author_id,created_at,entities,attachments,public_metrics",
   expansions: "author_id,attachments.media_keys",

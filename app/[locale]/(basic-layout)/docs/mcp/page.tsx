@@ -33,8 +33,7 @@ export default async function McpDocsPage() {
   const serverUrl = mcpServerUrl();
 
   return (
-    <div className="w-full border-b">
-      <article className="mx-auto max-w-3xl px-4 py-12 md:py-16">
+    <>
         {/* Hero */}
         <header className="mb-12 space-y-3">
           <Badge variant="secondary">{t("hero.eyebrow")}</Badge>
@@ -232,7 +231,6 @@ export default async function McpDocsPage() {
             </div>
           </section>
         </div>
-      </article>
-    </div>
+    </>
   );
 }

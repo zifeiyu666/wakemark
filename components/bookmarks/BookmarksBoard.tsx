@@ -20,11 +20,20 @@ import {
 } from "@/actions/bookmarks/lists";
 import { processPendingBookmarks } from "@/actions/bookmarks/process";
 import { syncBookmarks } from "@/actions/bookmarks/sync";
+import { startNotionSync } from "@/actions/notion/connection";
 import type { SyncStoppedReason } from "@/lib/bookmarks/sync-core";
 import { BookmarkCard } from "@/components/bookmarks/BookmarkCard";
 import { ConnectXCard } from "@/components/bookmarks/ConnectXCard";
+import { NotionIcon } from "@/components/icons";
+import { HistoryImportCard } from "@/components/bookmarks/HistoryImportCard";
 import { useImportProgress } from "@/components/bookmarks/ImportProgressProvider";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +75,7 @@ import {
   BookmarkCheck,
   BookmarkX,
   Copy,
+  Download,
   Eye,
   EyeOff,
   ListPlus,
@@ -78,10 +88,10 @@ import { useProductAccess } from "@/components/payments/ProductAccessProvider";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Children,
+  isValidElement,
   useEffect,
   useMemo,
   useState,
-  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
@@ -91,10 +101,6 @@ import { useDebounce } from "use-debounce";
 
 const PAGE_SIZE = 24;
 const SYNC_COOLDOWN_MS = 30 * 60 * 1000;
-
-// One syncBookmarks() call pulls <=500 bookmarks (serverless timeout cap); a
-// multi-thousand first import loops the action here until X runs out of pages.
-const MAX_SYNC_ROUNDS = 60;
 
 export type BookmarksView = "all" | "unread" | "read" | "trash";
 
@@ -117,46 +123,22 @@ function oauthErrorMessage(
   return t("errors.linkFailed");
 }
 
-function getMasonryColumnCount() {
-  if (window.matchMedia("(min-width: 1280px)").matches) return 3;
-  if (window.matchMedia("(min-width: 768px)").matches) return 2;
-  return 1;
-}
-
-function subscribeMasonryColumns(onChange: () => void) {
-  const md = window.matchMedia("(min-width: 768px)");
-  const xl = window.matchMedia("(min-width: 1280px)");
-  md.addEventListener("change", onChange);
-  xl.addEventListener("change", onChange);
-  return () => {
-    md.removeEventListener("change", onChange);
-    xl.removeEventListener("change", onChange);
-  };
-}
-
-function useMasonryColumnCount() {
-  return useSyncExternalStore(
-    subscribeMasonryColumns,
-    getMasonryColumnCount,
-    () => 1,
-  );
-}
-
 function BookmarkMasonry({ children }: { children: ReactNode }) {
-  const columnCount = useMasonryColumnCount();
   const items = Children.toArray(children);
-  const columns = Array.from({ length: columnCount }, () => [] as ReactNode[]);
-  items.forEach((child, index) => {
-    columns[index % columnCount].push(child);
-  });
 
   return (
-    <div className="flex gap-x-4">
-      {columns.map((column, index) => (
-        <div key={index} className="flex min-w-0 flex-1 flex-col gap-y-4">
-          {column}
-        </div>
-      ))}
+    <div className="columns-1 gap-x-4 md:columns-2 xl:columns-3">
+      {items.map((child) => {
+        const key = isValidElement(child) ? child.key : null;
+        return (
+          <div
+            key={key ?? undefined}
+            className="mb-4 w-full break-inside-avoid"
+          >
+            {child}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -179,8 +161,11 @@ export function BookmarksBoard({
   const t = useTranslations("Bookmarks");
   const tLists = useTranslations("Lists");
   const locale = useLocale();
-  const { hasServiceAccess } = useProductAccess();
+  const { hasServiceAccess, hasPaidSubscription } = useProductAccess();
   const [subscribeOpen, setSubscribeOpen] = useState(false);
+  const [subscribeVariant, setSubscribeVariant] = useState<
+    "expired" | "trialManual" | "notionExport"
+  >("expired");
   const linkError = oauthErrorMessage(oauthError, t);
   const { mutate: globalMutate } = useSWRConfig();
   const isListMode = !!list;
@@ -221,6 +206,17 @@ export function BookmarksBoard({
   const { data: statsData } = useSWR(statsKey, getBookmarkStats);
   const stats = statsData?.success ? statsData.data : null;
   const connected = !!stats?.connected;
+
+  useEffect(() => {
+    if (!stats?.initialApiSyncCompleted || stats.historyImportCompleted) return;
+    if (typeof window === "undefined") return;
+    const key = "wakemark.cold-start-toast";
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    toast.message(t("coldStart.title"), {
+      description: t("coldStart.description"),
+    });
+  }, [stats?.initialApiSyncCompleted, stats?.historyImportCompleted, t]);
 
   // Custom tags (user-added + AI-assigned) shown after the preset categories.
   const tagsKey = "bookmarks-tags";
@@ -372,7 +368,8 @@ export function BookmarksBoard({
   };
 
   const runSync = async () => {
-    if (!hasServiceAccess) {
+    if (!hasPaidSubscription) {
+      setSubscribeVariant(hasServiceAccess ? "trialManual" : "expired");
       setSubscribeOpen(true);
       return;
     }
@@ -381,59 +378,47 @@ export function BookmarksBoard({
     setSyncPhase("syncing");
     setSyncAdded(0);
 
-    // Pull phase: loop the capped server action so a single click ingests the
-    // whole backlog; the list refreshes every round so cards stream in.
-    let added = 0;
-    let pendingCount = 0;
-    let stoppedReason: SyncStoppedReason = "done";
-    let cooldownStarted = false;
-    for (let round = 0; round < MAX_SYNC_ROUNDS; round++) {
-      const res = await syncBookmarks();
-      if (!res.success) {
-        setSyncPhase("idle");
-        if (res.customCode === "auth-error") {
-          startReconnect();
-          return;
-        }
-        if (res.customCode === "sync-busy") {
-          // Another tab or the cron tick holds the sync lock: not a failure.
-          setBanner({ kind: "warn", text: t("syncBanner.syncBusy") });
-          return;
-        }
-        if (res.customCode === "not-subscribed") {
-          setSubscribeOpen(true);
-          return;
-        }
-        setBanner({
-          kind: "error",
-          text:
-            res.customCode === "refresh-failed"
-              ? t("syncBanner.refreshFailed")
-              : t("errors.syncFailed"),
-        });
+    const res = await syncBookmarks();
+    if (!res.success) {
+      setSyncPhase("idle");
+      if (res.customCode === "auth-error") {
+        startReconnect();
         return;
       }
-      const responseStoppedReason = res.data?.stoppedReason ?? "done";
-      if (!cooldownStarted && responseStoppedReason !== "auth-error") {
-        setCooldownUntil(Date.now() + SYNC_COOLDOWN_MS);
-        cooldownStarted = true;
+      if (res.customCode === "sync-busy") {
+        setBanner({ kind: "warn", text: t("syncBanner.syncBusy") });
+        return;
       }
-      added += res.data?.added ?? 0;
-      pendingCount = res.data?.pendingCount ?? 0;
-      stoppedReason = responseStoppedReason;
-      console.log(
-        "[bookmarks] sync round:",
-        JSON.stringify({
-          round: round + 1,
-          added,
-          pendingCount,
-          stoppedReason,
-        }),
-      );
-      setSyncAdded(added);
-      mutateList();
-      refreshStats();
-      if (stoppedReason !== "max-pages") break;
+      if (res.customCode === "not-subscribed") {
+        setSubscribeOpen(true);
+        return;
+      }
+      setBanner({
+        kind: "error",
+        text:
+          res.customCode === "refresh-failed"
+            ? t("syncBanner.refreshFailed")
+            : res.customCode === "rate-limit"
+              ? t("syncBanner.rateLimit")
+              : t("errors.syncFailed"),
+      });
+      return;
+    }
+
+    const added = res.data?.added ?? 0;
+    const pendingCount = res.data?.pendingCount ?? 0;
+    const stoppedReason: SyncStoppedReason = res.data?.stoppedReason ?? "done";
+    if (stoppedReason !== "auth-error") {
+      setCooldownUntil(Date.now() + SYNC_COOLDOWN_MS);
+    }
+    setSyncAdded(added);
+    mutateList();
+    refreshStats();
+
+    if (stoppedReason === "rate-limit") {
+      setBanner({ kind: "warn", text: t("syncBanner.rateLimit") });
+    } else if (stoppedReason === "usage-capped") {
+      setBanner({ kind: "warn", text: t("syncBanner.usageCapped") });
     }
 
     let remaining = pendingCount;
@@ -538,6 +523,51 @@ export function BookmarksBoard({
   const clearSelection = () => {
     setSelected([]);
     setSelectionMode(false);
+  };
+
+  const downloadExport = (format: "md-zip" | "json" | "csv", ids?: string[]) => {
+    const params = new URLSearchParams({ format });
+    if (ids?.length) params.set("ids", ids.join(","));
+    window.location.href = `/api/export/bookmarks?${params.toString()}`;
+  };
+
+  const exportSelected = (format: "md-zip" | "json" | "csv") => {
+    if (selected.length === 0) return;
+    downloadExport(format, selected);
+  };
+
+  const exportToNotion = async (bookmarkIds?: string[]) => {
+    if (!hasPaidSubscription) {
+      setSubscribeVariant("notionExport");
+      setSubscribeOpen(true);
+      return;
+    }
+    const res = await startNotionSync(bookmarkIds);
+    if (!res.success) {
+      if (res.customCode === "not-configured") {
+        toast.error(t("export.notionNotConfigured"), {
+          action: {
+            label: t("export.openSettings"),
+            onClick: () => {
+              window.location.href = "/dashboard/settings";
+            },
+          },
+        });
+        return;
+      }
+      if (res.customCode === "not-subscribed") {
+        setSubscribeVariant("notionExport");
+        setSubscribeOpen(true);
+        return;
+      }
+      toast.error(res.error);
+      return;
+    }
+    toast.success(
+      bookmarkIds?.length
+        ? t("export.notionQueuedSelected", { count: bookmarkIds.length })
+        : t("export.notionQueuedAll")
+    );
   };
 
   const bulkTrash = async () => {
@@ -645,6 +675,9 @@ export function BookmarksBoard({
           connected && !isListMode && stats?.username ? (
             <span className="mr-2 whitespace-nowrap text-xs text-muted-foreground">
               {t("connectedAs", { username: stats.username })}
+              {stats.historyImportCompleted
+                ? ` · ${t("historyCard.statusComplete")}`
+                : ` · ${t("historyCard.statusPartial")}`}
               <button
                 type="button"
                 className="ml-2 underline underline-offset-2 transition-opacity hover:opacity-70"
@@ -722,6 +755,42 @@ export function BookmarksBoard({
                   {listMeta.isPublic
                     ? tLists("board.makePrivate")
                     : tLists("board.makePublic")}
+                </Button>
+              )}
+              {!isTrashView && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-none shadow-none"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      {t("toolbar.export")}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="rounded-none">
+                    <DropdownMenuItem onClick={() => downloadExport("md-zip")}>
+                      {t("export.markdownZip")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => downloadExport("json")}>
+                      {t("export.json")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => downloadExport("csv")}>
+                      {t("export.csv")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {!isTrashView && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-none font-medium shadow-none"
+                  onClick={() => exportToNotion()}
+                >
+                  <NotionIcon className="h-3.5 w-3.5 text-foreground" />
+                  {t("toolbar.exportToNotion")}
                 </Button>
               )}
               {!isListMode && !isTrashView && (
@@ -936,6 +1005,33 @@ export function BookmarksBoard({
                       </div>
                     </PopoverContent>
                   </Popover>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        <Download className="h-4 w-4" />
+                        {t("bulk.export")}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-none">
+                      <DropdownMenuItem onClick={() => exportSelected("md-zip")}>
+                        {t("export.markdownZip")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportSelected("json")}>
+                        {t("export.json")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportSelected("csv")}>
+                        {t("export.csv")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => exportToNotion(selected)}
+                  >
+                    <NotionIcon className="h-4 w-4 text-foreground" />
+                    {t("bulk.exportToNotion")}
+                  </Button>
                   <Button size="sm" variant="outline" onClick={bulkTrash}>
                     <Trash2 className="h-4 w-4" />
                     {t("bulk.moveToTrash")}
@@ -971,14 +1067,16 @@ export function BookmarksBoard({
                 </p>
               </div>
             ) : (
-              <div className="rounded-none border border-border bg-background px-6 py-16 text-center">
+              <div className="rounded-none border border-border bg-card px-6 py-16 text-center">
                 <h2 className="text-lg font-semibold">
                   {isTrashView ? t("empty.trashTitle") : t("empty.title")}
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {isTrashView
                     ? t("empty.trashDescription")
-                    : t("empty.description")}
+                    : stats && !stats.initialApiSyncCompleted
+                      ? t("empty.apiBusy")
+                      : t("empty.description")}
                 </p>
               </div>
             )
@@ -1016,11 +1114,17 @@ export function BookmarksBoard({
               )}
             </>
           )}
+          {!isListMode && !isTrashView ? (
+            <div className="mt-6">
+              <HistoryImportCard />
+            </div>
+          ) : null}
         </>
       )}
       <SubscribePromptDialog
         open={subscribeOpen}
         onOpenChange={setSubscribeOpen}
+        variant={subscribeVariant}
       />
       <AlertDialog
         open={deleteConfirmOpen}

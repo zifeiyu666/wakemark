@@ -82,5 +82,33 @@
     "trialEnded": "Your free trial has ended. You can still browse already-synced bookmarks. Subscribe to restore sync and digest emails.",
     "upgradePlan": "Subscribe",
     "footerHint": "Subscribe anytime to restore sync and digest emails."
+  },
+  "notion": {
+    "title": "Notion sync",
+    "description": "Connect Notion to export bookmarks into a structured database. Auto-sync keeps new AI-tagged bookmarks flowing in the background.",
+    "footerHint": "Manual export from the bookmarks board is also available for selected items.",
+    "notConnected": "Notion is not connected yet.",
+    "connectedWorkspace": "Connected to {workspace}",
+    "unknownWorkspace": "your workspace",
+    "databaseReady": "Destination database is ready.",
+    "databaseMissing": "Choose a parent page to create the Wakemark Bookmarks database.",
+    "syncStats": "{synced} synced · {pending} pending",
+    "syncing": "Syncing bookmarks to Notion…",
+    "connectButton": "Connect Notion",
+    "disconnectButton": "Disconnect",
+    "parentPageLabel": "Parent page",
+    "parentPagePlaceholder": "Search pages…",
+    "searchPages": "Search pages",
+    "searching": "Searching…",
+    "createDatabase": "Create Wakemark Bookmarks database",
+    "autoSyncLabel": "Auto-sync to Notion",
+    "autoSyncHint": "When enabled, new AI-ready bookmarks are pushed to Notion automatically.",
+    "toast": {
+      "errorTitle": "Notion update failed",
+      "disconnectedTitle": "Notion disconnected",
+      "databaseReadyTitle": "Notion database created",
+      "autoSyncEnabledTitle": "Auto-sync enabled",
+      "autoSyncDisabledTitle": "Auto-sync disabled"
+    }
   }
 }

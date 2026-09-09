@@ -25,9 +25,9 @@ export function useImportProgress() {
   return useContext(ImportProgressContext);
 }
 
-// Renders the resumable import/organizing banner above the dashboard content
-// and shares a "manual Sync is running" flag so the banner loop stands down
-// while BookmarksBoard's own Sync loop owns the connection.
+// Renders the AI organizing banner above the dashboard content and shares a
+// "manual Sync is running" flag so the banner loop stands down while
+// BookmarksBoard's own Sync loop owns processing.
 export function ImportProgressProvider({
   children,
   enabled = true,

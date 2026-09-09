@@ -5,6 +5,9 @@ export const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wakemark.ap
 export const CHROME_WEB_STORE_URL =
   "https://chromewebstore.google.com/detail/wakemark/njgbiipglkpcpkapmjimkpbenjjlhbjn";
 
+export const CHROME_EXTENSION_STORE_ID = "njgbiipglkpcpkapmjimkpbenjjlhbjn";
+export const CHROME_EXTENSION_DEV_ID = "mlecdjaacmkbddpfddckfjhkchamjfco";
+
 const GITHUB_URL = ''
 const TWITTER_URL = ''
 const YOUTUBE_URL = ''

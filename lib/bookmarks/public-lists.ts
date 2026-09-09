@@ -1,3 +1,4 @@
+import { bookmarkSortOrder } from "@/lib/bookmarks/query";
 import { db } from "@/lib/db";
 import {
   bookmarkListItems,
@@ -5,7 +6,7 @@ import {
   bookmarks,
   xConnections,
 } from "@/lib/db/schema";
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 
 export type PublicListBookmark = {
   id: string;
@@ -85,8 +86,8 @@ export async function loadPublicList(
         isNull(bookmarks.deletedAt),
       ),
     )
-    // Tie-break by snowflake tweet id: same-batch rows share syncedAt.
-    .orderBy(desc(bookmarks.syncedAt), desc(bookmarks.tweetId))
+    // Newest tweets first (by publish time, not import/sync time).
+    .orderBy(...bookmarkSortOrder("newest"))
     .limit(200);
 
   return {

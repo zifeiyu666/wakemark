@@ -1,0 +1,43 @@
+{
+  "title": "Introduction to WakeMark",
+  "description": "WakeMark turns your X bookmarks into an AI-organized, searchable library with digests, lists, and exports.",
+  "hero": {
+    "eyebrow": "Getting Started",
+    "title": "Introduction",
+    "subtitle": "WakeMark is a bookmark manager built for X. It syncs your saves, reads each post, and turns a write-only archive into something you can actually search, filter, and revisit."
+  },
+  "what": {
+    "title": "What is WakeMark?",
+    "p1": "Every bookmark you save on X disappears into a timeline you never scroll. WakeMark connects to your account, pulls bookmarks in automatically, and organizes them with AI — so you can find that thread, article, or idea weeks later without digging through hundreds of saves.",
+    "p2": "Unlike a simple export or link dump, WakeMark reads tweet text, assigns topic tags, writes short summaries, and groups related saves into lists and digests. Your library stays in sync as you bookmark new posts."
+  },
+  "capabilities": {
+    "title": "Core capabilities",
+    "syncTitle": "Automatic sync",
+    "syncBody": "Connect X with official OAuth (read-only). New bookmarks sync daily, and you can trigger a manual sync anytime.",
+    "aiTitle": "AI tagging and summaries",
+    "aiBody": "Each bookmark gets topic tags and a one-line takeaway — no manual folders or labels required.",
+    "searchTitle": "Search and Ask AI",
+    "searchBody": "Full-text search across your library, plus Ask AI to answer questions using your saved posts as context.",
+    "listsTitle": "Themed lists",
+    "listsBody": "Curate shareable lists from your bookmarks — useful for reading lists, research, or public collections.",
+    "digestTitle": "Email digests",
+    "digestBody": "A scheduled briefing of recent bookmarks grouped by topic, with summaries and links back to the originals.",
+    "importTitle": "Full history import",
+    "importBody": "The official API only returns your newest ~20 bookmarks. The Chrome extension can scroll your full X bookmark history into WakeMark.",
+    "exportTitle": "Export and Notion sync",
+    "exportBody": "Download Markdown, JSON, or CSV anytime, or sync AI-ready bookmarks to a Notion database.",
+    "mcpTitle": "MCP for AI tools",
+    "mcpBody": "Connect Claude, ChatGPT, Cursor, and other MCP clients so agents can search and reference your bookmarks securely."
+  },
+  "who": {
+    "title": "Who is it for?",
+    "p1": "WakeMark is for people who save a lot on X — researchers, builders, writers, and curious readers who want their bookmarks to be useful instead of forgotten.",
+    "p2": "If you have been meaning to \"organize your bookmarks someday,\" WakeMark does that work in the background while you keep saving as usual."
+  },
+  "next": {
+    "title": "Next steps",
+    "quickstart": "Quickstart guide",
+    "importHistory": "Import full bookmark history"
+  }
+}

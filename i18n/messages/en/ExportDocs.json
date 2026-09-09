@@ -1,0 +1,29 @@
+{
+  "title": "Export bookmarks",
+  "description": "Download your WakeMark bookmarks as Markdown, JSON, or CSV for Obsidian, scripts, and backups.",
+  "hero": {
+    "eyebrow": "Getting Started",
+    "title": "Export bookmarks",
+    "subtitle": "Take your AI-tagged bookmarks with you anytime as offline files."
+  },
+  "why": {
+    "title": "Why export?",
+    "p1": "WakeMark keeps your bookmarks searchable and organized, but you should always be able to leave with your data.",
+    "p2": "Exports include tweet text, AI summaries, tags, links, and media references — without embedding vectors."
+  },
+  "formats": {
+    "title": "Available formats",
+    "markdownTitle": "Markdown zip",
+    "markdownBody": "One .md file per bookmark with YAML frontmatter, tweet quote, and AI summary. The zip also includes export.json and export.csv.",
+    "jsonTitle": "JSON",
+    "jsonBody": "A single structured file for scripts, automation, or custom tooling.",
+    "csvTitle": "CSV",
+    "csvBody": "Spreadsheet-friendly rows with ids, urls, tags, summaries, and links."
+  },
+  "how": {
+    "title": "How to export",
+    "step1": "Open your bookmarks board in the dashboard.",
+    "step2": "Use Export in the toolbar to download all visible bookmarks, or enter selection mode to export only selected items.",
+    "step3": "Choose Markdown zip, JSON, or CSV. Trash bookmarks are never included."
+  }
+}

@@ -1,21 +1,68 @@
 {
   "title": "WakeMark docs",
-  "description": "Guides for the Chrome extension and the WakeMark MCP server.",
+  "description": "Guides for getting started, importing history, exports, Notion sync, Chrome and Raycast extensions, and the WakeMark MCP server.",
   "hero": {
     "eyebrow": "Docs",
     "title": "Guides",
-    "subtitle": "Set up the Chrome extension, or connect WakeMark to Claude, ChatGPT, Cursor and other MCP clients."
+    "subtitle": "Learn what WakeMark does, follow the quickstart, import your full X bookmark history, or connect WakeMark to Claude, ChatGPT, Cursor and other MCP clients."
+  },
+  "nav": {
+    "label": "Docs",
+    "menu": "Menu",
+    "open": "Open docs menu",
+    "introduction": "Introduction",
+    "quickstart": "Quickstart",
+    "mcp": "MCP",
+    "extension": "Extension",
+    "raycast": "Raycast",
+    "start": "Getting Started",
+    "importHistory": "Import history",
+    "export": "Export",
+    "notion": "Notion sync"
+  },
+  "toc": {
+    "title": "On this page"
   },
   "items": {
+    "introduction": {
+      "eyebrow": "Getting Started",
+      "title": "Introduction",
+      "body": "What WakeMark is, who it is for, and the core capabilities that turn X bookmarks into a searchable library."
+    },
+    "quickstart": {
+      "eyebrow": "Getting Started",
+      "title": "Quickstart",
+      "body": "Connect X, sync your bookmarks, and start searching — the essential flow in a few minutes."
+    },
     "extension": {
       "eyebrow": "Chrome",
       "title": "Chrome extension",
       "body": "Install, sign in, search bookmarks from the toolbar, and Ask AI in the popup or side panel."
     },
+    "raycast": {
+      "eyebrow": "Raycast",
+      "title": "Raycast extension",
+      "body": "Search bookmarks and Ask AI from the launcher. History import stays in Chrome."
+    },
     "mcp": {
       "eyebrow": "Developers",
       "title": "MCP server",
       "body": "Give agents secure access to your bookmarks. Setup, client configs, and tool reference."
+    },
+    "importHistory": {
+      "eyebrow": "Getting Started",
+      "title": "Import history",
+      "body": "Bring years of X bookmarks into WakeMark with the Chrome extension — not just the newest 20 from the official API."
+    },
+    "export": {
+      "eyebrow": "Getting Started",
+      "title": "Export bookmarks",
+      "body": "Download Markdown, JSON, or CSV exports for Obsidian, backups, and custom scripts."
+    },
+    "notion": {
+      "eyebrow": "Getting Started",
+      "title": "Notion sync",
+      "body": "Connect Notion, create a Wakemark Bookmarks database, and auto-sync AI-ready bookmarks."
     }
   }
 }

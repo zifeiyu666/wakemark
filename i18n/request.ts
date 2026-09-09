@@ -20,6 +20,12 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Docs: (await import(`./messages/${locale}/Docs.json`)).default,
       McpDocs: (await import(`./messages/${locale}/McpDocs.json`)).default,
       ExtensionDocs: (await import(`./messages/${locale}/ExtensionDocs.json`)).default,
+      RaycastDocs: (await import(`./messages/${locale}/RaycastDocs.json`)).default,
+      IntroductionDocs: (await import(`./messages/${locale}/IntroductionDocs.json`)).default,
+      QuickstartDocs: (await import(`./messages/${locale}/QuickstartDocs.json`)).default,
+      ImportHistoryDocs: (await import(`./messages/${locale}/ImportHistoryDocs.json`)).default,
+      ExportDocs: (await import(`./messages/${locale}/ExportDocs.json`)).default,
+      NotionDocs: (await import(`./messages/${locale}/NotionDocs.json`)).default,
       Roadmap: (await import(`./messages/${locale}/Roadmap.json`)).default,
 
       // Dashboard - User

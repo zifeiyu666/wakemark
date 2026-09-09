@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Roadmap & Changelog",
-    "description": "What's shipping now, what's next, and everything WakeMark has shipped — from X bookmark sync and AI auto-tagging to email digests and the MCP server."
+    "description": "What's shipping now, what's next, and everything WakeMark has shipped — from X bookmark sync and AI auto-tagging to the Chrome extension, Notion sync, and the Shadowban Checker."
   },
   "hero": {
     "eyebrow": "ROADMAP",
@@ -55,6 +55,26 @@
     "description": "Everything that's already live, newest first."
   },
   "releases": [
+    {
+      "date": "SEP 08, 2026",
+      "title": "Shadowban Checker",
+      "description": "Free Health tab in the Chrome extension: test search ban, suggestion ban, sensitive flags, and account privacy from a logged-out guest session — no WakeMark login required."
+    },
+    {
+      "date": "SEP 08, 2026",
+      "title": "Notion sync & bookmark export",
+      "description": "Connect Notion and auto-sync AI-tagged bookmarks into a database, or download Markdown, JSON, or CSV from the dashboard anytime."
+    },
+    {
+      "date": "SEP 07, 2026",
+      "title": "Import bookmark history",
+      "description": "X's official API only returns your newest ~20 bookmarks. The Chrome extension scrolls your bookmarks page and uploads the rest."
+    },
+    {
+      "date": "SEP 06, 2026",
+      "title": "Chrome extension",
+      "description": "Search your library and Ask AI from any tab — toolbar popup or a persistent side panel, same account as wakemark.app."
+    },
     {
       "date": "AUG 26, 2026",
       "title": "MCP Server",

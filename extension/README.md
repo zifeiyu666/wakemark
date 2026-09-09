@@ -5,6 +5,7 @@ Manifest V3 extension built with [WXT](https://wxt.dev) + React.
 ## Features
 
 - Sign in via wakemark.app (no API key paste)
+- One-click import of full X bookmark history (uses your x.com session, not the official API)
 - Quick bookmark search in the toolbar popup
 - Ask AI in the popup or Chrome side panel
 
@@ -36,9 +37,19 @@ pnpm --dir extension dev
 
 Then open `chrome://extensions`, enable Developer mode, and **Load unpacked** → `extension/.output/chrome-mv3-dev`.
 
-Dev builds keep a stable ID (`key.b64`): `mlecdjaacmkbddpfddckfjhkchamjfco`, plus `http://localhost/*` host permission.
+After changing `wxt.config.ts` or pulling updates, click **Reload** on the extension card in `chrome://extensions`.
+
+Dev builds keep a stable ID (`key.b64`): `mlecdjaacmkbddpfddckfjhkchamjfco`, plus `http://localhost/*` and `x.com` host permission.
 
 Optional on the site: `CHROME_EXTENSION_ID=mlecdjaacmkbddpfddckfjhkchamjfco`
+
+### Import history testing
+
+1. Sign in via the extension popup first.
+2. Click **Import history** in the popup (not only from the website — Chrome requires the x.com permission prompt to come from the popup click).
+3. Approve the **x.com access** permission when Chrome asks.
+4. A `x.com/i/bookmarks` tab opens and scrolls automatically; keep it in the foreground.
+5. Re-open the popup to watch `Importing… N new` progress. Errors show in red under the button.
 
 ## Chrome Web Store package
 

@@ -213,3 +213,35 @@ export async function validateStoredAuth(): Promise<boolean> {
 export function askAiEndpoint(): string {
   return `${SITE_URL}/api/extension/ask-ai`;
 }
+
+export type ImportBatchResult = {
+  inserted: number;
+  skipped: number;
+  pendingCount: number;
+  historyImportCompleted: boolean;
+};
+
+export async function importBookmarks(payload: {
+  items: unknown[];
+  done?: boolean;
+}): Promise<ImportBatchResult> {
+  const headers = await authHeaders();
+  const res = await fetch(`${SITE_URL}/api/extension/bookmarks/import`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      source: "chrome_extension",
+      items: payload.items,
+      done: payload.done ?? false,
+    }),
+  });
+  if (res.status === 401) {
+    await handleUnauthorized(res);
+    throw new AuthError("Session expired. Please sign in again.");
+  }
+  const json = await parseJson<ImportBatchResult>(res);
+  if (!res.ok || !json.success || !json.data) {
+    throw new Error(json.error || "Import failed");
+  }
+  return json.data;
+}

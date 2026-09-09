@@ -61,8 +61,8 @@ export type CatchUpResult = {
 };
 
 /**
- * Pull newest bookmarks until we hit already-synced history (or the tick
- * budget / X rate limit). Then run a bounded AI pass. Digest is not backfilled.
+ * Incremental newest-page catch-up after subscription restore. Historical
+ * bookmarks are not fetched via the official API.
  */
 export async function catchUpBookmarksForUser(
   userId: string
@@ -76,23 +76,12 @@ export async function catchUpBookmarksForUser(
   let stoppedReason = "done";
 
   try {
-    while (Date.now() < deadline - 30_000) {
-      const result = await syncBookmarksForUser(userId, {
-        maxPages: 5,
-        mode: "latest",
-      });
-      added += result.added;
-      stoppedReason = result.stoppedReason;
-      if (
-        result.stoppedReason === "caught-up" ||
-        result.stoppedReason === "done" ||
-        result.stoppedReason === "rate-limit" ||
-        result.stoppedReason === "usage-capped" ||
-        result.stoppedReason === "auth-error"
-      ) {
-        break;
-      }
-    }
+    const result = await syncBookmarksForUser(userId, {
+      maxPages: 3,
+      mode: "latest",
+    });
+    added = result.added;
+    stoppedReason = result.stoppedReason;
   } catch (error) {
     if (error instanceof XNotConnectedError) {
       return { skipped: "not-connected" };

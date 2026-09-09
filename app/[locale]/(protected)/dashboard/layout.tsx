@@ -10,7 +10,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getSession } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { userPreferences, xConnections } from "@/lib/db/schema";
-import { hasBookmarkServiceAccess } from "@/lib/payments/subscription";
+import { hasActiveSubscription, hasBookmarkServiceAccess } from "@/lib/payments/subscription";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import React from "react";
@@ -35,6 +35,7 @@ export default async function DashboardLayout({
   }
 
   const isAdmin = session.user.role === "admin";
+  const hasPaidSubscription = await hasActiveSubscription(session.user.id);
   const hasServiceAccess = await hasBookmarkServiceAccess(session.user.id);
 
   let storedTimeZone: string | null = null;
@@ -72,7 +73,10 @@ export default async function DashboardLayout({
 
   return (
     <AuthGuard>
-      <ProductAccessProvider hasServiceAccess={hasServiceAccess}>
+      <ProductAccessProvider
+        hasServiceAccess={hasServiceAccess}
+        hasPaidSubscription={hasPaidSubscription}
+      >
         <TimezoneReporter storedTimeZone={storedTimeZone} />
         <SidebarProvider className="dashboard-sharp">
           <DashboardSidebar hasProductAccess={hasServiceAccess} />

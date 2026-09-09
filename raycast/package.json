@@ -1,0 +1,63 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "wakemark",
+  "title": "WakeMark",
+  "description": "Search your X bookmarks and ask AI — powered by WakeMark. History import stays in the Chrome extension.",
+  "icon": "icon.png",
+  "author": "wakemark",
+  "categories": ["Productivity", "Web"],
+  "license": "MIT",
+  "private": true,
+  "commands": [
+    {
+      "name": "search-bookmarks",
+      "title": "Search Bookmarks",
+      "description": "Search bookmarks already synced to your WakeMark account",
+      "mode": "view",
+      "keywords": ["twitter", "x", "bookmark"]
+    },
+    {
+      "name": "ask-ai",
+      "title": "Ask AI",
+      "description": "Ask questions about your WakeMark bookmarks",
+      "mode": "view"
+    },
+    {
+      "name": "sign-in",
+      "title": "Sign In",
+      "description": "Connect WakeMark in the browser, then return here",
+      "mode": "view"
+    },
+    {
+      "name": "sign-out",
+      "title": "Sign Out",
+      "description": "Disconnect this Raycast extension from WakeMark",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "siteUrl",
+      "type": "textfield",
+      "required": false,
+      "title": "WakeMark URL",
+      "description": "Production is https://wakemark.app. Use http://localhost:3000 when developing against a local site.",
+      "default": "https://wakemark.app",
+      "placeholder": "https://wakemark.app"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.94.0",
+    "@raycast/utils": "^1.19.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "dev": "ray develop",
+    "build": "ray build",
+    "lint": "ray lint"
+  }
+}

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { getSession } from "@/lib/auth/server";
 import { apiResponse } from "@/lib/api-response";
 import { storeExtensionGrant } from "@/lib/extension/auth-store";
+import { EXTENSION_CLIENTS } from "@/lib/extension/clients";
 import {
   extensionOptionsResponse,
   withExtensionCors,
@@ -14,10 +15,9 @@ import { z } from "zod";
 
 export const runtime = "nodejs";
 
-const EXTENSION_PURPOSE = "chrome-extension";
-
 const bodySchema = z.object({
   state: z.string().uuid(),
+  client: z.enum(["chrome", "raycast"]).optional().default("chrome"),
 });
 
 function parseMetadata(raw: string | null | undefined): Record<string, unknown> | null {
@@ -45,10 +45,11 @@ export async function POST(req: Request) {
     }
 
     const json = await req.json();
-    const { state } = bodySchema.parse(json);
+    const { state, client } = bodySchema.parse(json);
+    const { purpose, keyName } = EXTENSION_CLIENTS[client];
 
-    // Revoke previous chrome-extension keys so only one active device key
-    // stacks up per user. Metadata is stored as JSON text by better-auth.
+    // One active key per client (Chrome vs Raycast) so signing into Raycast
+    // does not kick the Chrome extension offline.
     const existing = await db
       .select({ id: apikey.id, metadata: apikey.metadata })
       .from(apikey)
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
 
     for (const row of existing) {
       const meta = parseMetadata(row.metadata);
-      if (meta?.purpose === EXTENSION_PURPOSE) {
+      if (meta?.purpose === purpose) {
         try {
           await auth.api.deleteApiKey({
             headers: await headers(),
@@ -71,9 +72,9 @@ export async function POST(req: Request) {
     const created = await auth.api.createApiKey({
       headers: await headers(),
       body: {
-        name: "Chrome Extension",
+        name: keyName,
         expiresIn: null,
-        metadata: { purpose: EXTENSION_PURPOSE },
+        metadata: { purpose },
       },
     });
 

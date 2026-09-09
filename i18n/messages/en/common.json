@@ -359,6 +359,10 @@
         "href": "/docs/extension"
       },
       {
+        "name": "Docs",
+        "href": "/docs"
+      },
+      {
         "name": "Roadmap",
         "href": "/roadmap"
       }
@@ -437,6 +441,10 @@
         {
           "title": "Support",
           "links": [
+            {
+              "name": "Docs",
+              "href": "/docs"
+            },
             {
               "name": "Roadmap",
               "href": "/roadmap"

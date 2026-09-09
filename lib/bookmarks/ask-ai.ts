@@ -1,6 +1,7 @@
 import "server-only";
 
 import { acquireAiSlot, with429Backoff } from "@/lib/bookmarks/ai-guard";
+import { bookmarkSortOrder } from "@/lib/bookmarks/query";
 import { db } from "@/lib/db";
 import { bookmarks } from "@/lib/db/schema";
 import { getErrorMessage } from "@/lib/error-utils";
@@ -8,10 +9,8 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { embed } from "ai";
 import {
   and,
-  asc,
   cosineDistance,
   count,
-  desc,
   eq,
   ilike,
   isNotNull,
@@ -151,9 +150,7 @@ export async function listBookmarks(
     .select()
     .from(bookmarks)
     .where(buildFilterWhere(userId, filters))
-    .orderBy(
-      sortBy === "oldest" ? asc(bookmarks.syncedAt) : desc(bookmarks.syncedAt)
-    )
+    .orderBy(...bookmarkSortOrder(sortBy))
     .limit(limit);
   return rows.map(serializeBookmark);
 }

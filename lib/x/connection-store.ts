@@ -74,8 +74,8 @@ export async function upsertXConnectionFromAccount(
     })
     .returning({ id: xConnections.id });
 
-  // Fresh connection (first X login): fast first page so the dashboard
-  // renders immediately; the cron drain picks up the historical backlog.
+  // Fresh connection (first X login): newest 20 bookmarks only. Historical
+  // import is the Chrome extension's job, not an X API pagination crawl.
   if (inserted.length > 0) {
     try {
       const syncResult = await syncBookmarksForUser(account.userId, {

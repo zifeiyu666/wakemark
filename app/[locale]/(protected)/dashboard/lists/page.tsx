@@ -16,7 +16,7 @@ export default async function ListsIndexPage() {
       </div>
 
       {lists.length === 0 ? (
-        <div className="rounded-lg border border-border bg-background px-6 py-16 text-center">
+        <div className="rounded-lg border border-border bg-card px-6 py-16 text-center">
           <h2 className="text-lg font-semibold">{t("index.title")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("index.empty")}
@@ -28,7 +28,7 @@ export default async function ListsIndexPage() {
             <Link
               key={list.id}
               href={`/dashboard/lists/${list.id}`}
-              className="flex flex-col gap-2 rounded-lg border border-border bg-background p-4 transition-colors hover:border-foreground"
+              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:border-foreground"
             >
               <div className="flex items-center gap-2">
                 <span className="truncate text-sm font-semibold">

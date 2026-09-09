@@ -20,7 +20,19 @@
     "syncing": "Syncing…",
     "syncCooldown": "Sync ({remaining})",
     "searchPlaceholder": "Search…",
-    "loadMore": "Load more"
+    "loadMore": "Load more",
+    "export": "Export",
+    "exportToNotion": "Export to Notion"
+  },
+  "export": {
+    "markdownZip": "Markdown zip",
+    "json": "JSON",
+    "csv": "CSV",
+    "notionAll": "Export all to Notion",
+    "notionQueuedAll": "Notion sync started for all unsynced bookmarks.",
+    "notionQueuedSelected": "Notion sync started for {count} bookmarks.",
+    "notionNotConfigured": "Connect Notion in Settings before exporting.",
+    "openSettings": "Open Settings"
   },
   "connect": {
     "title": "Sync with X",
@@ -33,7 +45,8 @@
   },
   "empty": {
     "title": "No bookmarks yet",
-    "description": "Hit Sync to pull your latest X bookmarks.",
+    "description": "Official X API is capped at your 20 newest bookmarks. Hit Sync, or import your full history with the Chrome extension.",
+    "apiBusy": "The official X API is busy. Install the Chrome extension to import bookmarks instantly.",
     "noResults": "No bookmarks match your search",
     "noResultsDescription": "Try different keywords or remove some filters.",
     "trashTitle": "Trash is empty",
@@ -68,7 +81,9 @@
     "deletedPermanently": "Permanently deleted {count} bookmarks",
     "deletePermanentlyConfirmTitle": "Delete permanently?",
     "deletePermanentlyConfirmDescription": "{count} bookmarks will be permanently deleted. This cannot be undone.",
-    "clear": "Clear"
+    "clear": "Clear",
+    "export": "Export",
+    "exportToNotion": "Export to Notion"
   },
   "syncBanner": {
     "syncing": "Syncing bookmarks from X… added {added}",
@@ -79,16 +94,33 @@
     "authError": "X authorization expired. Please reconnect your X account.",
     "refreshFailed": "X token refresh failed. Please try again in a moment.",
     "syncBusy": "A sync is already running in another tab or in the background. Please try again shortly.",
-    "caughtUp": "You're all caught up. {added} new bookmarks."
+    "caughtUp": "You're all caught up. {added} new bookmarks.",
+    "trialDailyLimit": "Free trial daily sync limit reached (10 bookmarks). Subscribe for unlimited sync."
   },
   "subscribePrompt": {
     "title": "Subscribe to sync",
-    "description": "Your free trial has ended. Subscribe to keep pulling new bookmarks from X. Already-synced bookmarks stay available to browse.",
+    "titleNotionExport": "Subscribe to export to Notion",
+    "descriptionExpired": "Your free trial has ended. Subscribe to keep pulling new bookmarks from X. Already-synced bookmarks stay available to browse.",
+    "descriptionTrialManual": "Manual sync requires a paid plan. On the free trial, WakeMark automatically syncs up to 10 new bookmarks per day from X.",
+    "descriptionNotionExport": "Exporting bookmarks to Notion requires a paid plan. Subscribe to connect Notion and sync your bookmarks automatically.",
     "cta": "Subscribe"
   },
   "importBanner": {
-    "pulling": "Importing your bookmark history… {count} imported",
     "organizing": "AI is tagging & summarizing your bookmarks… {remaining} left"
+  },
+  "coldStart": {
+    "title": "Latest 20 bookmarks are ready",
+    "description": "Try a natural-language search, or mount MCP in Cursor / Claude. Import the rest of your history with the Chrome extension."
+  },
+  "historyCard": {
+    "title": "Wake your full bookmark history",
+    "body": "X tightly quotas deep history. Install the companion extension to import years of tweets into your private knowledge base — no extra API cost.",
+    "cta": "Get the extension and import everything",
+    "started": "Extension import started. Keep the X bookmarks tab open until it finishes.",
+    "openExtensionHint": "Open the WakeMark extension",
+    "openExtensionHintBody": "Click Import history in the extension popup first to grant x.com access.",
+    "statusPartial": "Currently showing only your newest ~20 bookmarks from the official API.",
+    "statusComplete": "Full history import is complete."
   },
   "errors": {
     "loadFailed": "Failed to load bookmarks.",

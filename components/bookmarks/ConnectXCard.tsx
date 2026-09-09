@@ -51,7 +51,7 @@ export function ConnectXCard({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-none border border-border bg-background px-6 py-16 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 rounded-none border border-border bg-card px-6 py-16 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
         <Inbox className="h-6 w-6 text-muted-foreground" />
       </div>

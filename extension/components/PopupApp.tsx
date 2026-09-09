@@ -2,7 +2,9 @@ import { useState } from "react";
 import { revokeAuth } from "../lib/api";
 import { SITE_URL } from "../lib/config";
 import { useAuth } from "../lib/hooks";
+import { useImportHistory } from "../lib/use-import-history";
 import { ChatPanel } from "./ChatPanel";
+import { ImportHistoryBar } from "./ImportHistoryBar";
 import { SearchPanel } from "./SearchPanel";
 import { ShadowbanPanel } from "./ShadowbanPanel";
 import { UserAvatar } from "./UserAvatar";
@@ -17,6 +19,8 @@ const TAB_LABEL: Record<Tab, string> = {
 
 export function PopupApp() {
   const { signedIn, user, loading, refresh } = useAuth();
+  const { showHeaderImportAgain, busy: importBusy, start: startImport } =
+    useImportHistory();
   const [tab, setTab] = useState<Tab>("search");
   const [signingIn, setSigningIn] = useState(false);
 
@@ -61,6 +65,17 @@ export function PopupApp() {
         <div className="row" style={{ gap: 8 }}>
           {signedIn ? (
             <>
+              {showHeaderImportAgain ? (
+                <button
+                  type="button"
+                  className="btn btn-outline"
+                  style={{ fontSize: 11, padding: "5px 9px" }}
+                  disabled={importBusy}
+                  onClick={() => void startImport()}
+                >
+                  {importBusy ? "Importing…" : "Import again"}
+                </button>
+              ) : null}
               <UserAvatar user={user} size={26} />
               <button
                 type="button"
@@ -84,6 +99,8 @@ export function PopupApp() {
           )}
         </div>
       </header>
+
+      {signedIn ? <ImportHistoryBar signedIn /> : null}
 
       <div className="tabs">
         {(["search", "chat", "health"] as Tab[]).map((id) => (

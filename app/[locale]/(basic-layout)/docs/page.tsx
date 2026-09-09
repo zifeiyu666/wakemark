@@ -25,49 +25,49 @@ export async function generateMetadata({
   });
 }
 
+const DOC_CARDS = [
+  { href: "/docs/start/introduction", itemKey: "introduction" },
+  { href: "/docs/start/quickstart", itemKey: "quickstart" },
+  { href: "/docs/start/import-history", itemKey: "importHistory" },
+  { href: "/docs/start/export", itemKey: "export" },
+  { href: "/docs/start/notion", itemKey: "notion" },
+  { href: "/docs/mcp", itemKey: "mcp" },
+  { href: "/docs/extension", itemKey: "extension" },
+  { href: "/docs/raycast", itemKey: "raycast" },
+] as const;
+
 export default async function DocsPage() {
   const t = await getTranslations("Docs");
 
   return (
-    <div className="w-full border-b">
-      <article className="mx-auto max-w-3xl px-4 py-12 md:py-16">
-        <header className="mb-12 space-y-3">
-          <Badge variant="secondary">{t("hero.eyebrow")}</Badge>
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-            {t("hero.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("hero.subtitle")}</p>
-        </header>
+    <>
+      <header className="mb-12 space-y-3">
+        <Badge variant="secondary">{t("hero.eyebrow")}</Badge>
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+          {t("hero.title")}
+        </h1>
+        <p className="text-muted-foreground">{t("hero.subtitle")}</p>
+      </header>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {DOC_CARDS.map(({ href, itemKey }) => (
           <I18nLink
-            href="/docs/extension"
+            key={href}
+            href={href}
             className="rounded-md border bg-muted/40 p-5 transition-colors hover:bg-muted/70"
           >
             <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              {t("items.extension.eyebrow")}
+              {t(`items.${itemKey}.eyebrow`)}
             </p>
             <h2 className="mt-2 text-lg font-semibold">
-              {t("items.extension.title")}
+              {t(`items.${itemKey}.title`)}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {t("items.extension.body")}
+              {t(`items.${itemKey}.body`)}
             </p>
           </I18nLink>
-          <I18nLink
-            href="/docs/mcp"
-            className="rounded-md border bg-muted/40 p-5 transition-colors hover:bg-muted/70"
-          >
-            <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-              {t("items.mcp.eyebrow")}
-            </p>
-            <h2 className="mt-2 text-lg font-semibold">{t("items.mcp.title")}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("items.mcp.body")}
-            </p>
-          </I18nLink>
-        </div>
-      </article>
-    </div>
+        ))}
+      </div>
+    </>
   );
 }

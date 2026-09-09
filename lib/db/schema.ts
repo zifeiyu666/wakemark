@@ -579,6 +579,16 @@ export const xConnections = pgTable(
     lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
     lastSyncAdded: integer('last_sync_added').default(0),
     lastSyncError: text('last_sync_error'),
+    // Progressive sync: API cold-start is capped at ~20 newest bookmarks;
+    // full history is imported from the Chrome extension, not X API pagination.
+    initialApiSyncCompleted: boolean('initial_api_sync_completed')
+      .default(false)
+      .notNull(),
+    lastSyncedTweetId: varchar('last_synced_tweet_id', { length: 64 }),
+    totalSyncedCount: integer('total_synced_count').default(0).notNull(),
+    historyImportCompleted: boolean('history_import_completed')
+      .default(false)
+      .notNull(),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -601,6 +611,14 @@ export const bookmarkStatusEnum = pgEnum('bookmark_status', [
   'failed',
 ])
 export type BookmarkStatus = (typeof bookmarkStatusEnum.enumValues)[number]
+
+export const notionSyncStatusEnum = pgEnum('notion_sync_status', [
+  'idle',
+  'syncing',
+  'error',
+])
+export type NotionSyncStatus =
+  (typeof notionSyncStatusEnum.enumValues)[number]
 
 export const bookmarks = pgTable(
   'bookmarks',
@@ -636,6 +654,11 @@ export const bookmarks = pgTable(
     syncedAt: timestamp('synced_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
+    // 'api' | 'extension' | 'archive'
+    syncedVia: varchar('synced_via', { length: 20 }).default('api').notNull(),
+    isArchivedFull: boolean('is_archived_full').default(false).notNull(),
+    notionPageId: text('notion_page_id'),
+    notionSyncedAt: timestamp('notion_synced_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -663,8 +686,41 @@ export const bookmarks = pgTable(
         table.userId,
         table.deletedAt
       ),
+      notionPendingIdx: index('idx_bookmarks_notion_pending').on(table.userId),
     }
   }
+)
+
+export const notionConnections = pgTable(
+  'notion_connections',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .references(() => user.id, { onDelete: 'cascade' })
+      .notNull()
+      .unique(),
+    workspaceId: text('workspace_id'),
+    workspaceName: text('workspace_name'),
+    botId: text('bot_id'),
+    accessToken: text('access_token').notNull(),
+    parentPageId: text('parent_page_id'),
+    databaseId: text('database_id'),
+    autoSyncEnabled: boolean('auto_sync_enabled').default(false).notNull(),
+    syncStatus: notionSyncStatusEnum('sync_status').default('idle').notNull(),
+    cursorBookmarkId: uuid('cursor_bookmark_id'),
+    lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
+    lastSyncError: text('last_sync_error'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    userIdIdx: index('idx_notion_connections_user_id').on(table.userId),
+  })
 )
 
 // Per-user tag usage counters, maintained on every subTags write (AI tagging

@@ -59,10 +59,8 @@ export type BookmarkStats = {
   unread: number;
   pending: number;
   trash: number;
-  // True while a history backfill checkpoint exists; the dashboard's
-  // ImportProgressBanner uses it (together with `pending`) to auto-resume
-  // the frontend-driven import/tagging loop.
-  importing: boolean;
+  initialApiSyncCompleted: boolean;
+  historyImportCompleted: boolean;
 };
 
 export async function getBookmarkStats(): Promise<ActionResult<BookmarkStats>> {
@@ -91,7 +89,8 @@ export async function getBookmarkStats(): Promise<ActionResult<BookmarkStats>> {
       unread: Number(stats?.unread ?? 0),
       pending: Number(stats?.pending ?? 0),
       trash: Number(stats?.trash ?? 0),
-      importing: conn?.paginationToken != null,
+      initialApiSyncCompleted: conn?.initialApiSyncCompleted ?? false,
+      historyImportCompleted: conn?.historyImportCompleted ?? false,
     });
   } catch (error) {
     console.error("Error getting bookmark stats", error);

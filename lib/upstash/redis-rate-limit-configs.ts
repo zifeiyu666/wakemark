@@ -21,4 +21,14 @@ export const REDIS_RATE_LIMIT_CONFIGS = {
     maxRequests: 30,
     window: "1 d",
   },
+  extensionImport: {
+    prefix: `${LOWER_CASE_SITE_NAME}:rl:extension-import`,
+    maxRequests: 30,
+    window: "1 m",
+  },
+  notionSync: {
+    prefix: `${LOWER_CASE_SITE_NAME}:rl:notion-sync`,
+    maxRequests: 20,
+    window: "1 h",
+  },
 };

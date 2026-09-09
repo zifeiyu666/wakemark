@@ -35,7 +35,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import DigestSection from "./DigestSection";
+import NotionSection from "./NotionSection";
 import SettingsCard from "./SettingsCard";
+import { HistoryImportCard } from "@/components/bookmarks/HistoryImportCard";
 
 type User = typeof userSchema.$inferSelect;
 
@@ -290,6 +292,7 @@ export default function Settings({ user }: { user: User }) {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <HistoryImportCard />
       <SettingsCard
         title={t("form.emailLabel")}
         description={t("form.emailDescription")}
@@ -356,6 +359,8 @@ export default function Settings({ user }: { user: User }) {
       </SettingsCard>
 
       <DigestSection />
+
+      <NotionSection />
 
       <SettingsCard
         title={t("form.fullNameLabel")}

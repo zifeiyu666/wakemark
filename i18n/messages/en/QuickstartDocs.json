@@ -1,0 +1,44 @@
+{
+  "title": "WakeMark quickstart",
+  "description": "Connect X, sync bookmarks, and start searching your library in a few minutes.",
+  "hero": {
+    "eyebrow": "Getting Started",
+    "title": "Quickstart",
+    "subtitle": "The essential flow: sign in, connect X, sync, then explore your organized library."
+  },
+  "overview": {
+    "title": "Overview",
+    "p1": "Most people are productive in WakeMark after four steps: create an account, connect X, run the first sync, then browse or search the dashboard. Optional steps — importing older history, installing the extension, or connecting Notion — come after that."
+  },
+  "steps": {
+    "title": "Basic workflow",
+    "step1Title": "Create your account",
+    "step1Body": "Sign up at wakemark.app with email or your preferred login method. You land on the dashboard once authentication finishes.",
+    "step2Title": "Connect X",
+    "step2Body": "Open Settings and connect your X account through the official OAuth flow. WakeMark only requests read access to bookmarks — never your password.",
+    "step3Title": "Sync bookmarks",
+    "step3Body": "Click Sync on the bookmarks board. Your newest saves appear within a minute. AI tagging and summaries run in the background; a short banner may show while organization finishes.",
+    "step4Title": "Explore your library",
+    "step4Body": "Use search, filters, and tags to find posts. Try Ask AI for questions across your saves, or open Lists and Digests from the sidebar when you want curated views.",
+    "cta": "Open dashboard"
+  },
+  "optional": {
+    "title": "Recommended next steps",
+    "importTitle": "Import older bookmarks",
+    "importBody": "The first API sync only brings in your newest ~20 bookmarks. Use the Chrome extension to import your full X history.",
+    "extensionTitle": "Install the Chrome extension",
+    "extensionBody": "Search bookmarks from the toolbar, run history import, and use Ask AI from the popup or side panel without opening the website.",
+    "exportTitle": "Export or sync to Notion",
+    "exportBody": "Download your library as files, or connect Notion to keep an AI-ready database in sync.",
+    "mcpTitle": "Connect MCP clients",
+    "mcpBody": "Give Claude, ChatGPT, or Cursor secure access to search your bookmarks from inside your AI workflow."
+  },
+  "tips": {
+    "title": "Tips",
+    "items": {
+      "sync": "Sync again anytime you want the latest saves — there is no bookmark limit.",
+      "tags": "Tags appear automatically; you do not need to configure categories first.",
+      "trial": "Trial accounts can sync a limited number of bookmarks. Upgrade when you need the full library."
+    }
+  }
+}

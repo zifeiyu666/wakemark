@@ -417,7 +417,9 @@
   }
 }
 
-/* Dashboard product shell: square corners, flat surfaces, no elevation. */
+/* Dashboard product shell: square corners, flat surfaces, no elevation.
+   Chrome (sidebar, header, cards) sits on a paper surface; the board
+   canvas is a slightly cooler gray so cards read as discrete tiles. */
 .dashboard-sharp {
   --radius: 0px;
   --radius-sm: 0px;
@@ -432,6 +434,19 @@
   --shadow-lg: 0 0 #0000;
   --shadow-xl: 0 0 #0000;
   --shadow-2xl: 0 0 #0000;
+  --background: rgb(244, 244, 245);
+  --card: rgb(255, 255, 255);
+  --popover: rgb(255, 255, 255);
+  --sidebar: rgb(255, 255, 255);
+  --sidebar-background: rgb(255, 255, 255);
+}
+
+.dark .dashboard-sharp {
+  --background: rgb(16, 16, 16);
+  --card: rgb(24, 24, 24);
+  --popover: rgb(28, 28, 28);
+  --sidebar: rgb(24, 24, 24);
+  --sidebar-background: rgb(24, 24, 24);
 }
 
 .dashboard-sharp :is(.rounded, .rounded-sm, .rounded-md, .rounded-lg, .rounded-xl, .rounded-2xl, .rounded-3xl) {

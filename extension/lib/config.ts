@@ -17,4 +17,5 @@ export const STORAGE_KEYS = {
   askAiDraft: "wakemark.askAiDraft",
   authState: "wakemark.authState",
   authTabId: "wakemark.authTabId",
+  importStatus: "wakemark.importStatus",
 } as const;

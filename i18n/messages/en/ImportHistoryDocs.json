@@ -1,0 +1,75 @@
+{
+  "title": "Import your X bookmark history",
+  "description": "Use the WakeMark Chrome extension to import your full X bookmark history. The official API only returns about 20 recent bookmarks.",
+  "hero": {
+    "eyebrow": "Getting Started",
+    "title": "Import bookmark history",
+    "subtitle": "X’s official API only returns your newest bookmarks. The Chrome extension reads the bookmarks page you already use, then uploads the full history into WakeMark."
+  },
+  "why": {
+    "title": "Why this is needed",
+    "p1": "Connecting X in the dashboard uses the official bookmarks API. That path is reliable for new saves, but it is tightly quota’d — a first sync typically shows only your newest ~20 bookmarks.",
+    "p2": "The extension import uses your logged-in x.com session instead. It opens your bookmarks page, scrolls through the timeline, and uploads posts WakeMark does not already have. Duplicates are skipped."
+  },
+  "before": {
+    "title": "Before you start",
+    "p1": "You need Chrome, the WakeMark extension, and an X session in the same browser.",
+    "items": {
+      "chrome": "Use Google Chrome (or another Chromium browser that can install the extension).",
+      "extension": "Install the WakeMark extension and pin it to the toolbar.",
+      "signIn": "Sign in to WakeMark from the extension popup (the same account as wakemark.app).",
+      "xSession": "Stay signed in to X in Chrome so x.com/i/bookmarks loads your own library."
+    }
+  },
+  "steps": {
+    "title": "Import from the extension",
+    "intro": "Chrome only shows the x.com permission prompt after a click inside the extension popup. Start the import there — not only from the website.",
+    "step1Title": "Install and sign in",
+    "step1Body": "Add the extension from the Chrome Web Store, then click the WakeMark icon and sign in. The popup should show your avatar when the connection is ready.",
+    "cta": "Add to Chrome",
+    "step2Title": "Click Import history",
+    "step2Body": "In the popup, click Import history. Chrome will ask for access to x.com and twitter.com. Allow it — the import cannot run without that permission.",
+    "step3Title": "Keep the bookmarks tab open",
+    "step3Body": "WakeMark opens x.com/i/bookmarks and starts scrolling automatically. Leave that tab open until scrolling stops. You can switch to another tab, but do not close the bookmarks tab.",
+    "step4Title": "Watch progress in the popup",
+    "step4Body": "Re-open the extension popup to see how many bookmarks were added and how many already existed. A typical full import takes about 1–5 minutes, depending on how large your library is."
+  },
+  "after": {
+    "title": "After it finishes",
+    "p1": "When the popup says the import is done, refresh the WakeMark dashboard. New posts appear in your library, then AI tagging and summaries run in the background.",
+    "dashboard": "Open the dashboard",
+    "extensionGuide": "Chrome extension guide",
+    "points": {
+      "refresh": "Refresh Bookmarks if the list still looks short.",
+      "organize": "Give tagging a few minutes if a banner says bookmarks are still being organized.",
+      "search": "Search and Ask AI use the imported library, including older posts the official API never returned."
+    }
+  },
+  "website": {
+    "title": "Starting from the website",
+    "p1": "The dashboard and Settings also show an import card while history is still incomplete. That button can resume an import after x.com access is already granted.",
+    "p2": "If Chrome has not asked for x.com access yet, the site will send you to the extension instead. Click Import history in the popup first, then you can use the website card later."
+  },
+  "tips": {
+    "title": "Tips",
+    "items": {
+      "sameProfile": "Run the import in the Chrome profile where you are signed in to both WakeMark and X.",
+      "leaveTab": "Do not close x.com/i/bookmarks while status is Importing. Closing it stops the scroll.",
+      "duplicates": "Posts already in WakeMark are skipped. Re-running import will not create duplicates.",
+      "apiSync": "After history is in, use Sync in the dashboard for new bookmarks. The extension import is for the backlog the API cannot fetch."
+    }
+  },
+  "faq": {
+    "title": "Troubleshooting",
+    "q1": "Chrome never asked for x.com access",
+    "a1": "The permission prompt only appears from a click in the extension popup. Open the WakeMark icon and click Import history there.",
+    "q2": "The bookmarks tab opened but nothing imported",
+    "a2": "Sign in to X on that tab, stay on x.com/i/bookmarks, then click Import history again. If the content script cannot attach, reload the extension on chrome://extensions and retry.",
+    "q3": "The popup says I need to allow x.com access",
+    "a3": "Click Import history in the popup and choose Allow on the Chrome permission dialog. Denying it blocks the import.",
+    "q4": "I only still see about 20 bookmarks",
+    "a4": "That is the official API cap. Finish the extension import, wait until the popup reports done, then refresh the dashboard. AI tagging can lag a bit behind the upload.",
+    "q5": "Can I close the tab when scrolling seems finished?",
+    "a5": "Wait until the popup status changes from Importing to Imported. If it is still running, keep the tab open. You can click Done in the popup only after auto-scroll has actually stopped."
+  }
+}

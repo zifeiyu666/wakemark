@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
   // generator degrades to its fallback overview.
   let processed: { processed: number; remaining: number } | null = null;
   try {
-    processed = await processPendingForUser(userId, { maxItems: 100 });
+    processed = await processPendingForUser(userId, { maxItems: 20 });
   } catch (error) {
     console.warn(
       `[welcome-digest] user ${userId}: AI processing skipped: ${getErrorMessage(error)}`

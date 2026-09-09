@@ -1,11 +1,18 @@
 import { revokeAuth } from "../lib/api";
 import { SITE_URL } from "../lib/config";
 import { useAuth } from "../lib/hooks";
+import { useImportHistory } from "../lib/use-import-history";
 import { ChatPanel } from "./ChatPanel";
+import { ImportHistoryBar } from "./ImportHistoryBar";
 import { UserAvatar } from "./UserAvatar";
 
 export function SidePanelApp() {
   const { signedIn, user, loading, refresh } = useAuth();
+  const { status: importStatus } = useImportHistory();
+  const importActive =
+    importStatus.status === "running" ||
+    importStatus.status === "error" ||
+    (importStatus.status === "done" && !importStatus.dismissed);
 
   async function handleSignIn() {
     await chrome.runtime.sendMessage({ type: "wakemark:start-login" });
@@ -19,7 +26,9 @@ export function SidePanelApp() {
   return (
     <div className="shell shell-side col">
       <header className="row" style={{ justifyContent: "space-between" }}>
-        <span className="brand">WakeMark Ask AI</span>
+        <span className="brand">
+          {importActive ? "WakeMark Import" : "WakeMark Ask AI"}
+        </span>
         <div className="row" style={{ gap: 8 }}>
           <a
             className="brand-link"
@@ -45,14 +54,26 @@ export function SidePanelApp() {
         </div>
       </header>
 
+      {signedIn ? <ImportHistoryBar signedIn /> : null}
+
       <hr className="divider" />
 
       {loading ? (
         <p className="muted">Loading…</p>
       ) : signedIn ? (
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <ChatPanel />
-        </div>
+        importActive ? (
+          <p className="muted" style={{ fontSize: 11, margin: 0 }}>
+            {importStatus.status === "running"
+              ? "Scrolling your X bookmarks tab in the background. Keep that tab open until import finishes."
+              : importStatus.status === "error"
+                ? "Fix the error above, then click Import history to try again."
+                : "Import finished. Dismiss the banner above when you are done."}
+          </p>
+        ) : (
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <ChatPanel />
+          </div>
+        )
       ) : (
         <div
           className="col"

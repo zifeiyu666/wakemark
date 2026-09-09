@@ -1,0 +1,30 @@
+{
+  "title": "Notion sync",
+  "description": "Connect Notion and sync WakeMark bookmarks into a structured database with auto-sync for paid plans.",
+  "hero": {
+    "eyebrow": "Getting Started",
+    "title": "Notion sync",
+    "subtitle": "Push AI-tagged bookmarks into a Notion database — manually or automatically."
+  },
+  "overview": {
+    "title": "What you get",
+    "p1": "WakeMark creates a Wakemark Bookmarks database in the Notion page you choose, with title, author, URL, tags, created date, and media flags.",
+    "p2": "Each bookmark page includes the tweet quote, AI summary, outbound links, and media references as blocks."
+  },
+  "setup": {
+    "title": "Setup",
+    "step1": "Subscribe to a paid plan.",
+    "step2": "Open Settings → Notion sync and click Connect Notion.",
+    "step3": "Search for a parent page and create the Wakemark Bookmarks database.",
+    "step4": "Enable Auto-sync to backfill unsynced bookmarks and keep new ones flowing in."
+  },
+  "manual": {
+    "title": "Manual export",
+    "p1": "On the bookmarks board, select items and choose Export to Notion. WakeMark queues the sync in the background using batched jobs."
+  },
+  "limits": {
+    "title": "Rate limits and reliability",
+    "p1": "Large first-time syncs run in batches of 15 bookmarks with short delays to respect Notion API limits and Vercel timeouts.",
+    "p2": "If a batch fails, QStash retries automatically with exponential backoff."
+  }
+}

@@ -29,27 +29,26 @@ Use [Upstash QStash](https://console.upstash.com/qstash) to create a schedule
 that sends a `POST` request to:
 
 ```text
-https://<your-domain>/api/cron/bookmarks?job=drain
+https://<your-domain>/api/cron/bookmarks?job=daily
 ```
 
 Add an `Upstash-Forward` header whose forwarded key is `Authorization` and
 whose value is `<CRON_SECRET>` (the secret itself, without `Bearer `). Set
-`Upstash-Method` to `POST` and choose a schedule such as `0 */3 * * *`.
-Active **subscribed** users (and admins) drive their own first-time history import and AI tagging from
-the dashboard (resumable progress banner); this schedule is the fallback that
-continues backlogs and pending AI work for users who stay away. Unsubscribed
-accounts are skipped until they resubscribe, at which point a latest-mode
-catch-up runs immediately. You may
-create a second daily schedule for `?job=daily` (for example `0 8 * * *`,
-UTC). Keep `CRON_SECRET` configured in Vercel and QStash; never commit its
-value.
+`Upstash-Method` to `POST` and schedule daily (for example `0 8 * * *` UTC).
+The daily job pulls at most the newest ~20 X bookmarks (up to 3 pages only if
+every tweet on the previous page was new) and then drains the AI tagging
+queue. Historical bookmarks are imported from the Chrome extension, not via
+X API pagination. `?job=drain` is kept as an alias that only processes the
+AI queue. Unsubscribed accounts are skipped until they resubscribe, at which
+point a newest-page catch-up runs immediately.
+
+Keep `CRON_SECRET` configured in Vercel and QStash; never commit its value.
 
 The route also accepts `Authorization: Bearer <CRON_SECRET>` for manual
 requests and compatibility with other schedulers.
 
 The endpoint is implemented in
-[`app/api/cron/bookmarks/route.ts`](./app/api/cron/bookmarks/route.ts). Its
-database checkpoints make each drain invocation resumable and idempotent.
+[`app/api/cron/bookmarks/route.ts`](./app/api/cron/bookmarks/route.ts).
 
 ## Weekly digests (Upstash QStash)
 
@@ -79,3 +78,36 @@ skipped rather than sending a stale summary.
 The endpoint is implemented in
 [`app/api/cron/digests/route.ts`](./app/api/cron/digests/route.ts) and reuses
 the same `CRON_SECRET` authentication as the bookmark sync cron.
+
+## Notion sync (Upstash QStash)
+
+Paid users can connect Notion in Settings and sync bookmarks into a structured
+database. Large backfills are processed in chained batches of 15 bookmarks via
+QStash so each worker stays within Vercel timeouts and respects Notion rate
+limits.
+
+Configure a Notion public integration with redirect URI:
+
+```text
+https://<your-domain>/api/notion/oauth/callback
+```
+
+Set `NOTION_CLIENT_ID`, `NOTION_CLIENT_SECRET`, `QSTASH_TOKEN`,
+`QSTASH_CURRENT_SIGNING_KEY`, and `QSTASH_NEXT_SIGNING_KEY` in Vercel.
+
+- Trigger: `POST /api/notion/sync-start` (session auth)
+- Worker: `POST /api/notion/sync-worker` (QStash signature only)
+
+When auto-sync is enabled, new AI-ready bookmarks enqueue a background batch
+after processing completes.
+
+## Bookmark export
+
+Any signed-in user can download bookmarks as Markdown zip, JSON, or CSV from
+the dashboard export menu:
+
+```text
+GET /api/export/bookmarks?format=md-zip|json|csv
+```
+
+Optional `ids=` limits the export to selected bookmarks. Trash is excluded.
