@@ -21,34 +21,65 @@ export const dynamic = "force-dynamic";
 // entitled connection, then drains the AI pending queue.
 // `?job=drain` is kept as an alias that only processes the AI queue — it no
 // longer paginates historical bookmarks via the official API.
+function cronLog(event: string, payload: Record<string, unknown>) {
+  console.log(
+    `[bookmarks:cron] ${event} ${JSON.stringify(payload)}`
+  );
+}
+
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const auth = request.headers.get("authorization");
   const authorized =
     !!secret && (auth === secret || auth === `Bearer ${secret}`);
   if (!authorized) {
+    cronLog("unauthorized", {
+      hasSecret: Boolean(secret),
+      hasAuthHeader: Boolean(auth),
+    });
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const job =
-    request.nextUrl.searchParams.get("job") === "daily" ? "daily" : "drain";
+  const jobParam = request.nextUrl.searchParams.get("job");
+  const job = jobParam === "daily" ? "daily" : "drain";
   const configured = Number(process.env.CRON_TICK_BUDGET_MS ?? 240_000);
   const tickBudgetMs = Math.min(
     Number.isFinite(configured) && configured > 0 ? configured : 240_000,
     280_000
   );
   const deadline = Date.now() + tickBudgetMs;
+  const startedAt = Date.now();
 
   const connections = await db.select().from(xConnections);
+  cronLog("start", {
+    job,
+    jobParam,
+    method: request.method,
+    connections: connections.length,
+    tickBudgetMs,
+  });
+
   const results: Array<Record<string, unknown>> = [];
+  let skippedDeadline = 0;
 
   for (const conn of connections) {
-    if (Date.now() >= deadline) break;
-    const entry: Record<string, unknown> = { userId: conn.userId };
+    if (Date.now() >= deadline) {
+      skippedDeadline = connections.length - results.length;
+      cronLog("deadline", {
+        remaining: skippedDeadline,
+        elapsedMs: Date.now() - startedAt,
+      });
+      break;
+    }
+    const entry: Record<string, unknown> = {
+      userId: conn.userId,
+      username: conn.username,
+    };
     try {
       if (!(await hasBookmarkServiceAccess(conn.userId))) {
         entry.reason = "not-subscribed";
         results.push(entry);
+        cronLog("user", entry);
         continue;
       }
       const syncInFlight =
@@ -59,6 +90,10 @@ export async function GET(request: NextRequest) {
           maxPages: 3,
           mode: "latest",
         });
+      } else if (job !== "daily") {
+        entry.reason = "drain-only";
+      } else if (syncInFlight) {
+        entry.reason = "sync-in-flight";
       }
 
       const budgetLeft = deadline - Date.now();
@@ -83,7 +118,19 @@ export async function GET(request: NextRequest) {
       }
     }
     results.push(entry);
+    cronLog("user", entry);
   }
+
+  const summary = {
+    job,
+    users: results.length,
+    skippedDeadline,
+    elapsedMs: Date.now() - startedAt,
+    synced: results.filter((r) => r.sync).length,
+    errors: results.filter((r) => r.error).length,
+    skipped: results.filter((r) => r.reason).length,
+  };
+  cronLog("done", summary);
 
   return NextResponse.json({
     job,
