@@ -19,4 +19,6 @@ async function handler(request: Request) {
   return Response.json(result);
 }
 
-export const POST = verifySignatureAppRouter(handler);
+export async function POST(request: Request) {
+  return verifySignatureAppRouter(handler)(request);
+}

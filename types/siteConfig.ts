@@ -18,7 +18,7 @@ export type SiteConfig = {
   }
   creator: string
   themeColors?: string | ThemeColor[]
-  defaultNextTheme?: string
+  defaultNextTheme: string
   icons: {
     icon: string
     shortcut?: string
