@@ -25,7 +25,8 @@ function getQStashClient(): Client {
   if (!token) {
     throw new Error("QSTASH_TOKEN is not configured");
   }
-  return new Client({ token });
+  const baseUrl = process.env.QSTASH_URL;
+  return new Client(baseUrl ? { token, baseUrl } : { token });
 }
 
 export function notionSyncWorkerUrl(): string {
@@ -43,7 +44,7 @@ export async function publishNotionSyncBatch(
     delay: delaySeconds,
     deduplicationId: payload.bookmarkIds?.length
       ? undefined
-      : `notion-sync:${payload.userId}`,
+      : `notion-sync-${payload.userId}`,
   });
 }
 
