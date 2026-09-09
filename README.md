@@ -82,9 +82,10 @@ the same `CRON_SECRET` authentication as the bookmark sync cron.
 ## Notion sync (Upstash QStash)
 
 Paid users can connect Notion in Settings and sync bookmarks into a structured
-database. Large backfills are processed in chained batches of 15 bookmarks via
+database. Large backfills are processed in chained batches of 50 bookmarks via
 QStash so each worker stays within Vercel timeouts and respects Notion rate
-limits.
+limits. Only the initial auto-start job is deduplicated; follow-up batches
+must publish without that id so QStash does not drop them as duplicates.
 
 Configure a Notion public integration with redirect URI:
 

@@ -188,6 +188,9 @@ export async function processNotionSyncBatch(
       : await hasRemainingRows(payload.userId, lastCursor);
 
     if (remaining) {
+      console.log(
+        `[notion:sync] batch done user=${payload.userId} processed=${processed} remaining=true cursor=${lastCursor}`
+      );
       await publishNotionSyncBatch(
         {
           userId: payload.userId,
