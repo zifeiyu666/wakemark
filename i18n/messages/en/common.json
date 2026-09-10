@@ -477,6 +477,10 @@
             {
               "name": "Shadowban Checker",
               "href": "/tools/shadowban-check"
+            },
+            {
+              "name": "Advanced Twitter Search",
+              "href": "/tools/twitter-advanced-search"
             }
           ]
         }
