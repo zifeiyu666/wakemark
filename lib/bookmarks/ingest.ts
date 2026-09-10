@@ -16,6 +16,7 @@ export type BookmarkIngestItem = {
   tweetCreatedAt?: Date;
   mediaUrls?: string[];
   mediaTypes?: string[];
+  mediaPlaybackUrls?: string[];
   urls?: string[];
   metrics?: { likes: number; retweets: number; replies: number };
 };
@@ -54,6 +55,7 @@ export async function insertBookmarkBatch(
     tweetCreatedAt: item.tweetCreatedAt,
     mediaUrls: item.mediaUrls ?? [],
     mediaTypes: item.mediaTypes ?? [],
+    mediaPlaybackUrls: item.mediaPlaybackUrls ?? [],
     urls: item.urls ?? [],
     metrics: item.metrics ?? { likes: 0, retweets: 0, replies: 0 },
     syncedVia: source,
@@ -65,7 +67,7 @@ export async function insertBookmarkBatch(
     .onConflictDoNothing({
       target: [bookmarks.userId, bookmarks.tweetId],
     })
-    .returning({ id: bookmarks.id });
+    .returning({ id: bookmarks.id, tweetId: bookmarks.tweetId });
 
   const insertedCount = inserted.length;
   if (insertedCount > 0) {
@@ -77,11 +79,36 @@ export async function insertBookmarkBatch(
       .where(eq(xConnections.userId, userId));
   }
 
+  const insertedTweetIds = new Set(inserted.map((row) => row.tweetId));
+  await backfillMediaPlaybackUrls(
+    userId,
+    uniqueItems.filter((item) => !insertedTweetIds.has(item.tweetId))
+  );
+
   return {
     inserted: insertedCount,
     skipped: uniqueItems.length - insertedCount,
     pendingCount: await pendingCountFor(userId),
   };
+}
+
+async function backfillMediaPlaybackUrls(
+  userId: string,
+  items: BookmarkIngestItem[]
+): Promise<void> {
+  const patches = items.filter((item) =>
+    (item.mediaPlaybackUrls ?? []).some(Boolean)
+  );
+  if (patches.length === 0) return;
+
+  for (const item of patches) {
+    await db
+      .update(bookmarks)
+      .set({ mediaPlaybackUrls: item.mediaPlaybackUrls ?? [] })
+      .where(
+        and(eq(bookmarks.userId, userId), eq(bookmarks.tweetId, item.tweetId))
+      );
+  }
 }
 
 export async function pendingCountFor(userId: string): Promise<number> {

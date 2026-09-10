@@ -22,15 +22,19 @@
     "searchPlaceholder": "Search…",
     "loadMore": "Load more",
     "export": "Export",
-    "exportToNotion": "Export to Notion"
+    "exportToNotion": "Export to Notion",
+    "exportingToNotion": "Sending to Notion…"
   },
   "export": {
     "markdownZip": "Markdown zip",
     "json": "JSON",
     "csv": "CSV",
     "notionAll": "Export all to Notion",
-    "notionQueuedAll": "Notion sync started for all unsynced bookmarks.",
-    "notionQueuedSelected": "Notion sync started for {count} bookmarks.",
+    "notionQueuing": "Starting Notion export…",
+    "notionQueuedAll": "Notion export started. Pages appear in the background — you can keep browsing.",
+    "notionQueuedSelected": "Notion export started for {count} bookmarks. Pages appear in the background.",
+    "notionAlreadyRunning": "Notion export is already running. New pages will keep appearing — no need to click again.",
+    "notionFailed": "Could not start Notion export. Please try again.",
     "notionNotConfigured": "Connect Notion in Settings before exporting.",
     "openSettings": "Open Settings"
   },
@@ -61,8 +65,9 @@
     "openTweet": "Open tweet",
     "processing": "AI processing…",
     "failed": "Processing failed",
-    "playVideo": "Play video on X",
+    "playVideo": "Play video",
     "videoCover": "Video thumbnail",
+    "openVideo": "Open video in new window",
     "showMore": "Show more",
     "showLess": "Show less"
   },

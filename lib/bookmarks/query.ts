@@ -46,6 +46,7 @@ export type BookmarkRow = {
   tweetCreatedAt: Date | null;
   mediaUrls: string[];
   mediaTypes: string[];
+  mediaPlaybackUrls: string[];
   metrics: { likes: number; retweets: number; replies: number } | null;
   primaryCategory: string | null;
   subTags: string[];
@@ -117,6 +118,7 @@ const bookmarkColumns = {
   tweetCreatedAt: bookmarks.tweetCreatedAt,
   mediaUrls: bookmarks.mediaUrls,
   mediaTypes: bookmarks.mediaTypes,
+  mediaPlaybackUrls: bookmarks.mediaPlaybackUrls,
   metrics: bookmarks.metrics,
   primaryCategory: bookmarks.primaryCategory,
   subTags: bookmarks.subTags,
@@ -136,6 +138,7 @@ function toBookmarkRow(row: {
   tweetCreatedAt: Date | null;
   mediaUrls: unknown;
   mediaTypes: unknown;
+  mediaPlaybackUrls: unknown;
   metrics: unknown;
   primaryCategory: string | null;
   subTags: unknown;
@@ -148,6 +151,7 @@ function toBookmarkRow(row: {
     ...row,
     mediaUrls: (row.mediaUrls as string[] | null) ?? [],
     mediaTypes: (row.mediaTypes as string[] | null) ?? [],
+    mediaPlaybackUrls: (row.mediaPlaybackUrls as string[] | null) ?? [],
     metrics: (row.metrics as BookmarkRow["metrics"] | null) ?? null,
     subTags: (row.subTags as string[] | null) ?? [],
   };

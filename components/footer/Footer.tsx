@@ -1,18 +1,15 @@
-import { Newsletter } from "@/components/footer/Newsletter";
 import { poppinsMediumItalic } from "@/app/fonts";
 import { TwitterX } from "@/components/social-icons/icons";
 import { siteConfig } from "@/config/site";
 import { Link as I18nLink } from "@/i18n/routing";
 import { FooterLink } from "@/types/common";
 import { GithubIcon, InstagramIcon, Youtube } from "lucide-react";
-import { getMessages, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import Link from "next/link";
 import { SiDiscord, SiTiktok } from "react-icons/si";
 
 export default async function Footer() {
-  const messages = await getMessages();
-
   const t = await getTranslations("Home");
   const tFooter = await getTranslations("Footer");
 
@@ -34,7 +31,7 @@ export default async function Footer() {
     <div className="bg-black text-gray-300">
       <footer className="py-2 container max-w-8xl mx-auto">
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-12 lg:grid-cols-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 py-12 lg:grid-cols-6">
             <div className="w-full flex flex-col sm:flex-row lg:flex-col gap-4 col-span-full md:col-span-2">
               <div className="space-y-4 flex-1">
                 <div className="items-center space-x-2 flex">
@@ -185,12 +182,6 @@ export default async function Footer() {
                 </ul>
               </div>
             ))}
-
-            {messages.Footer.Newsletter && (
-              <div className="w-full flex-1">
-                <Newsletter />
-              </div>
-            )}
           </div>
 
           <div className="border-t border-neutral-800 py-6 flex flex-col md:flex-row justify-between items-center">

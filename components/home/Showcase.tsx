@@ -77,7 +77,7 @@ const ScaleBox = ({
   );
 };
 
-export default function Showcase() {
+export default function Showcase({ signedIn = false }: { signedIn?: boolean }) {
   /* Measure the unscaled center window height so the engaged position can
    * bottom-anchor it (fully visible, attio-style) regardless of viewport. */
   const centerRef = useRef<HTMLDivElement>(null);
@@ -160,7 +160,7 @@ export default function Showcase() {
             engaged && "pointer-events-none"
           )}
         >
-          <Hero />
+          <Hero signedIn={signedIn} />
         </motion.div>
 
         {/* Left top — Email Digest */}

@@ -39,6 +39,7 @@ const MARKETING_PATHS = [
   '/tools/twitter-advanced-search',
   '/alternatives/readwise-alternative',
   '/alternatives/dewey-alternative',
+  '/alternatives/tweetstorm-alternative',
 ]
 
 const LEGAL_PATHS = [

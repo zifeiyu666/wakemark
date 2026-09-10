@@ -79,6 +79,7 @@ import {
   Eye,
   EyeOff,
   ListPlus,
+  Loader2,
   RotateCcw,
   Trash2,
 } from "lucide-react";
@@ -201,6 +202,7 @@ export function BookmarksBoard({
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [banner, setBanner] = useState<Banner | null>(null);
+  const [notionExporting, setNotionExporting] = useState(false);
 
   const statsKey = "bookmarks-stats";
   const { data: statsData } = useSWR(statsKey, getBookmarkStats);
@@ -537,37 +539,54 @@ export function BookmarksBoard({
   };
 
   const exportToNotion = async (bookmarkIds?: string[]) => {
+    if (notionExporting) {
+      toast.info(t("export.notionAlreadyRunning"));
+      return;
+    }
     if (!hasPaidSubscription) {
       setSubscribeVariant("notionExport");
       setSubscribeOpen(true);
       return;
     }
-    const res = await startNotionSync(bookmarkIds);
-    if (!res.success) {
-      if (res.customCode === "not-configured") {
-        toast.error(t("export.notionNotConfigured"), {
-          action: {
-            label: t("export.openSettings"),
-            onClick: () => {
-              window.location.href = "/dashboard/settings";
+    setNotionExporting(true);
+    const toastId = toast.loading(t("export.notionQueuing"));
+    try {
+      const res = await startNotionSync(bookmarkIds);
+      if (!res.success) {
+        toast.dismiss(toastId);
+        if (res.customCode === "not-configured") {
+          toast.error(t("export.notionNotConfigured"), {
+            action: {
+              label: t("export.openSettings"),
+              onClick: () => {
+                window.location.href = "/dashboard/settings";
+              },
             },
-          },
-        });
+          });
+          return;
+        }
+        if (res.customCode === "not-subscribed") {
+          setSubscribeVariant("notionExport");
+          setSubscribeOpen(true);
+          return;
+        }
+        toast.error(res.error);
         return;
       }
-      if (res.customCode === "not-subscribed") {
-        setSubscribeVariant("notionExport");
-        setSubscribeOpen(true);
-        return;
-      }
-      toast.error(res.error);
-      return;
+      const alreadyRunning = res.customCode === "already-running";
+      const message = alreadyRunning
+        ? t("export.notionAlreadyRunning")
+        : bookmarkIds?.length
+          ? t("export.notionQueuedSelected", { count: bookmarkIds.length })
+          : t("export.notionQueuedAll");
+      toast.success(message, { id: toastId, duration: 6000 });
+      setBanner({ kind: "info", text: message });
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(error instanceof Error ? error.message : t("export.notionFailed"));
+    } finally {
+      setNotionExporting(false);
     }
-    toast.success(
-      bookmarkIds?.length
-        ? t("export.notionQueuedSelected", { count: bookmarkIds.length })
-        : t("export.notionQueuedAll")
-    );
   };
 
   const bulkTrash = async () => {
@@ -788,9 +807,16 @@ export function BookmarksBoard({
                   variant="outline"
                   className="rounded-none font-medium shadow-none"
                   onClick={() => exportToNotion()}
+                  disabled={notionExporting}
                 >
-                  <NotionIcon className="h-3.5 w-3.5 text-foreground" />
-                  {t("toolbar.exportToNotion")}
+                  {notionExporting ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <NotionIcon className="h-3.5 w-3.5 text-foreground" />
+                  )}
+                  {notionExporting
+                    ? t("toolbar.exportingToNotion")
+                    : t("toolbar.exportToNotion")}
                 </Button>
               )}
               {!isListMode && !isTrashView && (
@@ -1028,9 +1054,16 @@ export function BookmarksBoard({
                     size="sm"
                     variant="outline"
                     onClick={() => exportToNotion(selected)}
+                    disabled={notionExporting}
                   >
-                    <NotionIcon className="h-4 w-4 text-foreground" />
-                    {t("bulk.exportToNotion")}
+                    {notionExporting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <NotionIcon className="h-4 w-4 text-foreground" />
+                    )}
+                    {notionExporting
+                      ? t("toolbar.exportingToNotion")
+                      : t("bulk.exportToNotion")}
                   </Button>
                   <Button size="sm" variant="outline" onClick={bulkTrash}>
                     <Trash2 className="h-4 w-4" />

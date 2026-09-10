@@ -19,6 +19,7 @@ import {
 } from "@/config/bookmark-categories";
 import { Button } from "@/components/ui/button";
 import { CollapsibleBookmarkText } from "@/components/bookmarks/CollapsibleBookmarkText";
+import { BookmarkVideo } from "@/components/bookmarks/BookmarkVideo";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -144,9 +145,14 @@ export function BookmarkCard({
     });
   }, [bookmark.primaryCategory, bookmark.subTags]);
   const mediaTypes = (bookmark.mediaTypes ?? []).slice(0, 2);
+  const playbackUrls = (bookmark.mediaPlaybackUrls ?? []).slice(0, 2);
   const media = (bookmark.mediaUrls ?? [])
     .slice(0, 2)
-    .map((url, i) => ({ url, type: mediaTypes[i] ?? "photo" }));
+    .map((url, i) => ({
+      url,
+      type: mediaTypes[i] ?? "photo",
+      playbackUrl: playbackUrls[i] || undefined,
+    }));
   const videoMedia = media.find((m) => m.type !== "photo");
   const photoMedia = media.filter((m) => m.type === "photo");
   const isProcessing =
@@ -306,30 +312,43 @@ export function BookmarkCard({
       <CollapsibleBookmarkText text={bookmark.text} />
 
       {/* media */}
-      {videoMedia && (
-        <div className="relative aspect-video overflow-hidden rounded-none bg-secondary">
-          <a
-            href={`https://x.com/i/status/${bookmark.tweetId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={t("card.playVideo")}
-            className="group relative block h-full w-full"
-          >
-            <Image
-              src={videoMedia.url}
-              alt={t("card.videoCover")}
-              width={600}
-              height={338}
-              className="h-full w-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover/card:scale-[1.04]"
-            />
-            <span className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
-              <span className="flex size-12 items-center justify-center rounded-full bg-black/60 backdrop-blur-sm transition-transform group-hover:scale-105">
-                <Play className="ml-0.5 size-5 fill-white text-white" />
+      {videoMedia &&
+        (videoMedia.playbackUrl ? (
+          <BookmarkVideo
+            src={videoMedia.playbackUrl}
+            poster={
+              videoMedia.url !== videoMedia.playbackUrl
+                ? videoMedia.url
+                : undefined
+            }
+            loop={videoMedia.type === "animated_gif"}
+            playLabel={t("card.playVideo")}
+            openLabel={t("card.openVideo")}
+          />
+        ) : (
+          <div className="relative aspect-video overflow-hidden rounded-none bg-secondary">
+            <a
+              href={`https://x.com/i/status/${bookmark.tweetId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("card.playVideo")}
+              className="group relative block h-full w-full"
+            >
+              <Image
+                src={videoMedia.url}
+                alt={t("card.videoCover")}
+                width={600}
+                height={338}
+                className="h-full w-full object-cover transition-transform duration-500 ease-out motion-safe:group-hover/card:scale-[1.04]"
+              />
+              <span className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/30">
+                <span className="flex size-12 items-center justify-center rounded-full bg-black/60 backdrop-blur-sm transition-transform group-hover:scale-105">
+                  <Play className="ml-0.5 size-5 fill-white text-white" />
+                </span>
               </span>
-            </span>
-          </a>
-        </div>
-      )}
+            </a>
+          </div>
+        ))}
       {photoMedia.length > 0 && (
         <div
           className={cn(

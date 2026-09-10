@@ -34,6 +34,7 @@ const itemSchema = z.object({
   created_at: z.string().max(64).optional(),
   media_urls: z.array(z.string().max(2000)).max(20).optional(),
   media_types: z.array(z.string().max(40)).max(20).optional(),
+  media_playback_urls: z.array(z.string().max(2000)).max(20).optional(),
   urls: z.array(z.string().max(2000)).max(50).optional(),
   entities: z
     .object({
@@ -111,6 +112,7 @@ export async function POST(req: Request) {
           tweetCreatedAt: parseCreatedAt(item.created_at),
           mediaUrls: item.media_urls ?? [],
           mediaTypes: item.media_types ?? [],
+          mediaPlaybackUrls: item.media_playback_urls ?? [],
           urls: item.urls ?? entityUrls,
         };
       }),

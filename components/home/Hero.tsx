@@ -27,8 +27,9 @@ function PlatformLogo({ label, children }: { label: string; children: ReactNode 
   );
 }
 
-export default function Hero() {
+export default function Hero({ signedIn = false }: { signedIn?: boolean }) {
   const t = useTranslations("Landing.Hero");
+  const ctaHref = signedIn ? "/dashboard/bookmarks" : "/login";
 
   return (
     <div className="w-full">
@@ -67,7 +68,7 @@ export default function Hero() {
               size="lg"
               className="h-11 w-full text-sm font-semibold md:h-12"
             >
-              <I18nLink href="/login">{t("cta")}</I18nLink>
+              <I18nLink href={ctaHref}>{t("cta")}</I18nLink>
             </Button>
           </div>
 

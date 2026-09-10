@@ -8,6 +8,7 @@ export type ScrapedBookmark = {
   created_at?: string;
   media_urls: string[];
   media_types: string[];
+  media_playback_urls: string[];
   urls: string[];
 };
 
@@ -64,26 +65,66 @@ function collectUser(tweet: Json): {
   };
 }
 
-function collectMedia(legacy: Json): { urls: string[]; types: string[] } {
+function pickBestMp4Url(variants: unknown): string | undefined {
+  if (!Array.isArray(variants)) return undefined;
+  const mp4s: { url: string; bitrate: number }[] = [];
+  for (const raw of variants) {
+    if (!isRecord(raw)) continue;
+    const url = asString(raw.url);
+    const contentType = asString(raw.content_type) ?? asString(raw.contentType) ?? "";
+    const isMp4 =
+      contentType === "video/mp4" ||
+      (!contentType && !!url?.includes(".mp4"));
+    if (!url || !isMp4) continue;
+    const bitrate =
+      typeof raw.bit_rate === "number"
+        ? raw.bit_rate
+        : typeof raw.bitrate === "number"
+          ? raw.bitrate
+          : 0;
+    mp4s.push({ url, bitrate });
+  }
+  if (mp4s.length === 0) return undefined;
+  mp4s.sort((a, b) => b.bitrate - a.bitrate);
+  return mp4s[0].url;
+}
+
+function collectMedia(legacy: Json): {
+  urls: string[];
+  types: string[];
+  playbackUrls: string[];
+} {
   const urls: string[] = [];
   const types: string[] = [];
+  const playbackUrls: string[] = [];
   const entities = isRecord(legacy.extended_entities)
     ? legacy.extended_entities
-    : isRecord(legacy.entities)
-      ? legacy.entities
-      : undefined;
+    : isRecord(legacy.extendedEntities)
+      ? legacy.extendedEntities
+      : isRecord(legacy.entities)
+        ? legacy.entities
+        : undefined;
   const media = entities && Array.isArray(entities.media) ? entities.media : [];
   for (const item of media) {
     if (!isRecord(item)) continue;
     const type = asString(item.type) ?? "photo";
-    const url =
-      asString(item.media_url_https) ??
-      asString(item.media_url);
-    if (!url) continue;
-    urls.push(url);
+    const preview =
+      asString(item.media_url_https) ?? asString(item.media_url);
+    const videoInfo = isRecord(item.video_info)
+      ? item.video_info
+      : isRecord(item.videoInfo)
+        ? item.videoInfo
+        : undefined;
+    const playback =
+      type === "video" || type === "animated_gif"
+        ? pickBestMp4Url(videoInfo?.variants) ?? ""
+        : "";
+    if (!preview && !playback) continue;
+    urls.push(preview || playback);
     types.push(type);
+    playbackUrls.push(playback);
   }
-  return { urls, types };
+  return { urls, types, playbackUrls };
 }
 
 function collectUrls(legacy: Json): string[] {
@@ -139,6 +180,7 @@ function toScraped(node: unknown): ScrapedBookmark | null {
     created_at: createdAtIso(legacy),
     media_urls: media.urls,
     media_types: media.types,
+    media_playback_urls: media.playbackUrls,
     urls: collectUrls(legacy),
   };
 }

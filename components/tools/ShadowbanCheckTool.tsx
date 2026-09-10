@@ -308,6 +308,12 @@ export default function ShadowbanCheckTool() {
           </p>
           <div className="flex flex-wrap gap-4 pt-1 text-sm">
             <I18nLink
+              href="/tools/twitter-advanced-search"
+              className="underline underline-offset-4 hover:text-foreground text-muted-foreground"
+            >
+              Advanced Twitter Search
+            </I18nLink>
+            <I18nLink
               href="/docs/extension"
               className="underline underline-offset-4 hover:text-foreground text-muted-foreground"
             >

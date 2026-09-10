@@ -281,6 +281,13 @@
       "when": 1788865000000,
       "tag": "0039_notion_export_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1789056060000,
+      "tag": "0040_bookmark_media_playback",
+      "breakpoints": true
     }
   ]
 }

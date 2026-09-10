@@ -1,5 +1,7 @@
 import "server-only";
 
+import { pickBestMp4Url } from "@/lib/x/media";
+
 const API_BASE = "https://api.x.com/2";
 
 export interface XRateLimitInfo {
@@ -55,8 +57,10 @@ export interface NormalizedBookmark {
   tweetCreatedAt?: Date;
   mediaUrls: string[];
   // Parallel to mediaUrls: 'photo' | 'video' | 'animated_gif'. Video entries
-  // carry the preview thumbnail (X exposes no direct playable url here).
+  // carry the preview thumbnail.
   mediaTypes: string[];
+  // Parallel to mediaUrls: playable mp4 for video/gif, "" for photos.
+  mediaPlaybackUrls: string[];
   urls: string[];
   metrics: { likes: number; retweets: number; replies: number };
 }
@@ -87,6 +91,11 @@ interface XMedia {
   type?: string;
   url?: string;
   preview_image_url?: string;
+  variants?: Array<{
+    bit_rate?: number;
+    content_type?: string;
+    url?: string;
+  }>;
 }
 
 interface XUser {
@@ -111,7 +120,7 @@ const BOOKMARKS_QUERY: Record<string, string> = {
     "id,text,note_tweet,author_id,created_at,entities,attachments,public_metrics",
   expansions: "author_id,attachments.media_keys",
   "user.fields": "id,username,name,profile_image_url",
-  "media.fields": "media_key,type,url,preview_image_url",
+  "media.fields": "media_key,type,url,preview_image_url,variants,duration_ms",
 };
 
 export async function fetchBookmarksPageForUser(
@@ -183,6 +192,7 @@ export async function fetchBookmarksPageForUser(
     const author = tweet.author_id ? usersById.get(tweet.author_id) : undefined;
     const mediaUrls: string[] = [];
     const mediaTypes: string[] = [];
+    const mediaPlaybackUrls: string[] = [];
     for (const key of tweet.attachments?.media_keys ?? []) {
       const m = mediaByKey.get(key);
       if (!m?.type) continue;
@@ -190,10 +200,14 @@ export async function fetchBookmarksPageForUser(
         if (!m.url) continue;
         mediaUrls.push(m.url);
         mediaTypes.push("photo");
+        mediaPlaybackUrls.push("");
       } else if (m.type === "video" || m.type === "animated_gif") {
-        if (!m.preview_image_url) continue;
-        mediaUrls.push(m.preview_image_url);
+        const preview = m.preview_image_url;
+        const playback = pickBestMp4Url(m.variants) ?? "";
+        if (!preview && !playback) continue;
+        mediaUrls.push(preview || playback);
         mediaTypes.push(m.type);
+        mediaPlaybackUrls.push(playback);
       }
     }
     const urls = (tweet.entities?.urls ?? [])
@@ -211,6 +225,7 @@ export async function fetchBookmarksPageForUser(
         : undefined,
       mediaUrls,
       mediaTypes,
+      mediaPlaybackUrls,
       urls,
       metrics: {
         likes: tweet.public_metrics?.like_count ?? 0,

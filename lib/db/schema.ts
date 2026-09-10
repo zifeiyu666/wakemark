@@ -636,8 +636,10 @@ export const bookmarks = pgTable(
     tweetCreatedAt: timestamp('tweet_created_at', { withTimezone: true }),
     mediaUrls: jsonb('media_urls').default('[]').notNull(),
     // Parallel to mediaUrls: 'photo' | 'video' | 'animated_gif' (video entries
-    // hold the preview thumbnail url; playback goes through the X embed player).
+    // hold the preview thumbnail url).
     mediaTypes: jsonb('media_types').default('[]').notNull(),
+    // Parallel to mediaUrls: playable mp4 for video/gif entries, "" for photos.
+    mediaPlaybackUrls: jsonb('media_playback_urls').default('[]').notNull(),
     metrics: jsonb('metrics'),
     urls: jsonb('urls').default('[]').notNull(),
     // AI processing results

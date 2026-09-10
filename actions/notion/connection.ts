@@ -212,6 +212,14 @@ export async function startNotionSync(
     );
   }
 
+  const lastTouch =
+    conn.lastSyncedAt?.getTime() ?? conn.updatedAt?.getTime() ?? 0;
+  const recentlySyncing =
+    conn.syncStatus === "syncing" && Date.now() - lastTouch < 2 * 60 * 1000;
+  if (recentlySyncing) {
+    return actionResponse.success({ alreadyRunning: true }, "already-running");
+  }
+
   try {
     await enqueueNotionSyncForUser(gate.user!.id, bookmarkIds, true);
     return actionResponse.success();
