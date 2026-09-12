@@ -35,7 +35,7 @@ const HeaderLinks = () => {
                   {link.name}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <ul className="w-[250px] gap-1">
+                  <ul className="flex w-[280px] flex-col gap-1">
                     {link.items.map((child) => (
                       <li
                         key={child.name}

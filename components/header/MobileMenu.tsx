@@ -65,7 +65,7 @@ export default function MobileMenu({
                 <DropdownMenuSubTrigger className="px-2 py-1.5">
                   {link.name}
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-40">
+                <DropdownMenuSubContent className="w-56">
                   {link.items.map((child) => (
                     <DropdownMenuItem key={child.name} asChild>
                       <I18nLink

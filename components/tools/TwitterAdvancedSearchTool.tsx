@@ -375,6 +375,12 @@ export default function TwitterAdvancedSearchTool() {
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <ChromeInstallButton label="Install Chrome Extension" />
             <I18nLink
+              href="/tools/twitter-screenshot"
+              className="text-sm underline underline-offset-4 text-muted-foreground hover:text-foreground"
+            >
+              Twitter screenshot tool
+            </I18nLink>
+            <I18nLink
               href="/docs/mcp"
               className="text-sm underline underline-offset-4 text-muted-foreground hover:text-foreground"
             >

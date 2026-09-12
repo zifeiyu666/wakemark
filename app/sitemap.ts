@@ -37,6 +37,7 @@ const MARKETING_PATHS = [
   '/subscribe',
   '/tools/shadowban-check',
   '/tools/twitter-advanced-search',
+  '/tools/twitter-screenshot',
   '/alternatives/readwise-alternative',
   '/alternatives/dewey-alternative',
   '/alternatives/tweetstorm-alternative',

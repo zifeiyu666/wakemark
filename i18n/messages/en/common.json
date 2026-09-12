@@ -351,20 +351,34 @@
         "href": "/#pricing"
       },
       {
+        "id": "tools",
+        "name": "Tools",
+        "href": "/tools/shadowban-check",
+        "items": [
+          {
+            "name": "Shadowban Checker",
+            "href": "/tools/shadowban-check",
+            "description": "Check if an X account is shadowbanned"
+          },
+          {
+            "name": "Advanced Twitter Search",
+            "href": "/tools/twitter-advanced-search",
+            "description": "Filter tweets by date, account, and media"
+          },
+          {
+            "name": "Twitter Screenshot",
+            "href": "/tools/twitter-screenshot",
+            "description": "Turn tweets into shareable images"
+          }
+        ]
+      },
+      {
         "name": "MCP",
         "href": "/docs/mcp"
       },
       {
-        "name": "Extension",
-        "href": "/docs/extension"
-      },
-      {
         "name": "Docs",
         "href": "/docs"
-      },
-      {
-        "name": "Roadmap",
-        "href": "/roadmap"
       }
     ]
   },
@@ -485,6 +499,10 @@
             {
               "name": "Advanced Twitter Search",
               "href": "/tools/twitter-advanced-search"
+            },
+            {
+              "name": "Twitter Screenshot Generator",
+              "href": "/tools/twitter-screenshot"
             }
           ]
         }

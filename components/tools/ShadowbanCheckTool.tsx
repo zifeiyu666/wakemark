@@ -314,6 +314,12 @@ export default function ShadowbanCheckTool() {
               Advanced Twitter Search
             </I18nLink>
             <I18nLink
+              href="/tools/twitter-screenshot"
+              className="underline underline-offset-4 hover:text-foreground text-muted-foreground"
+            >
+              Twitter Screenshot Generator
+            </I18nLink>
+            <I18nLink
               href="/docs/extension"
               className="underline underline-offset-4 hover:text-foreground text-muted-foreground"
             >
